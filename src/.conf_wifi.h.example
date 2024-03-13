@@ -1,0 +1,10 @@
+
+#define WIFI_SSID "ssid"
+#define WIFI_PASS "pass"
+
+// =======================
+// network credentials
+// =======================
+
+const char *ssid = WIFI_SSID;
+const char *password = WIFI_PASS;
