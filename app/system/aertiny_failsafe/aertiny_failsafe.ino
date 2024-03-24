@@ -26,6 +26,8 @@
 #include <Arduino.h>
 #include "ledEffects.h"
 
+using namespace LED_EFFECTS;
+
 // avrdude -c usbasp -p t88 -B 5 -U lfuse:w:0xE2:m -U hfuse:w:0xDD:m
 // avrdude -c usbasp -p t88 -U flash:w:aertiny_failsafe.ino.hex:i
 
@@ -78,6 +80,8 @@ typedef enum ELM_PROT_OP_CODE : uint8_t
 // ===============================================================
 // Main Setup
 
+#define INVERT_DVR false
+
 void setup()
 {
   pinMode(LED_A, OUTPUT);
@@ -96,7 +100,7 @@ void setup()
   pinMode(SSR_CONTROL_1, INPUT);
 
   pinMode(DTR_CONTROL, OUTPUT);
-  digitalWrite(DTR_CONTROL, LOW);
+  digitalWrite(DTR_CONTROL, INVERT_DVR ? HIGH : LOW);
 
   // init i2c slave
   Wire.begin(I2C_SLAVE_ADDRESS);
@@ -160,7 +164,7 @@ void loop()
     // fadeOut(LED_A, 8);
     fadePin(LED_A);
     digitalWrite(LED_B, !state);
-    digitalWrite(DTR_CONTROL, HIGH);
+    digitalWrite(DTR_CONTROL, INVERT_DVR ? LOW: HIGH);
     dtr_mode_on = true;
     delay(1);
     return;
@@ -169,7 +173,7 @@ void loop()
   if (!dtr_enabled)
   {
     dtr_mode_on = false;
-    digitalWrite(DTR_CONTROL, LOW);
+    digitalWrite(DTR_CONTROL, INVERT_DVR ? HIGH : LOW);
   }
 
   // status led
@@ -266,7 +270,7 @@ void receiveEvent(int howMany)
   }
   else if (response == 100)
   {
-    digitalWrite(DTR_CONTROL, HIGH);
+    digitalWrite(DTR_CONTROL, INVERT_DVR ? LOW : HIGH);
     dtr_enabled = true;
     dtr_mode_on = true;
     response = E_PROT_OKAY;
@@ -274,7 +278,7 @@ void receiveEvent(int howMany)
   }
   else if (response == 200)
   {
-    digitalWrite(DTR_CONTROL, LOW);
+    digitalWrite(DTR_CONTROL, INVERT_DVR ? HIGH : LOW);
     dtr_enabled = false;
     response = E_PROT_OKAY;
     return;

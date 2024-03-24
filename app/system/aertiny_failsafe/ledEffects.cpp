@@ -2,6 +2,9 @@
 
 namespace LED_EFFECTS
 {
+    uint8_t led_index = 0;
+    bool led_dir_out = false;
+  
     void fadeOut(uint8_t pin, uint16_t length)
     {
         fadeOut(pin, 1, length, 1);
