@@ -1,0 +1,311 @@
+::-webkit-scrollbar {
+  width: 12px;
+}
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+::-webkit-scrollbar-thumb {
+  background: #888;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+.w3-row-padding img {
+  margin-bottom: 12px;
+}
+.w3-sidebar {
+  width: 120px;
+  background: #222;
+}
+#main {
+  margin: auto;
+  width: 100%;
+}
+
+@media only screen and (max-width: 600px) {
+  #main {
+    margin-left: 0px;
+    width: 100vw;
+  }
+}
+
+.tempoutter {
+  max-height: 400px;
+  overflow: hidden;
+}
+.barOverflow {
+  margin: 0 auto;
+  max-width: 100%;
+  max-height: 380px;
+  overflow: hidden;
+  width: 52vw;
+  height: 26vw;
+  margin-bottom: -64px;
+}
+
+.bar {
+  margin: 0 auto;
+  max-width: 100%;
+  max-width: 760px;
+  max-height: 760px;
+  width: 52vw;
+  height: 52vw;
+  border-radius: 50%;
+  box-sizing: border-box;
+  border: 7vw solid #eee;
+  border-bottom-color: #eee;
+  border-right-color: #eee;
+  transition: border-color 0.5s ease;
+}
+@media screen and (min-width: 1000px) {
+  .bar {
+    border: 70px solid #eee;
+  }
+}
+#temp_setting {
+  text-align: center;
+}
+
+/* The switch - the box around the slider */
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 60px;
+  height: 34px;
+}
+
+/* Hide default HTML checkbox */
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+/* The slider */
+.slide {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  -webkit-transition: 0.4s;
+  transition: 0.4s;
+}
+
+.slide:before {
+  position: absolute;
+  content: '';
+  height: 26px;
+  width: 26px;
+  left: 4px;
+  bottom: 4px;
+  background-color: white;
+  -webkit-transition: 0.4s;
+  transition: 0.4s;
+}
+
+input:checked + .slide {
+  background-color: #2196f3;
+}
+
+input:focus + .slide {
+  box-shadow: 0 0 1px #2196f3;
+}
+
+input:checked + .slide:before {
+  -webkit-transform: translateX(26px);
+  -ms-transform: translateX(26px);
+  transform: translateX(26px);
+}
+
+/* Rounded sliders */
+.slide.round {
+  border-radius: 34px;
+}
+
+.slide.round:before {
+  border-radius: 50%;
+}
+
+.tooltip {
+  position: relative;
+  display: inline-block;
+  border-bottom: 1px dotted black;
+}
+
+.tooltip .tooltiptext {
+  visibility: hidden;
+  width: 120px;
+  background-color: black;
+  color: #fff;
+  text-align: center;
+  border-radius: 6px;
+  padding: 5px 0;
+
+  /* Position the tooltip */
+  position: absolute;
+  z-index: 1;
+}
+
+.tooltip:hover .tooltiptext {
+  visibility: visible;
+}
+.tooltip .tooltiptext {
+  width: 200px;
+  bottom: 100%;
+  left: 50%;
+  margin-left: -60px; /* Use half of the width (120/2 = 60), to center the tooltip */
+}
+#temperature {
+  max-height: 400px;
+}
+
+.bar-slider {
+  justify-content: center;
+  padding-left: 0.3em;
+  padding-right: 0.3em;
+  padding-top: 0.5em;
+  padding-bottom: 0.5em;
+  overflow: hidden;
+  border: 1px solid rgba(68, 68, 68, 0.4);
+}
+
+datalist {
+  display: flex;
+  justify-content: space-evenly;
+  color: black;
+  max-width: 300px;
+  width: 100%;
+  font-size: 12px;
+  margin: auto;
+  padding-left: 10px;
+}
+
+#bright_bar {
+  max-width: 300px;
+  width: 100%;
+  margin: auto;
+}
+
+body,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: 'Montserrat', sans-serif;
+}
+.w3-row-padding img {
+  margin-bottom: 12px;
+}
+/* Set the width of the sidebar to 120px */
+.w3-sidebar {
+  width: 120px;
+  background: #222;
+}
+/* Add a left margin to the "page content" that matches the width of the sidebar (120px) */
+#main {
+  margin-left: 120px;
+  width: 100%;
+  width: calc(100vw - 140px);
+}
+/* Remove margins from "page content" on small screens */
+@media only screen and (max-width: 600px) {
+  #main {
+    margin-left: 0px;
+    width: 100vw;
+  }
+}
+
+.nav-btn-fade {
+  transition: all 0.3s ease;
+}
+
+/* Nav bar */
+.navbar {
+  z-index: 100;
+  overflow: hidden;
+  background-color: rgb(0, 0, 0);
+  background: linear-gradient(
+    0deg,
+    rgba(2, 1, 3, 0.46) 0%,
+    rgba(2, 1, 3, 0.93) 12%,
+    rgb(2, 1, 3) 18%,
+    rgb(2, 1, 3) 100%
+  );
+  backdrop-filter: blur(8px);
+}
+.navbar h4 {
+  margin: 3px 0 !important;
+}
+.navbar-inline {
+  display: inline-block !important;
+}
+.navbar-logo {
+  height: 16px;
+  margin-top: -4px;
+}
+.navbar-text {
+  cursor: default;
+  color: rgba(237, 246, 245, 0.825);
+}
+/* Page content */
+.w3-content {
+  padding: 0 16px !important;
+  margin-top: 2px !important;
+}
+/* Sticky nav */
+.nav-sticky {
+  position: sticky;
+  top: 0;
+  width: 100%;
+}
+.nav-sticky + .w3-content {
+  padding-top: 20px;
+}
+
+.wifi-input-field input {
+  width: 100%;
+  min-width: 80px;
+  max-width: 256px;
+}
+
+.w3-modal-content {
+  box-shadow: 4px 6px 7px 1px rgba(16, 8, 8, 0.4);
+}
+
+.w3-modal {
+  background-color: rgba(0, 0, 0, 0.57);
+  backdrop-filter: blur(2px);
+}
+
+#temp_chart {
+  background-color: black;
+}
+
+#color_pallete {
+  padding: 0.2em 0.6em;
+}
+
+.sqd-container {
+  min-height: max-content;
+  height: 420px;
+  width: 100%;
+}
+
+.sqd-wrapper {
+  display: flex;
+  padding-right: 0.5em;
+  padding-left: 0.5em;
+  height: fill;
+  max-height: 100%;
+}
+
+.sqd-list {
+  min-height: max-content;
+  height: 100%;
+}

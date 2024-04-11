@@ -33,25 +33,57 @@
 #define LM75_ADDRESS_A 0x48
 #define LM75_ADDRESS_B 0x49
 #define RCLOCK_ADDRESS 0x51
+#if AERPID_COUNT == 2
+#define LM75_ADDRESS_C 0x4A
+#endif
 
 // ======================
 // Pin Defines
 #define PIN_LED_C 17
+#if AERPID_COUNT == 1
 #define PIN_LED_B 12
+#endif
+#if AERPID_COUNT == 2
+#define PIN_LED_B 17
+#endif
 // Fnacy LED Control PIN
 #define PIN_xLED_A 4
 #define PIN_xLED_B 16
-// EEPROM Enable PIN
-#define PIN_EEPROM_EN 13
 // Flash Select PIN
 #define PIN_FLSH_CS 5
 
+#if AERPID_COUNT == 1
+// EEPROM Enable PIN
+#define PIN_EEPROM_EN 13
+#endif
+#if AERPID_COUNT == 2
+// EEPROM Enable PIN (not present)
+#define PIN_EEPROM_EN -1
+#endif
+
 // One Wire Bus Pin
 #define PIN_ONE_WIRE 15
+#if AERPID_COUNT >= 1
+#define PIN_ONE_WIRE_A PIN_ONE_WIRE
+#endif
+#if AERPID_COUNT >= 2
+#define PIN_ONE_WIRE_B 12
+#endif
 
 // SSR Enable Pin
 #define PIN_SSR_EN 2
+#if AERPID_COUNT >= 1
+#define PIN_SSR_EN_A PIN_SSR_EN
+#endif
 #define PIN_SSR_CHAN 0
+#define PIN_SSR_CHAN_1 PIN_SSR_CHAN
+#if AERPID_COUNT >= 2
+#define PIN_SSR_CHAN_2 1
+#endif
+
+#if AERPID_COUNT == 2
+#define PIN_SSR_EN_B 13
+#endif
 
 // Interface Pins
 #define ENC_A 33  // Encoder Knob

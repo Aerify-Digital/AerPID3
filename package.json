@@ -1,0 +1,30 @@
+{
+  "name": "aertiny",
+  "version": "3.0.0",
+  "description": "ESP32 Based PID Control of 150 watt Heating Element",
+  "scripts": {
+    "setup-electron": "npm install --prefix ./app/electron",
+    "start-electron": "npm run start --prefix ./app/electron",
+    "package-electron": "npm run package --prefix ./app/electron",
+    "make-electron": "npm run make --prefix ./app/electron",
+    "publish-electron": "npm run publish --prefix ./app/electron",
+    "lint-electron": "npm run lint --prefix ./app/electron"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:Aerify-Digital/AerPID3.git"
+  },
+  "author": "AerifyDigital",
+  "contributors": [
+    {
+      "name": "SeqSEE"
+    },
+    {
+      "name": "squidicuz"
+    },
+    {
+      "name": "Boehmerang"
+    }
+  ],
+  "license": "GPL-3.0-only"
+}

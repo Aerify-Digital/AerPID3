@@ -35,6 +35,20 @@
 #endif
 
 // =========================
+// AerPID module type setup
+#ifndef AERPID_DEVICE_TYPE
+// default to single element control
+#define AERPID_DEVICE_TYPE 1
+#endif
+
+#if !defined(AERPID_COUNT) && AERPID_DEVICE_TYPE == 1
+#define AERPID_COUNT 1
+#endif
+#if !defined(AERPID_COUNT) && AERPID_DEVICE_TYPE == 2
+#define AERPID_COUNT 2
+#endif
+
+// =========================
 // Verbose debug mode toggle
 #define DEBUG_VERBOSE true
 
