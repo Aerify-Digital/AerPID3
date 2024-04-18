@@ -664,6 +664,11 @@ const initPageData = async (initData) => {
   setLED_Toggles(state.LED.mode);
   state.LED.color = initData.ledColor;
   state.LED.status = initData.ledStatus;
+  if (state.LED.status) {
+    document.getElementById('statusbut_span').innerText = 'Disable';
+  } else {
+    document.getElementById('statusbut_span').innerText = 'Enable';
+  }
   state.LED.brightness = initData.ledBrightness;
   if (document.getElementById('bright_bar')) {
     document.getElementById('bright_bar').value = `${state.LED.brightness}`;
@@ -1179,6 +1184,16 @@ const handleMessage = (dat) => {
           document.getElementById('br_qset').value = dat[3];
           state.LED.brightness = this.value;
           break;
+        case Led.STAT:
+          console.log('LED > Status');
+          var stat_enb = dat[3] > 0;
+          if (stat_enb) {
+            state.LED.status = true;
+            document.getElementById('statusbut_span').innerText = 'Disable';
+          } else {
+            state.LED.status = false;
+            document.getElementById('statusbut_span').innerText = 'Enable';
+          }
         default:
           break;
       }
