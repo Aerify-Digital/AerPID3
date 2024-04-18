@@ -530,37 +530,38 @@ const parseInitMessage = (data) => {
   const bumpTime = getNumber(data.slice(301, 303));
   const autoOffTime = getNumber(data.slice(303, 305));
   const ledMode = data.slice(305, 306)[0];
-  const ledColor = data.slice(306, 309);
-  const ledBrightness = data.slice(309, 310)[0];
+  const ledStatus = data.slice(306, 307)[0];
+  const ledColor = data.slice(307, 310);
+  const ledBrightness = data.slice(310, 311)[0];
   const fav1Name = new TextDecoder()
-    .decode(new Uint8Array(data.slice(310, 374)))
+    .decode(new Uint8Array(data.slice(311, 375)))
     .replace(/\u0000/g, '')
     .trim();
-  const fav1Temp = getNumber(data.slice(374, 376));
+  const fav1Temp = getNumber(data.slice(375, 377));
   const fav2Name = new TextDecoder()
-    .decode(new Uint8Array(data.slice(376, 440)))
+    .decode(new Uint8Array(data.slice(377, 441)))
     .replace(/\u0000/g, '')
     .trim();
-  const fav2Temp = getNumber(data.slice(440, 442));
+  const fav2Temp = getNumber(data.slice(441, 443));
   const fav3Name = new TextDecoder()
-    .decode(new Uint8Array(data.slice(442, 506)))
+    .decode(new Uint8Array(data.slice(443, 507)))
     .replace(/\u0000/g, '')
     .trim();
-  const fav3Temp = getNumber(data.slice(506, 508));
+  const fav3Temp = getNumber(data.slice(507, 509));
   const fav4Name = new TextDecoder()
-    .decode(new Uint8Array(data.slice(508, 572)))
+    .decode(new Uint8Array(data.slice(509, 573)))
     .replace(/\u0000/g, '')
     .trim();
-  const fav4Temp = getNumber(data.slice(572, 574));
-  const tempAdjustAmt = getNumber(data.slice(574, 576));
-  const temp = getNumber(data.slice(576, 578));
-  const setTemp = getNumber(data.slice(578, 580));
-  const avgTemp = getNumber(data.slice(580, 582));
-  const P = bytesToDouble(Uint8Array.from(data.slice(582, 590)));
-  const I = bytesToDouble(Uint8Array.from(data.slice(590, 598)));
-  const D = bytesToDouble(Uint8Array.from(data.slice(598, 606)));
-  const unitType = data.slice(606, 607)[0];
-  const booleanMap = [...Array(8)].map((_, i) => Boolean(data.slice(607)[0] & (1 << (7 - i))));
+  const fav4Temp = getNumber(data.slice(573, 575));
+  const tempAdjustAmt = getNumber(data.slice(575, 577));
+  const temp = getNumber(data.slice(577, 579));
+  const setTemp = getNumber(data.slice(579, 581));
+  const avgTemp = getNumber(data.slice(581, 583));
+  const P = bytesToDouble(Uint8Array.from(data.slice(583, 591)));
+  const I = bytesToDouble(Uint8Array.from(data.slice(591, 599)));
+  const D = bytesToDouble(Uint8Array.from(data.slice(599, 607)));
+  const unitType = data.slice(607, 608)[0];
+  const booleanMap = [...Array(8)].map((_, i) => Boolean(data.slice(608)[0] & (1 << (7 - i))));
   const [
     AUTO_OFF_ENABLED,
     COIL_ENABLED,
@@ -584,6 +585,7 @@ const parseInitMessage = (data) => {
     bumpTime,
     autoOffTime,
     ledMode,
+    ledStatus,
     ledColor,
     ledBrightness,
     fav1Name,
@@ -661,6 +663,7 @@ const initPageData = async (initData) => {
   state.LED.mode = initData.ledMode;
   setLED_Toggles(state.LED.mode);
   state.LED.color = initData.ledColor;
+  state.LED.status = initData.ledStatus;
   state.LED.brightness = initData.ledBrightness;
   if (document.getElementById('bright_bar')) {
     document.getElementById('bright_bar').value = `${state.LED.brightness}`;

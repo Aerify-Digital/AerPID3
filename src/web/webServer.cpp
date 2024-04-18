@@ -589,8 +589,9 @@ void WebServer::enPackFill(MessagePack *messagePack)
     messagePack->setBumpTime(aerManager.getBump()->getTime());
     messagePack->setAutoOffTime(as->AUTO_OFF_TIME);
     messagePack->setLedMode(lightstor.getMode());
+    messagePack->setLedSatus(lightstor.statusEnabled());
     messagePack->setLedColor(lightstor.getRgbVal('r'), lightstor.getRgbVal('g'), lightstor.getRgbVal('b'));
-    messagePack->setLedBrightness(lightstor.getBright()); 
+    messagePack->setLedBrightness(lightstor.getBright());
 
     FavsStor *favs = aerManager.getFavs();
     messagePack->setFavName(1, favs->getName(1));
@@ -1351,7 +1352,7 @@ void WebServer::processSocketData(char *data, size_t len, AsyncWebSocketClient *
                 aerManager.updateLStor(true);
                 aerManager.updateLightState(true);
             }
-            //reply->Op(op);
+            // reply->Op(op);
         }
         reply->Val(val);
         reply->build();
