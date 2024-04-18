@@ -661,7 +661,7 @@ const initPageData = async (initData) => {
     }
   }
   state.LED.mode = initData.ledMode;
-  setLED_Toggles(state.LED.mode);
+  initLED_toggles(state.LED.mode);
   state.LED.color = initData.ledColor;
   state.LED.status = initData.ledStatus;
   if (state.LED.status) {
@@ -1159,7 +1159,7 @@ const handleMessage = (dat) => {
               break;
             case LedMode.STATIC:
               if (setLED_Toggles(LedMode.STATIC)) {
-                document.getElementById('led_static').disabled = true;
+                //document.getElementById('led_static').disabled = true;
                 document.getElementById('leden_static').disabled = true;
               }
               break;
@@ -1707,9 +1707,9 @@ document.getElementById('leden_pulse').addEventListener('click', function () {
 document.getElementById('leden_static').addEventListener('click', function () {
   toggleLED_static();
 });
-document.getElementById('led_static').addEventListener('click', function () {
+/*document.getElementById('led_static').addEventListener('click', function () {
   toggleLED_static();
-});
+});*/
 document.getElementById('led_status').addEventListener('click', function () {
   toggleLED_status();
 });
@@ -1738,6 +1738,48 @@ const setLED_Toggles = (mode) => {
     return false;
   }
 };
+const initLED_toggles = (mode) => {
+  buttons = document.getElementsByClassName('ledbtn');
+  for (var i = 0; i < buttons.length; i++) {
+    buttons[i].disabled = false; //.innerText="Enable";
+  }
+  switch (mode) {
+    case LedMode.AMBIENT:
+      break;
+    case LedMode.BLINK:
+      document.getElementById('leden_blink').disabled = true;
+      break;
+    case LedMode.PULSE:
+      document.getElementById('leden_pulse').disabled = true;
+      break;
+    case LedMode.PRESET:
+      break;
+    case LedMode.RAINBOW:
+      document.getElementById('led_rainbow2').disabled = true;
+      break;
+    case LedMode.RAINBOW_PULSE:
+      document.getElementById('led_rainbow3').disabled = true;
+      break;
+    case LedMode.RAINBOW_WAVE:
+      document.getElementById('led_rainbow').disabled = true;
+      break;
+    case LedMode.SHIFT:
+      document.getElementById('led_shift').disabled = true;
+      break;
+    case LedMode.PREPULSE:
+      document.getElementById('led_pulse').disabled = true;
+      break;
+    case LedMode.STATIC:
+      //document.getElementById('led_static').disabled = true;
+      document.getElementById('leden_static').disabled = true;
+      break;
+    case LedMode.STATUS: // Shouldn't turn off other ones.
+      break;
+
+    default:
+      break;
+  }
+}
 const toggleLED_status = () => {
   emit_websocket([SerialCommand.LED, Operation.SET, Led.STAT, state.LED.status ? 0 : 1]);
   if (!state.LED.status) {
@@ -1759,7 +1801,7 @@ const toggleLED_static = () => {
   ]);
   if (setLED_Toggles(LedMode.STATIC)) {
     //document.getElementById("staticbut_span").innerText = "Disable";
-    document.getElementById('led_static').disabled = true;
+    //document.getElementById('led_static').disabled = true;
     document.getElementById('leden_static').disabled = true;
   }
 };
