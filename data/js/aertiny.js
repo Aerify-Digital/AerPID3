@@ -1048,19 +1048,27 @@ const handleMessage = (dat) => {
         case WiFi.JOIN:
           console.log('Setup WiFi');
           if (document.getElementById('join_wifi')) {
-            document.getElementById('join_wifi').classList.remove('w3-text-green');
+            document.getElementById('join_wifi').classList.remove('w3-pale-green');
+            document.getElementById('join_wifi').innerHTML = `<div><i class="fas fa-check"></i> Joining Network</div>`;
           }
           if (document.getElementById('save_wifi_alert')) {
-            document.getElementById('save_wifi_alert').display = 'block';
+            document.getElementById('save_wifi_alert').style.display = 'block';
+          }
+          if (document.getElementById('rst_wifi')) {
+            document.getElementById('rst_wifi').classList.add('w3-pale-red');
           }
           break;
         case WiFi.RESET:
           console.log('Cleared WiFi');
           if (document.getElementById('rst_wifi')) {
-            document.getElementById('rst_wifi').classList.remove('w3-text-red');
+            document.getElementById('rst_wifi').classList.remove('w3-pale-red');
           }
           if (document.getElementById('save_wifi_alert')) {
-            document.getElementById('save_wifi_alert').display = 'block';
+            document.getElementById('save_wifi_alert').style.display = 'block';
+          }
+          if (document.getElementById('join_wifi')) {
+            document.getElementById('join_wifi').innerHTML = `<div><i class="fas fa-link"></i> Join Network</div>`;
+            document.getElementById('join_wifi').classList.add('w3-pale-green');
           }
           break;
         case WiFi.SCAN:
