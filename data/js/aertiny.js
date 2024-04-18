@@ -658,6 +658,8 @@ const initPageData = async (initData) => {
         '<i class="fas fa-stopwatch" style="color:MediumSeaGreen;"></i> Enable LEDs';
     }
   }
+  state.LED.mode = initData.ledMode;
+  setLED_Toggles(state.LED.mode);
   state.LED.color = initData.ledColor;
   state.LED.brightness = initData.ledBrightness;
   if (document.getElementById('bright_bar')) {

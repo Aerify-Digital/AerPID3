@@ -588,9 +588,9 @@ void WebServer::enPackFill(MessagePack *messagePack)
     messagePack->setBumpTemp(aerManager.getBump()->getTemp());
     messagePack->setBumpTime(aerManager.getBump()->getTime());
     messagePack->setAutoOffTime(as->AUTO_OFF_TIME);
-    messagePack->setLedMode(0);           // TODO
-    messagePack->setLedColor(21, 21, 21); // TODO
-    messagePack->setLedBrightness(251);   // TODO
+    messagePack->setLedMode(lightstor.getMode());
+    messagePack->setLedColor(lightstor.getRgbVal('r'), lightstor.getRgbVal('g'), lightstor.getRgbVal('b'));
+    messagePack->setLedBrightness(lightstor.getBright()); 
 
     FavsStor *favs = aerManager.getFavs();
     messagePack->setFavName(1, favs->getName(1));
