@@ -33,6 +33,10 @@ void worker_task(void *pvParameters)
     LM75 sensorC;
 #endif
 
+#if AERPID_COUNT == 2
+    uint8_t fanSpeed = 0;
+#endif
+
     // check if mutex is free
     if (xSemaphoreTake(i2c1_mutex, 1000) == pdTRUE)
     {
@@ -95,6 +99,46 @@ void worker_task(void *pvParameters)
                     tempC = sensorC.temp(); // cel
                     _am->setLocalTemps(tempA, tempB, tempC);
 #endif
+
+#if AERPID_COUNT == 2
+                    if (tempB > 40 && fanSpeed <= 250)
+                    {
+                        Serial.println(">> Enabled Fan 100% !");
+                        fanSpeed = 255;
+                        Wire.beginTransmission(PID_MONITOR_ADDR);
+                        const uint8_t data[2] = {50, fanSpeed};
+                        Wire.write(data, 2);
+                        Wire.endTransmission();
+                    }
+                    else if (tempB > 34 && fanSpeed < 128)
+                    {
+                        Serial.println(">> Enabled Fan 75% !");
+                        fanSpeed = 192;
+                        Wire.beginTransmission(PID_MONITOR_ADDR);
+                        const uint8_t data[2] = {50, fanSpeed};
+                        Wire.write(data, 2);
+                        Wire.endTransmission();
+                    }
+                    else if (tempB > 30 && fanSpeed < 64)
+                    {
+                        Serial.println(">> Enabled Fan 37% !");
+                        fanSpeed = 96;
+                        Wire.beginTransmission(PID_MONITOR_ADDR);
+                        const uint8_t data[2] = {50, fanSpeed};
+                        Wire.write(data, 2);
+                        Wire.endTransmission();
+                    }
+                    else if (tempB <= 30 && fanSpeed > 0)
+                    {
+                        Serial.println(">> Disabled Fan!");
+                        fanSpeed = 0;
+                        Wire.beginTransmission(PID_MONITOR_ADDR);
+                        const uint8_t data[2] = {50, fanSpeed};
+                        Wire.write(data, 2);
+                        Wire.endTransmission();
+                    }
+#endif
+
                     xSemaphoreGive(i2c1_mutex);
                 }
                 xSemaphoreGive(sys1_mutex);
