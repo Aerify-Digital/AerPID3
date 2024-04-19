@@ -121,7 +121,7 @@ void save_task(void *pvParameters)
         {
             int freq;
             // load PWM settings from flash
-            taskParams->flash->load_pwm_2(freq, am->getAerPID(1)->PWM_ScaleFactor, am->getAerPID(1)->PWM_CycleTime, am->getAerPID(1)->AUTO_TUNE_ACTIVE);
+            pwmStor.load_pwm_2(freq, am->getAerPID(1)->PWM_ScaleFactor, am->getAerPID(1)->PWM_CycleTime, am->getAerPID(1)->AUTO_TUNE_ACTIVE);
             // am->getAerPID(1)->setPwmFreq(freq);
 
             if (am->getAerPID(1)->PWM_ScaleFactor <= 0)
