@@ -87,6 +87,7 @@ void AerST7789::showLoadingStorMessage()
     tft->setTextSize(2);
     tft->setCursor(75, 152);
     tft->print("Loading Setup...");
+    delay(300);
 }
 
 void AerST7789::showLoadingAppMessage()
@@ -95,6 +96,7 @@ void AerST7789::showLoadingAppMessage()
     tft->setTextSize(2);
     tft->setCursor(75, 172);
     tft->print("Loading App...");
+    delay(300);
 }
 
 void AerST7789::showSplashInit()
@@ -120,7 +122,7 @@ void AerST7789::showSplashPost()
     yt = (TFT_WIDTH - 16) / 2;
     tft->setTextSize(2);
     tft->setCursor(xt, yt + 28);
-    tft->println("(C)2023");
+    tft->println("(C)2024");
 
     delay(1000);
 }
