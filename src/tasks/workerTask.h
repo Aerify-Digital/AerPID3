@@ -101,7 +101,7 @@ void worker_task(void *pvParameters)
 #endif
 
 #if AERPID_COUNT == 2
-                    if (tempB > 40 && fanSpeed <= 250)
+                    if (tempB > 44 && fanSpeed <= 250)
                     {
                         Serial.println(">> Enabled Fan 100% !");
                         fanSpeed = 255;
@@ -110,10 +110,19 @@ void worker_task(void *pvParameters)
                         Wire.write(data, 2);
                         Wire.endTransmission();
                     }
-                    else if (tempB > 34 && fanSpeed < 128)
+                    else if (tempB > 40 && fanSpeed < 192)
                     {
                         Serial.println(">> Enabled Fan 75% !");
                         fanSpeed = 192;
+                        Wire.beginTransmission(PID_MONITOR_ADDR);
+                        const uint8_t data[2] = {50, fanSpeed};
+                        Wire.write(data, 2);
+                        Wire.endTransmission();
+                    }
+                    else if (tempB > 34 && fanSpeed < 128)
+                    {
+                        Serial.println(">> Enabled Fan 50% !");
+                        fanSpeed = 128;
                         Wire.beginTransmission(PID_MONITOR_ADDR);
                         const uint8_t data[2] = {50, fanSpeed};
                         Wire.write(data, 2);
@@ -128,7 +137,7 @@ void worker_task(void *pvParameters)
                         Wire.write(data, 2);
                         Wire.endTransmission();
                     }
-                    else if (tempB <= 30 && fanSpeed > 0)
+                    else if (tempB <= 28 && fanSpeed > 0)
                     {
                         Serial.println(">> Disabled Fan!");
                         fanSpeed = 0;
