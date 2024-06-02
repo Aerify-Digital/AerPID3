@@ -345,10 +345,20 @@ boolean WebServer::setup()
     bool connected = false;
     if (commstor.getSSIDSet())
     { // SSID set; connecting to preconfigured network
-        char *set_ssid = commstor.getSSID();
+        if (wifiStorage.isUsingStaticIP())
+        {
+            IPAddress localIP = *wifiStorage.getLocalIP();
+            IPAddress gatewayIP = *wifiStorage.getGatewayIP();
+            IPAddress subnet = *wifiStorage.getNetMask();
+            IPAddress dns1 = *wifiStorage.getDNS1();
+            IPAddress dns2 = *wifiStorage.getDNS2();
+            WiFi.config(localIP, gatewayIP, subnet, dns1, dns2);
+            Serial.println(F("[WiFi] -> Using static network..."));
+        }
         WiFi.mode(WIFI_MODE_STA);
-        Serial.println(F("[WiFi] -> Connecting to WiFi network.."));
-        WiFi.begin(commstor.getSSID(), commstor.getPSK());
+        Serial.println(F("[WiFi] -> Connecting to WiFi network..."));
+        char *set_ssid = commstor.getSSID();
+        WiFi.begin(set_ssid, commstor.getPSK());
         Serial.print("[WiFi]");
         while (WiFi.status() != WL_CONNECTED)
         {

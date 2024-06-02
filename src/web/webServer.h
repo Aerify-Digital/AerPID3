@@ -39,6 +39,7 @@
 #include "serial/messagePack.h"
 
 #include "storage/networkStor.h"
+#include "storage/wifiStor.h"
 #include "core/controllers/AerManager.h"
 #include "core/controllers/AerPID.h"
 
