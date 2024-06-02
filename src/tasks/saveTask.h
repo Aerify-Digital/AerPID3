@@ -52,7 +52,7 @@ void save_task(void *pvParameters)
         {
             am->getAerPID(0)->kI = 0.025;
         }
-        else if (am->getAerPID(0)->kI >= 1.5001)
+        else if (am->getAerPID(0)->kI >= 1.0001)
         {
             am->getAerPID(0)->kI = 0.025;
         }
