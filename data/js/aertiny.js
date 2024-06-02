@@ -21,21 +21,25 @@ var websocket;
 // ==================================================
 
 const xValues = [];
-for (let i = 0; i < 64; i++) {
+for (let i = 0; i < 128; i++) {
   xValues.push(`${i}`);
 }
 
+Chart.defaults.global.animation.duration = 0
+
 const chart = new Chart('temp_chart', {
   type: 'line',
-  labels: ['0', '16', '32', '48', '64'],
+  animation: false,
+  labels: ['0', '16', '32', '48', '64', '80', '96'],
   data: {
     datasets: [
       {
-        label: 'Measure 3 Second',
+        label: 'Measure',
         data: [],
         borderColor: 'red',
+        borderWidth: 1,
         fill: false,
-        pointRadius: 2
+        pointRadius: 1.2
       },
       {
         label: 'Average 1 Minute',
@@ -130,12 +134,12 @@ function getTrendLinePoint(x, slope, intercept) {
 }
 
 const updateChart = (state, t, ta) => {
-  if (state.TEMPS.length > 64) {
+  if (state.TEMPS.length > 128) {
     state.TEMPS.shift();
   }
   state.TEMPS.push(t);
 
-  if (state.TEMPS_AVG.length > 64) {
+  if (state.TEMPS_AVG.length > 128) {
     state.TEMPS_AVG.shift();
   }
   state.TEMPS_AVG.push(ta);
