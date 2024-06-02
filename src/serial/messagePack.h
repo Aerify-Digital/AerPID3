@@ -67,6 +67,7 @@ public:
     void setBumpTime(uint16_t time);
     void setAutoOffTime(uint16_t time);
     void setLedMode(uint8_t mode);
+    void setLedSatus(uint8_t status);
     void setLedColor(uint8_t r, uint8_t g, uint8_t b);
     void setLedBrightness(uint8_t val);
     void setFavName(uint8_t fav, char *name);
@@ -108,6 +109,7 @@ private:
     uint8_t BUMP_TIME[2];       // 2 bytes
     uint8_t AUTO_OFF_TIME[2];   // 2 bytes
     uint8_t LED_MODE[1];        // 1 byte
+    uint8_t LED_STATUS[1];      // 1 byte
     uint8_t LED_COLOR[3];       // 3 byte
     uint8_t LED_BRIGHTNESS[1];  // 1 byte
     uint8_t FAV1_NAME[64];      // 64 bytes

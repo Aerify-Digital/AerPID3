@@ -17,7 +17,9 @@
 #define I2C_SDA 21
 #define I2C_SCL 22
 #define I2C_FREQ 104000
+#ifndef PID_MONITOR_ADDR
 #define PID_MONITOR_ADDR 0x2D
+#endif
 
 _elm_prot_op_code_t doOpStateCmd(_elm_prot_op_code_t op)
 {

@@ -21,7 +21,6 @@
 #include "common/enum/ThermalUnitsType.h"
 #include "core/controllers/AerManager.h"
 
-
 typedef struct
 {
     AerManager *am;
@@ -50,6 +49,10 @@ void save_task(void *pvParameters)
             am->getAerPID(0)->kP = 2.0;
         }
         if (am->getAerPID(0)->kI <= 0.0001)
+        {
+            am->getAerPID(0)->kI = 0.025;
+        }
+        else if (am->getAerPID(0)->kI >= 1.0001)
         {
             am->getAerPID(0)->kI = 0.025;
         }
@@ -122,7 +125,7 @@ void save_task(void *pvParameters)
         {
             int freq;
             // load PWM settings from flash
-            taskParams->flash->load_pwm_2(freq, am->getAerPID(1)->PWM_ScaleFactor, am->getAerPID(1)->PWM_CycleTime, am->getAerPID(1)->AUTO_TUNE_ACTIVE);
+            pwmStor.load_pwm_2(freq, am->getAerPID(1)->PWM_ScaleFactor, am->getAerPID(1)->PWM_CycleTime, am->getAerPID(1)->AUTO_TUNE_ACTIVE);
             // am->getAerPID(1)->setPwmFreq(freq);
 
             if (am->getAerPID(1)->PWM_ScaleFactor <= 0)
@@ -152,13 +155,13 @@ void save_task(void *pvParameters)
         taskParams->flash->load_settings(am->getAerPID(0)->USAGE_DETECT, am->getAerPID(0)->AUTO_OFF_ENB, am->getAerPID(0)->AUTO_OFF_TIME);
         if (am->getAerPID(0)->AUTO_OFF_TIME <= 1)
         {
-            am->getAerPID(0)->AUTO_OFF_TIME = 300;
+            am->getAerPID(0)->AUTO_OFF_TIME = 900;
         }
 #if AERPID_COUNT == 2
         taskParams->flash->load_settings(am->getAerPID(1)->USAGE_DETECT, am->getAerPID(1)->AUTO_OFF_ENB, am->getAerPID(1)->AUTO_OFF_TIME);
         if (am->getAerPID(1)->AUTO_OFF_TIME <= 1)
         {
-            am->getAerPID(1)->AUTO_OFF_TIME = 300;
+            am->getAerPID(1)->AUTO_OFF_TIME = 900;
         }
 #endif
 

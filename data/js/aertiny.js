@@ -21,21 +21,25 @@ var websocket;
 // ==================================================
 
 const xValues = [];
-for (let i = 0; i < 64; i++) {
+for (let i = 0; i < 128; i++) {
   xValues.push(`${i}`);
 }
 
+Chart.defaults.global.animation.duration = 0
+
 const chart = new Chart('temp_chart', {
   type: 'line',
-  labels: ['0', '16', '32', '48', '64'],
+  animation: false,
+  labels: ['0', '16', '32', '48', '64', '80', '96'],
   data: {
     datasets: [
       {
-        label: 'Measure 3 Second',
+        label: 'Measure',
         data: [],
         borderColor: 'red',
+        borderWidth: 1,
         fill: false,
-        pointRadius: 2
+        pointRadius: 1.2
       },
       {
         label: 'Average 1 Minute',
@@ -130,12 +134,12 @@ function getTrendLinePoint(x, slope, intercept) {
 }
 
 const updateChart = (state, t, ta) => {
-  if (state.TEMPS.length > 64) {
+  if (state.TEMPS.length > 128) {
     state.TEMPS.shift();
   }
   state.TEMPS.push(t);
 
-  if (state.TEMPS_AVG.length > 64) {
+  if (state.TEMPS_AVG.length > 128) {
     state.TEMPS_AVG.shift();
   }
   state.TEMPS_AVG.push(ta);
@@ -530,37 +534,38 @@ const parseInitMessage = (data) => {
   const bumpTime = getNumber(data.slice(301, 303));
   const autoOffTime = getNumber(data.slice(303, 305));
   const ledMode = data.slice(305, 306)[0];
-  const ledColor = data.slice(306, 309);
-  const ledBrightness = data.slice(309, 310)[0];
+  const ledStatus = data.slice(306, 307)[0];
+  const ledColor = data.slice(307, 310);
+  const ledBrightness = data.slice(310, 311)[0];
   const fav1Name = new TextDecoder()
-    .decode(new Uint8Array(data.slice(310, 374)))
+    .decode(new Uint8Array(data.slice(311, 375)))
     .replace(/\u0000/g, '')
     .trim();
-  const fav1Temp = getNumber(data.slice(374, 376));
+  const fav1Temp = getNumber(data.slice(375, 377));
   const fav2Name = new TextDecoder()
-    .decode(new Uint8Array(data.slice(376, 440)))
+    .decode(new Uint8Array(data.slice(377, 441)))
     .replace(/\u0000/g, '')
     .trim();
-  const fav2Temp = getNumber(data.slice(440, 442));
+  const fav2Temp = getNumber(data.slice(441, 443));
   const fav3Name = new TextDecoder()
-    .decode(new Uint8Array(data.slice(442, 506)))
+    .decode(new Uint8Array(data.slice(443, 507)))
     .replace(/\u0000/g, '')
     .trim();
-  const fav3Temp = getNumber(data.slice(506, 508));
+  const fav3Temp = getNumber(data.slice(507, 509));
   const fav4Name = new TextDecoder()
-    .decode(new Uint8Array(data.slice(508, 572)))
+    .decode(new Uint8Array(data.slice(509, 573)))
     .replace(/\u0000/g, '')
     .trim();
-  const fav4Temp = getNumber(data.slice(572, 574));
-  const tempAdjustAmt = getNumber(data.slice(574, 576));
-  const temp = getNumber(data.slice(576, 578));
-  const setTemp = getNumber(data.slice(578, 580));
-  const avgTemp = getNumber(data.slice(580, 582));
-  const P = bytesToDouble(Uint8Array.from(data.slice(582, 590)));
-  const I = bytesToDouble(Uint8Array.from(data.slice(590, 598)));
-  const D = bytesToDouble(Uint8Array.from(data.slice(598, 606)));
-  const unitType = data.slice(606, 607)[0];
-  const booleanMap = [...Array(8)].map((_, i) => Boolean(data.slice(607)[0] & (1 << (7 - i))));
+  const fav4Temp = getNumber(data.slice(573, 575));
+  const tempAdjustAmt = getNumber(data.slice(575, 577));
+  const temp = getNumber(data.slice(577, 579));
+  const setTemp = getNumber(data.slice(579, 581));
+  const avgTemp = getNumber(data.slice(581, 583));
+  const P = bytesToDouble(Uint8Array.from(data.slice(583, 591)));
+  const I = bytesToDouble(Uint8Array.from(data.slice(591, 599)));
+  const D = bytesToDouble(Uint8Array.from(data.slice(599, 607)));
+  const unitType = data.slice(607, 608)[0];
+  const booleanMap = [...Array(8)].map((_, i) => Boolean(data.slice(608)[0] & (1 << (7 - i))));
   const [
     AUTO_OFF_ENABLED,
     COIL_ENABLED,
@@ -584,6 +589,7 @@ const parseInitMessage = (data) => {
     bumpTime,
     autoOffTime,
     ledMode,
+    ledStatus,
     ledColor,
     ledBrightness,
     fav1Name,
@@ -658,7 +664,15 @@ const initPageData = async (initData) => {
         '<i class="fas fa-stopwatch" style="color:MediumSeaGreen;"></i> Enable LEDs';
     }
   }
+  state.LED.mode = initData.ledMode;
+  initLED_toggles(state.LED.mode);
   state.LED.color = initData.ledColor;
+  state.LED.status = initData.ledStatus;
+  if (state.LED.status) {
+    document.getElementById('statusbut_span').innerText = 'Disable';
+  } else {
+    document.getElementById('statusbut_span').innerText = 'Enable';
+  }
   state.LED.brightness = initData.ledBrightness;
   if (document.getElementById('bright_bar')) {
     document.getElementById('bright_bar').value = `${state.LED.brightness}`;
@@ -1048,19 +1062,27 @@ const handleMessage = (dat) => {
         case WiFi.JOIN:
           console.log('Setup WiFi');
           if (document.getElementById('join_wifi')) {
-            document.getElementById('join_wifi').classList.remove('w3-text-green');
+            document.getElementById('join_wifi').classList.remove('w3-pale-green');
+            document.getElementById('join_wifi').innerHTML = `<div><i class="fas fa-check"></i> Joining Network</div>`;
           }
           if (document.getElementById('save_wifi_alert')) {
-            document.getElementById('save_wifi_alert').display = 'block';
+            document.getElementById('save_wifi_alert').style.display = 'block';
+          }
+          if (document.getElementById('rst_wifi')) {
+            document.getElementById('rst_wifi').classList.add('w3-pale-red');
           }
           break;
         case WiFi.RESET:
           console.log('Cleared WiFi');
           if (document.getElementById('rst_wifi')) {
-            document.getElementById('rst_wifi').classList.remove('w3-text-red');
+            document.getElementById('rst_wifi').classList.remove('w3-pale-red');
           }
           if (document.getElementById('save_wifi_alert')) {
-            document.getElementById('save_wifi_alert').display = 'block';
+            document.getElementById('save_wifi_alert').style.display = 'block';
+          }
+          if (document.getElementById('join_wifi')) {
+            document.getElementById('join_wifi').innerHTML = `<div><i class="fas fa-link"></i> Join Network</div>`;
+            document.getElementById('join_wifi').classList.add('w3-pale-green');
           }
           break;
         case WiFi.SCAN:
@@ -1141,7 +1163,7 @@ const handleMessage = (dat) => {
               break;
             case LedMode.STATIC:
               if (setLED_Toggles(LedMode.STATIC)) {
-                document.getElementById('led_static').disabled = true;
+                //document.getElementById('led_static').disabled = true;
                 document.getElementById('leden_static').disabled = true;
               }
               break;
@@ -1166,6 +1188,16 @@ const handleMessage = (dat) => {
           document.getElementById('br_qset').value = dat[3];
           state.LED.brightness = this.value;
           break;
+        case Led.STAT:
+          console.log('LED > Status');
+          var stat_enb = dat[3] > 0;
+          if (stat_enb) {
+            state.LED.status = true;
+            document.getElementById('statusbut_span').innerText = 'Disable';
+          } else {
+            state.LED.status = false;
+            document.getElementById('statusbut_span').innerText = 'Enable';
+          }
         default:
           break;
       }
@@ -1679,9 +1711,9 @@ document.getElementById('leden_pulse').addEventListener('click', function () {
 document.getElementById('leden_static').addEventListener('click', function () {
   toggleLED_static();
 });
-document.getElementById('led_static').addEventListener('click', function () {
+/*document.getElementById('led_static').addEventListener('click', function () {
   toggleLED_static();
-});
+});*/
 document.getElementById('led_status').addEventListener('click', function () {
   toggleLED_status();
 });
@@ -1710,6 +1742,48 @@ const setLED_Toggles = (mode) => {
     return false;
   }
 };
+const initLED_toggles = (mode) => {
+  buttons = document.getElementsByClassName('ledbtn');
+  for (var i = 0; i < buttons.length; i++) {
+    buttons[i].disabled = false; //.innerText="Enable";
+  }
+  switch (mode) {
+    case LedMode.AMBIENT:
+      break;
+    case LedMode.BLINK:
+      document.getElementById('leden_blink').disabled = true;
+      break;
+    case LedMode.PULSE:
+      document.getElementById('leden_pulse').disabled = true;
+      break;
+    case LedMode.PRESET:
+      break;
+    case LedMode.RAINBOW:
+      document.getElementById('led_rainbow2').disabled = true;
+      break;
+    case LedMode.RAINBOW_PULSE:
+      document.getElementById('led_rainbow3').disabled = true;
+      break;
+    case LedMode.RAINBOW_WAVE:
+      document.getElementById('led_rainbow').disabled = true;
+      break;
+    case LedMode.SHIFT:
+      document.getElementById('led_shift').disabled = true;
+      break;
+    case LedMode.PREPULSE:
+      document.getElementById('led_pulse').disabled = true;
+      break;
+    case LedMode.STATIC:
+      //document.getElementById('led_static').disabled = true;
+      document.getElementById('leden_static').disabled = true;
+      break;
+    case LedMode.STATUS: // Shouldn't turn off other ones.
+      break;
+
+    default:
+      break;
+  }
+}
 const toggleLED_status = () => {
   emit_websocket([SerialCommand.LED, Operation.SET, Led.STAT, state.LED.status ? 0 : 1]);
   if (!state.LED.status) {
@@ -1731,7 +1805,7 @@ const toggleLED_static = () => {
   ]);
   if (setLED_Toggles(LedMode.STATIC)) {
     //document.getElementById("staticbut_span").innerText = "Disable";
-    document.getElementById('led_static').disabled = true;
+    //document.getElementById('led_static').disabled = true;
     document.getElementById('leden_static').disabled = true;
   }
 };

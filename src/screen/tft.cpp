@@ -705,7 +705,7 @@ namespace AerTftUI
 
         uint32_t color1 = color565(128, 128, 0);                                                  // free mem (olive)
         uint32_t color2 = color565(255 - (fPercentA * 0.6), 108 + (fPercentA * 0.4), 0);          // used mem
-        uint32_t color3 = color565(255 - fPercentB, std::min(208 + fPercentA, (uint32_t)255), 0); // used mem
+        uint32_t color3 = color565(255 - fPercentB, std::min(208 + fPercentB, (uint32_t)255), 0); // used mem
         uint32_t color4 = color565(150 + (fPercentC * 0.6), 255 - (fPercentC * 0.4), 30);         // used mem
 
         // widths A bar 1

@@ -556,10 +556,11 @@
                         <ul class="w3-ul w3-white w3-center">
                             <div class="chart-container" style="position: relative; height:100%; width:60vw; max-width:800px">
                             <canvas id="temp_chart" style="width:100%;max-width:800px"></canvas>
+                            <div style="background-color: black; color: grey;">X Axis updates every 1 Second</div>
                             </div>
                         </ul>
                         
-                        <div>
+                        <div style="margin-top: 1em; margin-bottom: 1em;">
                             <label for="color_pallete">Choose a color Palette:</label>
                             <select name="color_pallete" id="color_pallete" onchange="palletChange(this)">
                                 <option value="warm">Warm</option>
@@ -609,7 +610,7 @@
                                     <span class="ledmodebutton" id="statusbut_span">Enable</span>
                                 </button>
                             </li>
-                            <li class="w3-padding-16">
+                            <li class="w3-padding-16 w3-hide">
                                 <span class="tooltip"><span style="font-size: 1.2em">Static:</span><span
                                         class="tooltiptext">The LEDs will remain the color and brightness set below.</span></span>&nbsp;&nbsp;
                                 <!--<label class="switch">
@@ -1216,11 +1217,11 @@
                             </li>
                             <li class="w3-padding-16">
                                 Advanced Options:<br />
-                                <button id="esp_reset" class="w3-button w3-light-grey w3-padding-large w3-section" onclick="requestReboot();">
+                                <button id="esp_reset" class="w3-button w3-light-grey w3-padding-large w3-section w3-text-orange" onclick="requestReboot();">
                                     <i class="fas fa-arrows-spin"></i> Reboot AerTiny
                                 </button>
                                 <button id="esp_device_reset"
-                                    class="w3-button w3-light-grey w3-padding-large w3-section">
+                                    class="w3-button w3-light-grey w3-padding-large w3-section w3-text-red">
                                     <i class="fas fa-delete-left"></i> Factory Reset
                                 </button>
                             </li>

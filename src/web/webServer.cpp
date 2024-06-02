@@ -345,10 +345,20 @@ boolean WebServer::setup()
     bool connected = false;
     if (commstor.getSSIDSet())
     { // SSID set; connecting to preconfigured network
-        char *set_ssid = commstor.getSSID();
+        if (wifiStorage.isUsingStaticIP())
+        {
+            IPAddress localIP = *wifiStorage.getLocalIP();
+            IPAddress gatewayIP = *wifiStorage.getGatewayIP();
+            IPAddress subnet = *wifiStorage.getNetMask();
+            IPAddress dns1 = *wifiStorage.getDNS1();
+            IPAddress dns2 = *wifiStorage.getDNS2();
+            WiFi.config(localIP, gatewayIP, subnet, dns1, dns2);
+            Serial.println(F("[WiFi] -> Using static network..."));
+        }
         WiFi.mode(WIFI_MODE_STA);
-        Serial.println(F("[WiFi] -> Connecting to WiFi network.."));
-        WiFi.begin(commstor.getSSID(), commstor.getPSK());
+        Serial.println(F("[WiFi] -> Connecting to WiFi network..."));
+        char *set_ssid = commstor.getSSID();
+        WiFi.begin(set_ssid, commstor.getPSK());
         Serial.print("[WiFi]");
         while (WiFi.status() != WL_CONNECTED)
         {
@@ -588,9 +598,10 @@ void WebServer::enPackFill(MessagePack *messagePack)
     messagePack->setBumpTemp(aerManager.getBump()->getTemp());
     messagePack->setBumpTime(aerManager.getBump()->getTime());
     messagePack->setAutoOffTime(as->AUTO_OFF_TIME);
-    messagePack->setLedMode(0);           // TODO
-    messagePack->setLedColor(21, 21, 21); // TODO
-    messagePack->setLedBrightness(251);   // TODO
+    messagePack->setLedMode(lightstor.getMode());
+    messagePack->setLedSatus(lightstor.statusEnabled());
+    messagePack->setLedColor(lightstor.getRgbVal('r'), lightstor.getRgbVal('g'), lightstor.getRgbVal('b'));
+    messagePack->setLedBrightness(lightstor.getBright());
 
     FavsStor *favs = aerManager.getFavs();
     messagePack->setFavName(1, favs->getName(1));
@@ -1351,7 +1362,7 @@ void WebServer::processSocketData(char *data, size_t len, AsyncWebSocketClient *
                 aerManager.updateLStor(true);
                 aerManager.updateLightState(true);
             }
-            //reply->Op(op);
+            // reply->Op(op);
         }
         reply->Val(val);
         reply->build();

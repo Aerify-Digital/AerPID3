@@ -40,6 +40,9 @@ AerManager aerManager;
 // Network variable storage
 NetworkVars netVars;
 
+// Static IP wifi storage
+WiFiStorage wifiStorage;
+
 // Control Interface: TFT Screen and Encoder with buttons
 AerGUI aerGUI;
 
@@ -160,8 +163,8 @@ void setup()
         Serial.println(F(" "));
         count++;
         delay(1); // maybe unneeded?
-      }           // end of good response
-    }             // end of for loop
+      } // end of good response
+    } // end of for loop
     Serial.println(F("> Done."));
     Serial.print(F(">> Found "));
     Serial.print(count, DEC);
@@ -257,6 +260,8 @@ void setup()
   settingsStorage.init(&flash);
   Serial.println(F("[BOOT] Initializing Network Storage (networkStorage)  "));
   networkingStorage.init(&flash);
+  Serial.println(F("[BOOT] Initializing WiFi Storage (wifiStorage)  "));
+  wifiStorage.init(&flash);
   Serial.println(F("[BOOT] Initializing Charting Storage (chartingStorage)  "));
   chartingStorage.init(&flash);
   Serial.println(F("[BOOT] Initialized Storage Objects!"));
@@ -331,7 +336,12 @@ void setup()
   xTaskCreatePinnedToCore(worker_task, "Worker_Task", taskStackSize[2], (void *)&aerManager, 6, &wrkTask, 1);
 
   // PID task
-  xTaskCreatePinnedToCore(pid_task, "PID_Task", taskStackSize[5], NULL, 2, &pidTask, 1);
+  // xTaskCreatePinnedToCore(pid_task, "PID_Task", taskStackSize[5], NULL, 2, &pidTask, 1);
+  xTaskCreatePinnedToCore(pid_task_1, "PID_Task_1", taskStackSize[5], NULL, 2, &pidTask1, 1);
+#if AERPID_COUNT == 2
+  xTaskCreatePinnedToCore(pid_task_2, "PID_Task_2", taskStackSize[5], NULL, 2, &pidTask2, 1);
+#endif
+
   xTaskCreatePinnedToCore(element_task, "Element_Task", taskStackSize[12], (void *)&aerManager, 8, &elementTask, 0);
 
   if (commstor.getUSBEn())
