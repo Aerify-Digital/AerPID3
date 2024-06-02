@@ -54,6 +54,7 @@
 #include "storage/bumpStor.h"
 #include "storage/lights.h"
 #include "storage/networkStor.h"
+#include "storage/wifiStor.h"
 #include "storage/uiSettingsStor.h"
 #include "storage/chartsStor.h"
 
@@ -65,7 +66,11 @@
 
 #include "tasks/monitor/perfmon.h"
 #include "tasks/workerTask.h"
-#include "tasks/pidTask.h"
+// #include "tasks/pidTask.h"
+#include "tasks/pidTask_1.h"
+#if AERPID_COUNT == 2
+#include "tasks/pidTask_2.h"
+#endif
 #include "tasks/elementTask.h"
 #include "tasks/serialTask.h"
 #include "tasks/tftTask.h"
@@ -123,7 +128,7 @@ void _initThreadStackSizes()
     taskStackSize[2] = 32 * 32 * 2;  // Worker Task - RTC_Task & Local_Temp_Task
     taskStackSize[3] = 32 * 32 * 2;  // Link Task for element
     taskStackSize[4] = 32 * 32 * 5;  // TFT_Demo
-    taskStackSize[5] = 32 * 32 * 3;  // PID_Task
+    taskStackSize[5] = 32 * 32 * 2;  // PID_Task
     taskStackSize[6] = 32 * 32 * 6;  // Serial_Task
     taskStackSize[7] = 32 * 32 * 4;  // TFT_Task
     taskStackSize[8] = 32 * 32 * 2;  // LED_Task
