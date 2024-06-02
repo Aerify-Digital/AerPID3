@@ -56,7 +56,7 @@
 // *************************************
 
 // Sample Time for PID compute in milliseconds
-#define PID_SAMPLE_TIME_MS 100
+#define PID_SAMPLE_TIME_MS 150
 // Sleep Time for PID thread in milliseconds
 #define PID_SLEEP_TIME_MS 50
 // Tick time overshoot amount for PID compute

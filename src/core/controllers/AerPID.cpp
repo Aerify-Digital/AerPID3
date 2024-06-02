@@ -350,7 +350,7 @@ bool AerPID::compute()
         {
             _output *= 0.333;
         }
-        else if (output > 64)
+        else if (output > 48)
         {
             _output *= 0.667;
         }
