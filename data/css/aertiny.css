@@ -291,6 +291,10 @@ h6 {
   padding: 0.2em 0.6em;
 }
 
+#zoom_level {
+  padding: 0.2em 0.6em;
+}
+
 .sqd-container {
   min-height: max-content;
   height: 420px;

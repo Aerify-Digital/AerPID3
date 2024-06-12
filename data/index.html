@@ -552,8 +552,8 @@
 
                 <div class="w3-row-padding" style="margin: 0 -16px">
 
-                    <div class="w3-half w3-margin-bottom">
-                        <ul class="w3-ul w3-white w3-center">
+                    <div class="w3-margin-bottom">
+                        <ul class="w3-ul w3-center">
                             <div class="chart-container" style="position: relative; height:100%; width:60vw; max-width:800px">
                             <canvas id="temp_chart" style="width:100%;max-width:800px"></canvas>
                             <div style="background-color: black; color: grey;">X Axis updates every 1 Second</div>
@@ -561,12 +561,30 @@
                         </ul>
                         
                         <div style="margin-top: 1em; margin-bottom: 1em;">
-                            <label for="color_pallete">Choose a color Palette:</label>
-                            <select name="color_pallete" id="color_pallete" onchange="palletChange(this)">
-                                <option value="warm">Warm</option>
-                                <option value="cool">Cool</option>
-                                <option value="forest">Forest</option>
-                            </select>
+
+                            <div style="display:inline">
+                                <label for="color_pallete">Choose a color Palette:</label>
+                                <select name="color_pallete" id="color_pallete" onchange="palletChange(this)">
+                                    <option value="warm">Warm</option>
+                                    <option value="cool">Cool</option>
+                                    <option value="forest">Forest</option>
+                                </select>
+                            </div>
+
+                            <div style="display:inline; float: center; margin-left: 2em;">
+                                <label for="zoom_level">Y-Axis Zoom Level:</label>
+                                <select name="zoom_level" id="zoom_level" onchange="zoomChange(this)">
+                                    <option value="auto">Auto</option>
+                                    <option value="fine">Fine</option>
+                                    <option value="tiny">Tiny</option>
+                                    <option value="near">Near</option>
+                                    <option value="avg">Basic</option>
+                                    <option value="far">Far</option>
+                                    <option value="dist">Distant</option>
+                                    <option value="max">Max</option>
+                                    <option value="all">All</option>
+                                </select>
+                            </div>
                         </div>
                     </div>
 

@@ -211,6 +211,65 @@ const palletChange = (obj) => {
   chart.update();
 };
 
+const zoomChange = (obj) => {
+  if (!state.TEMPS || state.TEMPS.length == 0) {
+    return;
+  }
+  let low = 1000;
+  let high = 0;
+  for (const _t of state.TEMPS) {
+    const t = Number(_t);
+    if (t < low && t > 0) {
+      low = t;
+    }
+    if (t > high) {
+      high = t;
+    }
+  }
+  const delta = high - low;
+  const hDelta = delta * 0.5;
+  const dDelta = delta * 2;
+  const value = obj.value;
+  if (value == "auto") {
+    chart.config.options.scales.yAxes[0].ticks.beginAtZero = false;
+    chart.config.options.scales.yAxes[0].ticks.min = undefined;
+    chart.config.options.scales.yAxes[0].ticks.max = undefined;
+  } else if (value == "fine") {
+    chart.config.options.scales.yAxes[0].ticks.beginAtZero = false;
+    chart.config.options.scales.yAxes[0].ticks.min = low - 0.1;
+    chart.config.options.scales.yAxes[0].ticks.max = high + 0.1;
+  } else if (value == "tiny") {
+    chart.config.options.scales.yAxes[0].ticks.beginAtZero = false;
+    chart.config.options.scales.yAxes[0].ticks.min = low - 1;
+    chart.config.options.scales.yAxes[0].ticks.max = high + 1;
+  } else if (value == "near") {
+    chart.config.options.scales.yAxes[0].ticks.beginAtZero = false;
+    chart.config.options.scales.yAxes[0].ticks.min = low - hDelta - 1;
+    chart.config.options.scales.yAxes[0].ticks.max = high + hDelta + 1;
+  } else if (value == "avg") {
+    chart.config.options.scales.yAxes[0].ticks.beginAtZero = false;
+    chart.config.options.scales.yAxes[0].ticks.min = low - delta - 3;
+    chart.config.options.scales.yAxes[0].ticks.max = high + delta + 3;
+  } else if (value == "far") {
+    chart.config.options.scales.yAxes[0].ticks.beginAtZero = false;
+    chart.config.options.scales.yAxes[0].ticks.min = low - dDelta - 7;
+    chart.config.options.scales.yAxes[0].ticks.max = high + dDelta + 7;
+  } else if (value == "dist") {
+    chart.config.options.scales.yAxes[0].ticks.beginAtZero = false;
+    chart.config.options.scales.yAxes[0].ticks.min = low - dDelta - delta - 10;
+    chart.config.options.scales.yAxes[0].ticks.max = high + dDelta + delta + 10;
+  } else if (value == "max") {
+    chart.config.options.scales.yAxes[0].ticks.beginAtZero = true;
+    chart.config.options.scales.yAxes[0].ticks.min = low - delta - 25;
+    chart.config.options.scales.yAxes[0].ticks.max = high + delta + 25;
+  } else if (value == "all") {
+    chart.config.options.scales.yAxes[0].ticks.beginAtZero = true;
+    chart.config.options.scales.yAxes[0].ticks.min = 0;
+    chart.config.options.scales.yAxes[0].ticks.max = high + 25;
+  }
+  chart.update();
+}
+
 // ==================================================
 
 const emptyColor = [0, 0, 0];
