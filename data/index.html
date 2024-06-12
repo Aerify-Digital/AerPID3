@@ -6,7 +6,8 @@
     <link rel="icon" href="./favicon.ico" id="favicon" />
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <link rel="stylesheet" type="text/css" href="./css/w3.fa.minz.css" />
+    <link rel="stylesheet" type="text/css" href="./css/w3.minz.css" />
+    <link rel="stylesheet" type="text/css" href="./css/fa.minz.css" />
     <link rel="stylesheet" type="text/css" href="./css/aertiny.css" />
 
     <script>
@@ -78,24 +79,43 @@
     <!-- Loading Modal -->
     <div id="cont-load-modal" class="w3-modal" style="z-index: 101;">
         <div class="w3-modal-content w3-border w3-border-black">
-            <div class="w3-container w3-teal w3-center" style="padding: 20px;">
+            <div id="cont-load-modal-text" class="w3-container w3-teal w3-center" style="padding: 20px;">
                 <i class="fa-solid fa-spinner fa-spin-pulse w3-text-white w3-xxlarge"></i>
                 <div>...Loading...</div>
             </div>
         </div>
     </div>
     <script>
-        const openLoadingModal = () => {
-            document.getElementById('cont-load-modal').style.display = 'block';
+        let loaded = false;
+        const setupLoadPage = () => {
+            // Loading Modal
+            const openLoadingModal = () => {
+                document.getElementById('cont-load-modal').style.display = 'block';
+            }
+            const errorLoadingModal = () => {
+                if (loaded) {
+                    document.getElementById('cont-load-modal').style.display = 'none';
+                    return;
+                }
+                document.getElementById('cont-load-modal').style.display = 'block';
+                document.getElementById('cont-load-modal-text').innerHTML = `
+                    <i class="fa-solid fa-warning w3-text-amber w3-xxlarge"></i>
+                    <div class="w3-text-orange">...Error on Page Load...</div>
+                    <div class="w3-text-yellow">...Reloading Page...</div>
+                `;
+                setTimeout(() => { location.reload(); }, 3200);
+            }
+            const closeLoadingModal = () => {
+                document.getElementById('cont-load-modal').style.display = 'none';
+            }
+            openLoadingModal();
+            window.addEventListener('load', onLoad);
+            function onLoad(event) {
+                setTimeout(() => { closeLoadingModal(); loaded = true }, 300);
+            }
+            setTimeout(() => { errorLoadingModal(); }, 12000);
         }
-        const closeLoadingModal = (goHome) => {
-            document.getElementById('cont-load-modal').style.display = 'none';
-        }
-        openLoadingModal();
-        window.addEventListener('load', onLoad);
-        function onLoad(event) {
-            setTimeout(() => { closeLoadingModal(); }, 300);
-        }
+        setupLoadPage();
     </script>
     <!-- End Loading Modal -->
 
@@ -1342,9 +1362,9 @@
         <!-- END PAGE CONTENT -->
     </div>
 
-    <!-- LOAD JS 
-    <script src="./js/chart.min.js" defer type="application/javascript"></script>-->
-    <script src="./js/aertiny.js" defer type="application/javascript"></script>
+    <!-- LOAD JS -->
+    <script src="./js/chart.min.js" type="application/javascript"></script>
+    <script src="./js/aertiny.js" async type="application/javascript"></script>
     <!-- END LOAD JS -->
 </body>
 
