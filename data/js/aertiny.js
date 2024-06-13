@@ -125,6 +125,8 @@ function getTrendLinePoint(x, slope, intercept) {
   return { x: x, y: slope * x + intercept };
 }
 
+let zoomRefreshTick = 0;
+
 const updateChart = (state, t, ta) => {
   if (state.TEMPS.length > 128) {
     state.TEMPS.shift();
@@ -178,6 +180,12 @@ const updateChart = (state, t, ta) => {
   chart.data.datasets[2].data = set_temps;
   chart.data.datasets[3].data = calculateTrendLine(temps);
   chart.data.labels = labels;
+  if (zoomRefreshTick <= 0) {
+    updateZoom(state.ZOOM_LEVEL);
+    zoomRefreshTick = 3;
+  } else {
+    zoomRefreshTick--;
+  }
   chart.update();
 };
 
@@ -199,11 +207,10 @@ const palletChange = (obj) => {
     chart.data.datasets[2].borderColor = 'lime';
     chart.data.datasets[3].borderColor = 'teal';
   }
-
   chart.update();
 };
 
-const zoomChange = (obj) => {
+const updateZoom = (value) => {
   if (!state.TEMPS || state.TEMPS.length == 0) {
     return;
   }
@@ -221,7 +228,6 @@ const zoomChange = (obj) => {
   const delta = high - low;
   const hDelta = delta * 0.5;
   const dDelta = delta * 2;
-  const value = obj.value;
   if (value == "auto") {
     chart.config.options.scales.yAxes[0].ticks.beginAtZero = false;
     chart.config.options.scales.yAxes[0].ticks.min = undefined;
@@ -259,7 +265,6 @@ const zoomChange = (obj) => {
     chart.config.options.scales.yAxes[0].ticks.min = 0;
     chart.config.options.scales.yAxes[0].ticks.max = high + 25;
   }
-  chart.update();
 }
 
 // ==================================================
@@ -400,7 +405,8 @@ let state = {
   AUTO_OFF: {
     enabled: false,
     length: 0
-  }
+  },
+  ZOOM_LEVEL: 'auto'
 };
 
 // ==================================================
@@ -1966,6 +1972,14 @@ document.getElementById('toggle_heat').addEventListener('click', function () {
 const toggleHeat = () => {
   emit_websocket([SerialCommand.COIL_TOGGLE, Operation.SET, state.COIL.enabled ? 0 : 1]);
 };
+
+// Zoom change
+const zoomChange = (obj) => {
+  const value = obj.value;
+  updateZoom(value);
+  state.ZOOM_LEVEL = value;
+  chart.update();
+}
 
 // ==================================================
 // ==================================================
