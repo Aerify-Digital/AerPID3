@@ -507,7 +507,7 @@ boolean WebServer::setup()
 
     // 404 page
     server.onNotFound([](AsyncWebServerRequest *request)
-                      { request->send(404, "text/html", "<p><b>ERROR 404:</b> Path not found: " + request->url() + "<br/>The content you are looking for at the requested location was not found.</p>"); });
+                      { request->send(404, "text/html", get404Page(request->url())); });
 
     // Functional Endpoints
     server.on("/scan_wifi", HTTP_GET, [](AsyncWebServerRequest *request)

@@ -47,6 +47,8 @@
 #include "util/splitter.h"
 #include "util/thermals.hpp"
 
+#include "page_404.h"
+
 // ======================
 // ======================
 // HTTP Port Address
