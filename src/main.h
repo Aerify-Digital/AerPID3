@@ -124,10 +124,10 @@ void _initThreadStackSizes()
     // (word_size) * (word_count * multiplier) = heap_space
 
     taskStackSize[0] = 32 * 32 * 1;  // BleTask (not used)
-    taskStackSize[1] = 32 * 32 * 7;  // Encoder_Task
+    taskStackSize[1] = 32 * 32 * 6;  // Encoder_Task
     taskStackSize[2] = 32 * 32 * 2;  // Worker Task - RTC_Task & Local_Temp_Task
     taskStackSize[3] = 32 * 32 * 2;  // Link Task for element
-    taskStackSize[4] = 32 * 32 * 5;  // TFT_Demo
+    taskStackSize[4] = 32 * 32 * 4;  // TFT_Demo
     taskStackSize[5] = 32 * 32 * 2;  // PID_Task
     taskStackSize[6] = 32 * 32 * 6;  // Serial_Task
     taskStackSize[7] = 32 * 32 * 4;  // TFT_Task
