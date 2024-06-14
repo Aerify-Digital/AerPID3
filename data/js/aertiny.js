@@ -1,4 +1,3 @@
-
 // ==================================================
 // AerTiny
 // ==================================================
@@ -16,7 +15,7 @@ for (let i = 0; i < 128; i++) {
   xValues.push(`${i}`);
 }
 
-Chart.defaults.global.animation.duration = 0
+Chart.defaults.global.animation.duration = 0;
 
 // charting
 const chart = new Chart('temp_chart', {
@@ -228,44 +227,44 @@ const updateZoom = (value) => {
   const delta = high - low;
   const hDelta = delta * 0.5;
   const dDelta = delta * 2;
-  if (value == "auto") {
+  if (value == 'auto') {
     chart.config.options.scales.yAxes[0].ticks.beginAtZero = false;
     chart.config.options.scales.yAxes[0].ticks.min = undefined;
     chart.config.options.scales.yAxes[0].ticks.max = undefined;
-  } else if (value == "fine") {
+  } else if (value == 'fine') {
     chart.config.options.scales.yAxes[0].ticks.beginAtZero = false;
     chart.config.options.scales.yAxes[0].ticks.min = low - 0.1;
     chart.config.options.scales.yAxes[0].ticks.max = high + 0.1;
-  } else if (value == "tiny") {
+  } else if (value == 'tiny') {
     chart.config.options.scales.yAxes[0].ticks.beginAtZero = false;
     chart.config.options.scales.yAxes[0].ticks.min = low - 1;
     chart.config.options.scales.yAxes[0].ticks.max = high + 1;
-  } else if (value == "near") {
+  } else if (value == 'near') {
     chart.config.options.scales.yAxes[0].ticks.beginAtZero = false;
     chart.config.options.scales.yAxes[0].ticks.min = low - hDelta - 1;
     chart.config.options.scales.yAxes[0].ticks.max = high + hDelta + 1;
-  } else if (value == "avg") {
+  } else if (value == 'avg') {
     chart.config.options.scales.yAxes[0].ticks.beginAtZero = false;
     chart.config.options.scales.yAxes[0].ticks.min = low - delta - 3;
     chart.config.options.scales.yAxes[0].ticks.max = high + delta + 3;
-  } else if (value == "far") {
+  } else if (value == 'far') {
     chart.config.options.scales.yAxes[0].ticks.beginAtZero = false;
     chart.config.options.scales.yAxes[0].ticks.min = low - dDelta - 7;
     chart.config.options.scales.yAxes[0].ticks.max = high + dDelta + 7;
-  } else if (value == "dist") {
+  } else if (value == 'dist') {
     chart.config.options.scales.yAxes[0].ticks.beginAtZero = false;
     chart.config.options.scales.yAxes[0].ticks.min = low - dDelta - delta - 10;
     chart.config.options.scales.yAxes[0].ticks.max = high + dDelta + delta + 10;
-  } else if (value == "max") {
+  } else if (value == 'max') {
     chart.config.options.scales.yAxes[0].ticks.beginAtZero = true;
     chart.config.options.scales.yAxes[0].ticks.min = low - delta - 25;
     chart.config.options.scales.yAxes[0].ticks.max = high + delta + 25;
-  } else if (value == "all") {
+  } else if (value == 'all') {
     chart.config.options.scales.yAxes[0].ticks.beginAtZero = true;
     chart.config.options.scales.yAxes[0].ticks.min = 0;
     chart.config.options.scales.yAxes[0].ticks.max = high + 25;
   }
-}
+};
 
 // ==================================================
 // enums
@@ -299,7 +298,7 @@ const ParamPid = {
   PID_P: 0,
   PID_I: 1,
   PID_D: 2,
-  PARAM_PID: 3,
+  PARAM_PID: 3
 };
 
 const SerialCommand = {
@@ -1085,7 +1084,7 @@ const handleMessage = (dat) => {
     case SerialCommand.PID:
       param = dat[1];
       switch (param) {
-        case ParamPid.PARAM_PID:      
+        case ParamPid.PARAM_PID:
           const P = bytesToDouble(Uint8Array.from(dat.slice(2, 10)));
           const I = bytesToDouble(Uint8Array.from(dat.slice(10, 18)));
           const D = bytesToDouble(Uint8Array.from(dat.slice(18, 26)));
@@ -1125,7 +1124,9 @@ const handleMessage = (dat) => {
           console.log('Setup WiFi');
           if (document.getElementById('join_wifi')) {
             document.getElementById('join_wifi').classList.remove('w3-pale-green');
-            document.getElementById('join_wifi').innerHTML = `<div><i class="fas fa-check"></i> Joining Network</div>`;
+            document.getElementById(
+              'join_wifi'
+            ).innerHTML = `<div><i class="fas fa-check"></i> Joining Network</div>`;
           }
           if (document.getElementById('save_wifi_alert')) {
             document.getElementById('save_wifi_alert').style.display = 'block';
@@ -1143,7 +1144,9 @@ const handleMessage = (dat) => {
             document.getElementById('save_wifi_alert').style.display = 'block';
           }
           if (document.getElementById('join_wifi')) {
-            document.getElementById('join_wifi').innerHTML = `<div><i class="fas fa-link"></i> Join Network</div>`;
+            document.getElementById(
+              'join_wifi'
+            ).innerHTML = `<div><i class="fas fa-link"></i> Join Network</div>`;
             document.getElementById('join_wifi').classList.add('w3-pale-green');
           }
           break;
@@ -1237,12 +1240,12 @@ const handleMessage = (dat) => {
           }
           break;
         case Led.COLOR:
-          console.log('LED > Color')
+          console.log('LED > Color');
           let hexcol = new TextDecoder()
-          .decode(new Uint8Array(dat.slice(3)))
-          .replace(/\u0000/g, '')
-          .trim();
-          console.log("LED > Color Hex: " + hexcol);
+            .decode(new Uint8Array(dat.slice(3)))
+            .replace(/\u0000/g, '')
+            .trim();
+          console.log('LED > Color Hex: ' + hexcol);
           break;
         case Led.BRIGHTNESS:
           console.log('LED > Bright');
@@ -1288,7 +1291,7 @@ const handleMessage = (dat) => {
         document.getElementById('aoff_time').value = `${ao_len}`;
       break;
     case SerialCommand.FAV_1:
-      console.log("Cmd: FAV_1");
+      console.log('Cmd: FAV_1');
       param = dat[1];
       switch (param) {
         case Favorite.BUMP:
@@ -1297,9 +1300,9 @@ const handleMessage = (dat) => {
         case Favorite.NAME:
           console.log('Fav 1 Name');
           state.FAV_1.name = new TextDecoder()
-          .decode(new Uint8Array(dat.slice(3)))
-          .replace(/\u0000/g, '')
-          .trim();
+            .decode(new Uint8Array(dat.slice(3)))
+            .replace(/\u0000/g, '')
+            .trim();
           if (document.getElementById('fav1_t')) {
             document.getElementById('fav1_t').value = `${state.FAV_1.name}`;
           }
@@ -1327,24 +1330,24 @@ const handleMessage = (dat) => {
                 : cToC(state.FAV_1.temp) + '&deg;';
           }
           break;
-      
+
         default:
           break;
       }
       break;
     case SerialCommand.FAV_2:
-      console.log("Cmd: FAV_2");
+      console.log('Cmd: FAV_2');
       param = dat[1];
       switch (param) {
         case Favorite.BUMP:
           // Not implemented yet.
           break;
         case Favorite.NAME:
-           console.log('Fav 2 Name');
+          console.log('Fav 2 Name');
           state.FAV_2.name = new TextDecoder()
-          .decode(new Uint8Array(dat.slice(3)))
-          .replace(/\u0000/g, '')
-          .trim();
+            .decode(new Uint8Array(dat.slice(3)))
+            .replace(/\u0000/g, '')
+            .trim();
           if (document.getElementById('fav2_t')) {
             document.getElementById('fav2_t').value = `${state.FAV_2.name}`;
           }
@@ -1372,13 +1375,13 @@ const handleMessage = (dat) => {
                 : cToC(state.FAV_2.temp) + '&deg;';
           }
           break;
-        
+
         default:
           break;
       }
       break;
     case SerialCommand.FAV_3:
-      console.log("Cmd: FAV_3");
+      console.log('Cmd: FAV_3');
       param = dat[1];
       switch (param) {
         case Favorite.BUMP:
@@ -1387,9 +1390,9 @@ const handleMessage = (dat) => {
         case Favorite.NAME:
           console.log('Fav 3 Name');
           state.FAV_3.name = new TextDecoder()
-          .decode(new Uint8Array(dat.slice(3)))
-          .replace(/\u0000/g, '')
-          .trim();
+            .decode(new Uint8Array(dat.slice(3)))
+            .replace(/\u0000/g, '')
+            .trim();
           if (document.getElementById('fav3_t')) {
             document.getElementById('fav3_t').value = `${state.FAV_3.name}`;
           }
@@ -1417,13 +1420,13 @@ const handleMessage = (dat) => {
                 : cToC(state.FAV_3.temp) + '&deg;';
           }
           break;
-      
+
         default:
           break;
       }
       break;
     case SerialCommand.FAV_4:
-      console.log("Cmd: FAV_4");
+      console.log('Cmd: FAV_4');
       param = dat[1];
       switch (param) {
         case Favorite.BUMP:
@@ -1432,9 +1435,9 @@ const handleMessage = (dat) => {
         case Favorite.NAME:
           console.log('Fav 4 Name');
           state.FAV_4.name = new TextDecoder()
-          .decode(new Uint8Array(dat.slice(3)))
-          .replace(/\u0000/g, '')
-          .trim();
+            .decode(new Uint8Array(dat.slice(3)))
+            .replace(/\u0000/g, '')
+            .trim();
           if (document.getElementById('fav4_t')) {
             document.getElementById('fav4_t').value = `${state.FAV_4.name}`;
           }
@@ -1462,7 +1465,7 @@ const handleMessage = (dat) => {
                 : cToC(state.FAV_4.temp) + '&deg;';
           }
           break;
-      
+
         default:
           break;
       }
@@ -1845,7 +1848,7 @@ const initLED_toggles = (mode) => {
     default:
       break;
   }
-}
+};
 const toggleLED_status = () => {
   emit_websocket([SerialCommand.LED, Operation.SET, Led.STAT, state.LED.status ? 0 : 1]);
   if (!state.LED.status) {
@@ -1979,7 +1982,7 @@ const zoomChange = (obj) => {
   updateZoom(value);
   state.ZOOM_LEVEL = value;
   chart.update();
-}
+};
 
 // ==================================================
 // ==================================================
