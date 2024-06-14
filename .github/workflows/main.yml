@@ -33,8 +33,5 @@ jobs:
       - name: Install PlatformIO Core
         run: pip install --upgrade platformio
 
-      - name: Setup Project Variables
-        run: cp ${{ github.workspace }}/src/.conf_wifi.h.example ${{ github.workspace }}/src/.conf_wifi.h
-
       - name: Build PlatformIO Project
         run: pio run
