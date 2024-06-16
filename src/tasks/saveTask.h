@@ -152,13 +152,13 @@ void save_task(void *pvParameters)
 #endif
 
         // Load settings from flash
-        taskParams->flash->load_settings(am->getAerPID(0)->USAGE_DETECT, am->getAerPID(0)->AUTO_OFF_ENB, am->getAerPID(0)->AUTO_OFF_TIME);
+        taskParams->flash->load_setup(am->getAerPID(0)->USAGE_DETECT, am->getAerPID(0)->AUTO_OFF_ENB, am->getAerPID(0)->AUTO_OFF_TIME);
         if (am->getAerPID(0)->AUTO_OFF_TIME <= 1)
         {
             am->getAerPID(0)->AUTO_OFF_TIME = 900;
         }
 #if AERPID_COUNT == 2
-        taskParams->flash->load_settings(am->getAerPID(1)->USAGE_DETECT, am->getAerPID(1)->AUTO_OFF_ENB, am->getAerPID(1)->AUTO_OFF_TIME);
+        taskParams->flash->load_setup(am->getAerPID(1)->USAGE_DETECT, am->getAerPID(1)->AUTO_OFF_ENB, am->getAerPID(1)->AUTO_OFF_TIME);
         if (am->getAerPID(1)->AUTO_OFF_TIME <= 1)
         {
             am->getAerPID(1)->AUTO_OFF_TIME = 900;
@@ -195,6 +195,11 @@ void save_task(void *pvParameters)
         if (am->getGUI()->getST7789()->getBacklightLevelMin() < 4)
         {
             am->getGUI()->getST7789()->setBacklightMin(4);
+        }
+        uint8_t min = am->getGUI()->getST7789()->getBacklightLevelMin();
+        if (am->getGUI()->getST7789()->getBacklightLevel() < min)
+        {
+            am->getGUI()->getST7789()->setBacklight(min + 1, true);
         }
 
         xSemaphoreGive(spi1_mutex);
@@ -428,7 +433,7 @@ void save_task(void *pvParameters)
             {
                 if (xSemaphoreTake(spi1_mutex, 50) == pdTRUE)
                 {
-                    taskParams->flash->save_settings(am->getAerPID(0)->USAGE_DETECT, am->getAerPID(0)->AUTO_OFF_ENB, am->getAerPID(0)->AUTO_OFF_TIME);
+                    taskParams->flash->save_setup(am->getAerPID(0)->USAGE_DETECT, am->getAerPID(0)->AUTO_OFF_ENB, am->getAerPID(0)->AUTO_OFF_TIME);
                     am->updateFlashStor(false);
                     xSemaphoreGive(spi1_mutex);
                 }

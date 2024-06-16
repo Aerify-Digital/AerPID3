@@ -577,9 +577,9 @@ void Flash::load_favorites(double &fava, double &favb, double &favc, double &fav
 // ==========================================================================
 // Settings File
 
-void Flash::save_settings(bool usage_det, bool auto_off, long off_time)
+void Flash::save_setup(bool usage_det, bool auto_off, long off_time)
 {
-  const char *filename = "settings.dat";
+  const char *filename = "setup.dat";
   char storageData[25];
   int leng = 25;
 
@@ -704,8 +704,8 @@ void Flash::save_settings(bool usage_det, bool auto_off, long off_time)
 
   SerialFlashFile keyFile = SerialFlash.open(filename);
 
-  // Serial.print("Opened File.. ");
-  // Serial.println(filename);
+  Serial.print("Opened File.. ");
+  Serial.println(filename);
 
   char keys[leng];
   int p = 0;
@@ -742,14 +742,14 @@ void Flash::save_settings(bool usage_det, bool auto_off, long off_time)
   keyFile.write(keys, leng);
   keyFile.close();
 
-  // Serial.print(" ... ");
-  // Serial.println("File Saved!");
+  Serial.print(" ... ");
+  Serial.println("File Saved!");
 }
 
 // load
-void Flash::load_settings(bool &usage_det, bool &auto_off, long &off_time)
+void Flash::load_setup(bool &usage_det, bool &auto_off, long &off_time)
 {
-  const char *filename = "settings.dat";
+  const char *filename = "setup.dat";
   int leng = 25;
 
   union DoubleByte
@@ -782,11 +782,12 @@ void Flash::load_settings(bool &usage_det, bool &auto_off, long &off_time)
   }
 
   // Serial.println(" ");
-  // Serial.print("Opening File.. ");
-  // Serial.println(filename);
+  Serial.print("Opening File.. ");
+  Serial.print(filename);
 
   SerialFlashFile keyFile = SerialFlash.open(filename);
 
+  Serial.println(" ok");
   // Serial.print("Reading File..  ");
 
   char buf[leng];
