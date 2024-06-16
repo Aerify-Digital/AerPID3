@@ -587,8 +587,8 @@
 
                     <div class="w3-margin-bottom">
                         <ul class="w3-ul w3-center">
-                            <div class="chart-container" style="position: relative; height:100%; width:60vw; max-width:800px">
-                            <canvas id="temp_chart" style="width:100%;max-width:800px"></canvas>
+                            <div class="chart-container" style="position: relative; height:100%; width:60vw; max-width:1200px">
+                            <canvas id="temp_chart" style="width:100%;max-width:1200px"></canvas>
                             <div style="background-color: black; color: grey;">X Axis updates every 1 Second</div>
                             </div>
                         </ul>
@@ -621,6 +621,57 @@
                                 </select>
                             </div>
                         </div>
+                        <!-- Grid for Quick-Settings -->
+                        <h3 class="w3-padding-16 w3-text-light-grey">Quick-Settings</h3>
+                        <div class="w3-row-padding" style="margin: 0 -16px">
+                            <div class="w3-half w3-margin-bottom">
+                                <ul class="w3-ul w3-white w3-center w3-opacity w3-hover-opacity-off">
+                                    <li class="w3-dark-grey w3-xlarge w3-padding-32">PID</li>
+                                    <li class="w3-padding-16">
+                                        P:
+                                        <input type="number" id="p_qset2" name="p_qset2" class="pid_pset" min="0" max="100" step="0.1" value="0"
+                                            style="
+                            background-color: transparent;
+                            border: none;
+                            font-size: 14px;
+                            padding: 3px;
+                            text-align: center;
+                        " />
+                                    </li>
+                                    <li class="w3-padding-16">
+                                        I:
+                                        <input type="number" id="i_qset2" name="i_qset2" class="pid_iset" min="0" max="1" step="0.0001" value="0"
+                                            style="
+                            background-color: transparent;
+                            border: none;
+                            font-size: 14px;
+                            padding: 3px;
+                            text-align: center;
+                        " />
+                                    </li>
+                                    <li class="w3-padding-16">
+                                        D:
+                                        <input type="number" id="d_qset2" name="d_qset2" class="pid_dset" min="0" max="100" step="0.1" value="0"
+                                            style="
+                            background-color: transparent;
+                            border: none;
+                            font-size: 14px;
+                            padding: 3px;
+                            text-align: center;
+                        " />
+                                    </li>
+                                    <li class="w3-padding-8">
+                                        Please confirm all values before submitting these changes.
+                                    </li>
+                                    <li class="w3-light-grey w3-padding-24">
+                                        <button id="pid_qset2" class="w3-button w3-white w3-padding-large w3-hover-black">
+                                            Submit
+                                        </button>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                        <!-- End Quick-Settings tables -->
                     </div>
 
                 </div>

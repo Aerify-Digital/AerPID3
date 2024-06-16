@@ -775,6 +775,9 @@ const initPageData = async (initData) => {
   if (document.getElementById('p_qset')) {
     document.getElementById('p_qset').value = `${state.COIL.P}`;
   }
+  if (document.getElementById('p_qset2')) {
+    document.getElementById('p_qset2').value = `${state.COIL.P}`;
+  }
   state.COIL.I = initData.I;
   if (document.getElementById('i_set')) {
     document.getElementById('i_set').value = `${state.COIL.I}`;
@@ -782,12 +785,18 @@ const initPageData = async (initData) => {
   if (document.getElementById('i_qset')) {
     document.getElementById('i_qset').value = `${state.COIL.I}`;
   }
+  if (document.getElementById('i_qset2')) {
+    document.getElementById('i_qset2').value = `${state.COIL.I}`;
+  }
   state.COIL.D = initData.D;
   if (document.getElementById('d_set')) {
     document.getElementById('d_set').value = `${state.COIL.D}`;
   }
   if (document.getElementById('d_qset')) {
     document.getElementById('d_qset').value = `${state.COIL.D}`;
+  }
+  if (document.getElementById('d_qset2')) {
+    document.getElementById('d_qset2').value = `${state.COIL.D}`;
   }
   if (document.getElementById('toggle_heat')) {
     const element = document.getElementById('toggle_heat');
@@ -1128,6 +1137,9 @@ const handleMessage = (dat) => {
           if (document.getElementById('p_qset')) {
             document.getElementById('p_qset').value = `${state.COIL.P}`;
           }
+          if (document.getElementById('p_qset2')) {
+            document.getElementById('p_qset2').value = `${state.COIL.P}`;
+          }
           state.COIL.I = I;
           if (document.getElementById('i_set')) {
             document.getElementById('i_set').value = `${state.COIL.I}`;
@@ -1135,12 +1147,18 @@ const handleMessage = (dat) => {
           if (document.getElementById('i_qset')) {
             document.getElementById('i_qset').value = `${state.COIL.I}`;
           }
+          if (document.getElementById('i_qset2')) {
+            document.getElementById('i_qset2').value = `${state.COIL.I}`;
+          }
           state.COIL.D = D;
           if (document.getElementById('d_set')) {
             document.getElementById('d_set').value = `${state.COIL.D}`;
           }
           if (document.getElementById('d_qset')) {
             document.getElementById('d_qset').value = `${state.COIL.D}`;
+          }
+          if (document.getElementById('d_qset2')) {
+            document.getElementById('d_qset2').value = `${state.COIL.D}`;
           }
           break;
         default:
@@ -1562,11 +1580,16 @@ var pChanged = false,
   dChanged = false,
   qpChanged = false,
   qiChanged = false,
-  qdChanged = false;
+  qdChanged = false,
+  qp2Changed = false,
+  qi2Changed = false,
+  qd2Changed = false;
 function pidButtonInit() {
+  var pidQset2 = document.getElementById('pid_qset2');
   var pidQset = document.getElementById('pid_qset');
   var pidSet = document.getElementById('pid_set');
   pidQset.addEventListener('click', sendPidSettings);
+  pidQset2.addEventListener('click', sendPidSettings);
   pidSet.addEventListener('click', sendPidSettings);
   document.getElementById('p_set').addEventListener('change', function () {
     pChanged = true;
@@ -1574,17 +1597,26 @@ function pidButtonInit() {
   document.getElementById('p_qset').addEventListener('change', function () {
     qpChanged = true;
   });
+  document.getElementById('p_qset2').addEventListener('change', function () {
+    qp2Changed = true;
+  });
   document.getElementById('i_set').addEventListener('change', function () {
     iChanged = true;
   });
   document.getElementById('i_qset').addEventListener('change', function () {
     qiChanged = true;
   });
+  document.getElementById('i_qset2').addEventListener('change', function () {
+    qi2Changed = true;
+  });
   document.getElementById('d_set').addEventListener('change', function () {
     dChanged = true;
   });
   document.getElementById('d_qset').addEventListener('change', function () {
     qdChanged = true;
+  });
+  document.getElementById('d_qset2').addEventListener('change', function () {
+    qd2Changed = true;
   });
 }
 
@@ -1593,6 +1625,7 @@ function sendPidSettings() {
   if (pChanged) {
     let val = document.getElementById('p_set').value;
     document.getElementById('p_qset').value = val;
+    document.getElementById('p_qset2').value = val;
     emit_websocket([
       SerialCommand.PID,
       Operation.SET,
@@ -1604,6 +1637,7 @@ function sendPidSettings() {
   if (iChanged) {
     let val = document.getElementById('i_set').value;
     document.getElementById('i_qset').value = val;
+    document.getElementById('i_qset2').value = val;
     emit_websocket([
       SerialCommand.PID,
       Operation.SET,
@@ -1615,6 +1649,7 @@ function sendPidSettings() {
   if (dChanged) {
     let val = document.getElementById('d_set').value;
     document.getElementById('d_qset').value = val;
+    document.getElementById('d_qset2').value = val;
     emit_websocket([
       SerialCommand.PID,
       Operation.SET,
@@ -1626,6 +1661,7 @@ function sendPidSettings() {
   if (qpChanged) {
     let val = document.getElementById('p_qset').value;
     document.getElementById('p_set').value = val;
+    document.getElementById('p_qset2').value = val;
     emit_websocket([
       SerialCommand.PID,
       Operation.SET,
@@ -1637,6 +1673,7 @@ function sendPidSettings() {
   if (qiChanged) {
     let val = document.getElementById('i_qset').value;
     document.getElementById('i_set').value = val;
+    document.getElementById('i_qset2').value = val;
     emit_websocket([
       SerialCommand.PID,
       Operation.SET,
@@ -1648,6 +1685,7 @@ function sendPidSettings() {
   if (qdChanged) {
     let val = document.getElementById('d_qset').value;
     document.getElementById('d_set').value = val;
+    document.getElementById('s_qset2').value = val;
     emit_websocket([
       SerialCommand.PID,
       Operation.SET,
@@ -1655,6 +1693,42 @@ function sendPidSettings() {
       ...doubleToBytes(Number(val))
     ]);
     qdChanged = false;
+  }
+  if (qp2Changed) {
+    let val = document.getElementById('p_qset2').value;
+    document.getElementById('p_set').value = val;
+    document.getElementById('d_qset').value = val;
+    emit_websocket([
+      SerialCommand.PID,
+      Operation.SET,
+      ParamPid.PID_P,
+      ...doubleToBytes(Number(val))
+    ]);
+    qp2Changed = false;
+  }
+  if (qi2Changed) {
+    let val = document.getElementById('i_qset2').value;
+    document.getElementById('i_set').value = val;
+    document.getElementById('i_qset').value = val;
+    emit_websocket([
+      SerialCommand.PID,
+      Operation.SET,
+      ParamPid.PID_I,
+      ...doubleToBytes(Number(val))
+    ]);
+    qi2Changed = false;
+  }
+  if (qd2Changed) {
+    let val = document.getElementById('d_qset2').value;
+    document.getElementById('d_set').value = val;
+    document.getElementById('d_qset').value = val;
+    emit_websocket([
+      SerialCommand.PID,
+      Operation.SET,
+      ParamPid.PID_D,
+      ...doubleToBytes(Number(val))
+    ]);
+    qd2Changed = false;
   }
 }
 
