@@ -194,17 +194,27 @@ const palletChange = (obj) => {
     chart.data.datasets[0].borderColor = 'red';
     chart.data.datasets[1].borderColor = 'orange';
     chart.data.datasets[2].borderColor = 'yellow';
-    chart.data.datasets[3].borderColor = '#ff4d0d';
+    chart.data.datasets[3].borderColor = '#81d41a';
   } else if (value == 'cool') {
     chart.data.datasets[0].borderColor = '#6A5ACD';
-    chart.data.datasets[1].borderColor = '#87CEFA';
-    chart.data.datasets[2].borderColor = '#4169E1';
-    chart.data.datasets[3].borderColor = 'blue';
+    chart.data.datasets[1].borderColor = '#87faf2';
+    chart.data.datasets[2].borderColor = '#4169e1';
+    chart.data.datasets[3].borderColor = '#dd4cf4';
   } else if (value == 'forest') {
-    chart.data.datasets[0].borderColor = 'yellowgreen';
+    chart.data.datasets[0].borderColor = '#158466';
     chart.data.datasets[1].borderColor = '#40E0D0';
-    chart.data.datasets[2].borderColor = 'lime';
-    chart.data.datasets[3].borderColor = 'teal';
+    chart.data.datasets[2].borderColor = '#81d41a';
+    chart.data.datasets[3].borderColor = '#2a6099';
+  } else if (value == 'traffic') {
+    chart.data.datasets[0].borderColor = '#ff0000';
+    chart.data.datasets[1].borderColor = '#ffbf00';
+    chart.data.datasets[2].borderColor = '#00a933';
+    chart.data.datasets[3].borderColor = '#87faf2';
+  } else if (value == 'void') {
+    chart.data.datasets[0].borderColor = '#ffffff';
+    chart.data.datasets[1].borderColor = '#7a7b7f';
+    chart.data.datasets[2].borderColor = '#2a6099';
+    chart.data.datasets[3].borderColor = '#650953';
   }
   chart.update();
 };
