@@ -1492,7 +1492,7 @@ void WebServer::processSocketData(char *data, size_t len, AsyncWebSocketClient *
                 val = bd.value;
             }
             Serial.printf(">> Set Temp(c): %f \n", val);
-            xAerPID1.SET_TEMP = val; // val = xAerPID1.SET_TEMP = bd.value;
+            xAerPID1.SET_TEMP = val;
             aerManager.updateTempStor(0, true);
             aerManager.setPressTick(250);
         }
@@ -1504,7 +1504,7 @@ void WebServer::processSocketData(char *data, size_t len, AsyncWebSocketClient *
         SocketCmdOp *reply = new SocketCmdOp(SerialCommand::CMD_TEMP);
         reply->AddClient(client->id());
         reply->Op(op);
-        reply->Val(val);
+        reply->Val(static_cast<uint16_t>(10.0 * val));
         reply->build();
         reply->emit(&ws);
         delete reply;

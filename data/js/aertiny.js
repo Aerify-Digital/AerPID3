@@ -126,7 +126,7 @@ function getTrendLinePoint(x, slope, intercept) {
 
 let zoomRefreshTick = 0;
 
-const updateChart = (state, t, ta) => {
+const updateChart = (state, t, ta, st) => {
   if (state.TEMPS.length > 128) {
     state.TEMPS.shift();
   }
@@ -146,12 +146,7 @@ const updateChart = (state, t, ta) => {
     avg_temps.push({ x: i, y: state.TEMPS_AVG[i] });
     set_temps.push({
       x: i,
-      y:
-        state.UNIT == TemperatureUnit.FAHRENHEIT
-          ? cToF(state.SET_TEMP)
-          : state.UNIT == TemperatureUnit.KELVIN
-          ? cToK(state.SET_TEMP)
-          : cToC(state.SET_TEMP)
+      y: st
     });
     if (state.TEMPS.length <= 16) {
       if (i % 2 == 0) {
@@ -922,7 +917,6 @@ const initPageData = async (initData) => {
         : state.UNIT == TemperatureUnit.KELVIN
         ? cToK(state.TEMP).toFixed(1)
         : cToC(state.TEMP).toFixed(1);
-  updateTempMeter();
   state.SET_TEMP = initData.setTemp;
   if (document.getElementById('temp_setting'))
     document.getElementById('temp_setting').value =
@@ -931,13 +925,9 @@ const initPageData = async (initData) => {
         : state.UNIT == TemperatureUnit.KELVIN
         ? cToK(state.SET_TEMP).toFixed(1)
         : cToC(state.SET_TEMP).toFixed(1);
-  if (document.getElementById('temp_slider'))
-    document.getElementById('temp_slider').value =
-      state.UNIT == TemperatureUnit.FAHRENHEIT
-        ? cToF(state.SET_TEMP).toFixed(1)
-        : state.UNIT == TemperatureUnit.KELVIN
-        ? cToK(state.SET_TEMP).toFixed(1)
-        : cToC(state.SET_TEMP).toFixed(1);
+
+  updateTempMeter();
+  updateTempSlider();
 
   state.AVG_TEMP = initData.avgTemp;
   state.AUTO_OFF.enabled = initData.AUTO_OFF_ENABLED;
@@ -960,8 +950,18 @@ const initPageData = async (initData) => {
 
 const updateTempMeter = () => {
   const bar = document.getElementById('bar');
-  const temp = parseInt(document.getElementById('meas_temp').innerHTML);
-  const temp_setting = parseInt(document.getElementById('temp_setting').value);
+  const temp =
+    state.UNIT == TemperatureUnit.FAHRENHEIT
+      ? cToF(state.TEMP).toFixed(1)
+      : state.UNIT == TemperatureUnit.KELVIN
+      ? cToK(state.TEMP).toFixed(1)
+      : cToC(state.TEMP).toFixed(1);
+  const temp_setting =
+    state.UNIT == TemperatureUnit.FAHRENHEIT
+      ? cToF(state.SET_TEMP).toFixed(1)
+      : state.UNIT == TemperatureUnit.KELVIN
+      ? cToK(state.SET_TEMP).toFixed(1)
+      : cToC(state.SET_TEMP).toFixed(1);
   bar.style.transform = 'rotate(' + (45 + temp * 0.15) + 'deg)';
   var color = 'black';
   if (temp >= temp_setting - 7 && temp <= temp_setting + 7) {
@@ -984,7 +984,17 @@ const updateTempMeter = () => {
 };
 
 function updateTempSlider() {
-  document.getElementById('temp_slider').value = document.getElementById('temp_setting').value;
+  var elm_ts = document.getElementById('temp_slider');
+  var isFocused = document.activeElement === elm_ts;
+  if (isFocused) {
+    return;
+  }
+  document.getElementById('temp_slider').value =
+    state.UNIT == TemperatureUnit.FAHRENHEIT
+      ? cToF(state.SET_TEMP).toFixed(1)
+      : state.UNIT == TemperatureUnit.KELVIN
+      ? cToK(state.SET_TEMP).toFixed(1)
+      : cToC(state.SET_TEMP).toFixed(1);
 }
 
 const initPageMessage = async (initData) => {
@@ -1029,9 +1039,14 @@ const handleMessage = (dat) => {
           ? cToF(avg_temp).toFixed(1)
           : state.UNIT == TemperatureUnit.KELVIN
           ? cToK(avg_temp).toFixed(1)
-          : cToC(avg_temp).toFixed(1)
+          : cToC(avg_temp).toFixed(1),
+        state.UNIT == TemperatureUnit.FAHRENHEIT
+          ? cToF(set_temp).toFixed(1)
+          : state.UNIT == TemperatureUnit.KELVIN
+          ? cToK(set_temp).toFixed(1)
+          : cToC(set_temp).toFixed(1)
       );
-      //console.log(pid_enb, mes_temp, avg_temp, set_temp);
+      //console.log('SerialCommand.STATUS: ', pid_enb, mes_temp, avg_temp, set_temp);
       state.COIL.enabled = pid_enb;
       state.TEMP = mes_temp;
       state.SET_TEMP = set_temp;
@@ -1052,7 +1067,9 @@ const handleMessage = (dat) => {
             : state.UNIT == TemperatureUnit.KELVIN
             ? cToK(state.TEMP).toFixed(1)
             : cToC(state.TEMP).toFixed(1);
-      if (document.getElementById('temp_setting'))
+      var elm_ts = document.getElementById('temp_setting');
+      var isFocused = document.activeElement === elm_ts;
+      if (!isFocused && document.getElementById('temp_setting'))
         document.getElementById('temp_setting').value =
           state.UNIT == TemperatureUnit.FAHRENHEIT
             ? cToF(state.SET_TEMP).toFixed(1)
@@ -1060,11 +1077,15 @@ const handleMessage = (dat) => {
             ? cToK(state.SET_TEMP).toFixed(1)
             : cToC(state.SET_TEMP).toFixed(1);
       updateTempMeter();
+      updateTempSlider();
       break;
     case SerialCommand.TEMP:
-      var set_temp = getNumber(dat.slice(2, 4));
+      var set_temp = getNumber(dat.slice(2));
+      //console.log('SerialCommand.TEMP: ', set_temp);
       state.SET_TEMP = set_temp;
-      if (document.getElementById('temp_setting'))
+      var elm_ts = document.getElementById('temp_setting');
+      var isFocused = document.activeElement === elm_ts;
+      if (!isFocused && document.getElementById('temp_setting'))
         document.getElementById('temp_setting').value =
           state.UNIT == TemperatureUnit.FAHRENHEIT
             ? cToF(state.SET_TEMP).toFixed(1)
@@ -1072,6 +1093,7 @@ const handleMessage = (dat) => {
             ? cToK(state.SET_TEMP).toFixed(1)
             : cToC(state.SET_TEMP).toFixed(1);
       updateTempMeter();
+      updateTempSlider();
       break;
     case SerialCommand.UNIT:
       const unitType = dat[1];
@@ -1724,25 +1746,37 @@ const changeFavName = (target) => {
   emit_websocket([cmd, Operation.SET, Favorite.NAME, ...new TextEncoder().encode(val)]);
 };
 
+let timer_temp_setting = undefined;
+let timer_temp_slider = undefined;
+
 // Temp Funcs/Vars
 document.getElementById('temp_setting').addEventListener('change', function () {
-  updateTemp(0);
+  if (timer_temp_setting) {
+    clearTimeout(timer_temp_setting);
+  }
+  timer_temp_setting = setTimeout(() => {
+    updateTemp(0);
+    timer_temp_setting = undefined;
+  }, 700);
 });
 document.getElementById('temp_slider').addEventListener('change', function () {
-  updateTemp(1);
+  if (timer_temp_slider) {
+    clearTimeout(timer_temp_slider);
+  }
+  timer_temp_slider = setTimeout(() => {
+    updateTemp(1);
+    timer_temp_slider = undefined;
+  }, 300);
 });
 const updateTemp = (target) => {
-  var selement = document.getElementById('temp_setting');
+  let selement;
   if (target == 1) {
     selement = document.getElementById('temp_slider');
+  } else if (target == 0) {
+    selement = document.getElementById('temp_setting');
+  } else {
+    return;
   }
-
-  var value =
-    state.UNIT == TemperatureUnit.FAHRENHEIT
-      ? fToC(selement.value)
-      : state.UNIT == TemperatureUnit.KELVIN
-      ? kToC(selement.value)
-      : selement.value;
   emit_websocket([SerialCommand.TEMP, Operation.SET, ...doubleToBytes(Number(selement.value))]);
 };
 
