@@ -28,7 +28,7 @@ const chart = new Chart('temp_chart', {
         label: 'Measure',
         data: [],
         borderColor: 'red',
-        borderWidth: 1,
+        borderWidth: 0.9,
         fill: false,
         pointRadius: 1.2
       },
@@ -36,22 +36,22 @@ const chart = new Chart('temp_chart', {
         label: 'Average 1 Minute',
         data: [],
         borderColor: 'orange',
-        borderWidth: 2,
+        borderWidth: 2.2,
         fill: false,
-        pointRadius: 1
+        pointRadius: 0.8
       },
       {
         label: 'Set Temperature',
         data: [],
         borderColor: 'yellow',
-        borderWidth: 2,
+        borderWidth: 1.8,
         fill: false,
-        pointRadius: 1
+        pointRadius: 0.0
       },
       {
         label: 'Measure Trend',
         data: [],
-        borderColor: '#ff4d0d',
+        borderColor: '#81d41a',
         borderWidth: 1,
         fill: false,
         pointRadius: 0,
@@ -207,7 +207,7 @@ const palletChange = (obj) => {
     chart.data.datasets[3].borderColor = '#87faf2';
   } else if (value == 'void') {
     chart.data.datasets[0].borderColor = '#ffffff';
-    chart.data.datasets[1].borderColor = '#7a7b7f';
+    chart.data.datasets[1].borderColor = '#5adac2';
     chart.data.datasets[2].borderColor = '#2a6099';
     chart.data.datasets[3].borderColor = '#650953';
   }
