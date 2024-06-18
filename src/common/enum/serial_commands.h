@@ -14,6 +14,8 @@ enum SerialCommand
 {
     CMD_INIT = 0x20,
     CMD_STATUS = 0x21,
+    CMD_INIT2 = 0x22,
+    CMD_STATUS2 = 0x23,
     AUTO_OFF_LENGTH = 0x35,
     AUTO_OFF_TOGGLE = 0x32,
     ADJUST_AMOUNT = 0x24,
@@ -23,6 +25,7 @@ enum SerialCommand
     BUMP_LENGTH = 0x45,
     BUMP_TOGGLE = 0x42,
     COIL_TOGGLE = 0x52,
+    COIL_TOGGLE2 = 0x53,
     CMD_ESP = 0x00,
     FAV_1 = 0x86,
     FAV_2 = 0x87,
@@ -30,8 +33,10 @@ enum SerialCommand
     FAV_4 = 0x89,
     CMD_LED = 0x70,
     CMD_PID = 0x90,
+    CMD_PID2 = 0x91,
     CMD_TEMP = 0x10,
     CMD_UNIT = 0x11,
+    CMD_TEMP2 = 0x13,
     CMD_WIFI = 0x60,
 };
 

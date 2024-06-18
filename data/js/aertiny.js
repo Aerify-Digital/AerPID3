@@ -15,69 +15,81 @@ for (let i = 0; i < 128; i++) {
   xValues.push(`${i}`);
 }
 
+// chart 2 values
+const xValues2 = [];
+for (let i = 0; i < 128; i++) {
+  xValues2.push(`${i}`);
+}
+
 Chart.defaults.global.animation.duration = 0;
 
-// charting
-const chart = new Chart('temp_chart', {
-  type: 'line',
-  animation: false,
-  labels: ['0', '16', '32', '48', '64', '80', '96'],
-  data: {
-    datasets: [
-      {
-        label: 'Measure',
-        data: [],
-        borderColor: 'red',
-        borderWidth: 1,
-        fill: false,
-        pointRadius: 1.2
-      },
-      {
-        label: 'Average 1 Minute',
-        data: [],
-        borderColor: 'orange',
-        borderWidth: 2,
-        fill: false,
-        pointRadius: 1
-      },
-      {
-        label: 'Set Temperature',
-        data: [],
-        borderColor: 'yellow',
-        borderWidth: 2,
-        fill: false,
-        pointRadius: 1
-      },
-      {
-        label: 'Measure Trend',
-        data: [],
-        borderColor: '#ff4d0d',
-        borderWidth: 1,
-        fill: false,
-        pointRadius: 0,
-        hidden: true
-      }
-    ]
-  },
-  options: {
-    scales: {
-      xAxes: [
+const createChart = (name) => {
+  // charting
+  const chart = new Chart(name, {
+    type: 'line',
+    animation: false,
+    labels: ['0', '16', '32', '48', '64', '80', '96'],
+    data: {
+      datasets: [
         {
-          gridLines: {
-            color: 'rgba(255, 255, 255, 0.1)' // Set the x-axis grid color to a light color
-          }
-        }
-      ],
-      yAxes: [
+          label: 'Measure',
+          data: [],
+          borderColor: 'red',
+          borderWidth: 0.9,
+          fill: false,
+          pointRadius: 1.2
+        },
         {
-          gridLines: {
-            color: 'rgba(255, 255, 255, 0.08)' // Set the y-axis grid color to a light color
-          }
+          label: 'Average 1 Minute',
+          data: [],
+          borderColor: 'orange',
+          borderWidth: 2.2,
+          fill: false,
+          pointRadius: 0.8
+        },
+        {
+          label: 'Set Temperature',
+          data: [],
+          borderColor: 'yellow',
+          borderWidth: 1.8,
+          fill: false,
+          pointRadius: 0.0
+        },
+        {
+          label: 'Measure Trend',
+          data: [],
+          borderColor: '#81d41a',
+          borderWidth: 1,
+          fill: false,
+          pointRadius: 0,
+          hidden: true
         }
       ]
+    },
+    options: {
+      scales: {
+        xAxes: [
+          {
+            gridLines: {
+              color: 'rgba(255, 255, 255, 0.1)' // Set the x-axis grid color to a light color
+            }
+          }
+        ],
+        yAxes: [
+          {
+            gridLines: {
+              color: 'rgba(255, 255, 255, 0.08)' // Set the y-axis grid color to a light color
+            }
+          }
+        ]
+      }
     }
-  }
-});
+  });
+  return chart;
+};
+
+const chart = createChart('temp_chart');
+const chart2 = createChart('temp_chart2');
 
 function calculateTrendLine(temps) {
   var a,
@@ -183,6 +195,65 @@ const updateChart = (state, t, ta, st) => {
   chart.update();
 };
 
+let zoomRefreshTick2 = 0;
+
+const updateChart2 = (state, t, ta, st) => {
+  if (state.TEMPS2.length > 128) {
+    state.TEMPS2.shift();
+  }
+  state.TEMPS2.push(t);
+
+  if (state.TEMPS_AVG2.length > 128) {
+    state.TEMPS_AVG2.shift();
+  }
+  state.TEMPS_AVG2.push(ta);
+
+  const labels = [];
+  const temps = [];
+  const set_temps = [];
+  const avg_temps = [];
+  for (let i = 0; i < state.TEMPS2.length; i++) {
+    temps.push({ x: i, y: state.TEMPS2[i] });
+    avg_temps.push({ x: i, y: state.TEMPS_AVG2[i] });
+    set_temps.push({
+      x: i,
+      y: st
+    });
+    if (state.TEMPS2.length <= 16) {
+      if (i % 2 == 0) {
+        labels.push(`${i}`);
+      } else {
+        labels.push('');
+      }
+    } else if (state.TEMPS2.length <= 32) {
+      if (i % 8 == 0) {
+        labels.push(`${i}`);
+      } else {
+        labels.push('');
+      }
+    } else {
+      if (i % 16 == 0) {
+        labels.push(`${i}`);
+      } else {
+        labels.push('');
+      }
+    }
+  }
+
+  chart2.data.datasets[0].data = temps.reverse(); // reverse order
+  chart2.data.datasets[1].data = avg_temps.reverse(); // reverse order
+  chart2.data.datasets[2].data = set_temps;
+  chart2.data.datasets[3].data = calculateTrendLine(temps);
+  chart2.data.labels = labels;
+  if (zoomRefreshTick2 <= 0) {
+    updateZoom2(state.ZOOM_LEVEL2);
+    zoomRefreshTick2 = 3;
+  } else {
+    zoomRefreshTick2--;
+  }
+  chart2.update();
+};
+
 const palletChange = (obj) => {
   const value = obj.value;
   if (value == 'warm') {
@@ -207,11 +278,42 @@ const palletChange = (obj) => {
     chart.data.datasets[3].borderColor = '#87faf2';
   } else if (value == 'void') {
     chart.data.datasets[0].borderColor = '#ffffff';
-    chart.data.datasets[1].borderColor = '#7a7b7f';
+    chart.data.datasets[1].borderColor = '#5adac2';
     chart.data.datasets[2].borderColor = '#2a6099';
     chart.data.datasets[3].borderColor = '#650953';
   }
   chart.update();
+};
+
+const palletChange2 = (obj) => {
+  const value = obj.value;
+  if (value == 'warm') {
+    chart2.data.datasets[0].borderColor = 'red';
+    chart2.data.datasets[1].borderColor = 'orange';
+    chart2.data.datasets[2].borderColor = 'yellow';
+    chart2.data.datasets[3].borderColor = '#81d41a';
+  } else if (value == 'cool') {
+    chart2.data.datasets[0].borderColor = '#6A5ACD';
+    chart2.data.datasets[1].borderColor = '#87faf2';
+    chart2.data.datasets[2].borderColor = '#4169e1';
+    chart2.data.datasets[3].borderColor = '#dd4cf4';
+  } else if (value == 'forest') {
+    chart2.data.datasets[0].borderColor = '#158466';
+    chart2.data.datasets[1].borderColor = '#40E0D0';
+    chart2.data.datasets[2].borderColor = '#81d41a';
+    chart2.data.datasets[3].borderColor = '#2a6099';
+  } else if (value == 'traffic') {
+    chart2.data.datasets[0].borderColor = '#ff0000';
+    chart2.data.datasets[1].borderColor = '#ffbf00';
+    chart2.data.datasets[2].borderColor = '#00a933';
+    chart2.data.datasets[3].borderColor = '#87faf2';
+  } else if (value == 'void') {
+    chart2.data.datasets[0].borderColor = '#ffffff';
+    chart2.data.datasets[1].borderColor = '#5adac2';
+    chart2.data.datasets[2].borderColor = '#2a6099';
+    chart2.data.datasets[3].borderColor = '#650953';
+  }
+  chart2.update();
 };
 
 const updateZoom = (value) => {
@@ -271,6 +373,63 @@ const updateZoom = (value) => {
   }
 };
 
+const updateZoom2 = (value) => {
+  if (!state.TEMPS2 || state.TEMPS2.length == 0) {
+    return;
+  }
+  let low = 1000;
+  let high = 0;
+  for (const _t of state.TEMPS2) {
+    const t = Number(_t);
+    if (t < low && t > 0) {
+      low = t;
+    }
+    if (t > high) {
+      high = t;
+    }
+  }
+  const delta = high - low;
+  const hDelta = delta * 0.5;
+  const dDelta = delta * 2;
+  if (value == 'auto') {
+    chart2.config.options.scales.yAxes[0].ticks.beginAtZero = false;
+    chart2.config.options.scales.yAxes[0].ticks.min = undefined;
+    chart2.config.options.scales.yAxes[0].ticks.max = undefined;
+  } else if (value == 'fine') {
+    chart2.config.options.scales.yAxes[0].ticks.beginAtZero = false;
+    chart2.config.options.scales.yAxes[0].ticks.min = low - 0.1;
+    chart2.config.options.scales.yAxes[0].ticks.max = high + 0.1;
+  } else if (value == 'tiny') {
+    chart2.config.options.scales.yAxes[0].ticks.beginAtZero = false;
+    chart2.config.options.scales.yAxes[0].ticks.min = low - 1;
+    chart2.config.options.scales.yAxes[0].ticks.max = high + 1;
+  } else if (value == 'near') {
+    chart2.config.options.scales.yAxes[0].ticks.beginAtZero = false;
+    chart2.config.options.scales.yAxes[0].ticks.min = low - hDelta - 1;
+    chart2.config.options.scales.yAxes[0].ticks.max = high + hDelta + 1;
+  } else if (value == 'avg') {
+    chart2.config.options.scales.yAxes[0].ticks.beginAtZero = false;
+    chart2.config.options.scales.yAxes[0].ticks.min = low - delta - 3;
+    chart2.config.options.scales.yAxes[0].ticks.max = high + delta + 3;
+  } else if (value == 'far') {
+    chart2.config.options.scales.yAxes[0].ticks.beginAtZero = false;
+    chart2.config.options.scales.yAxes[0].ticks.min = low - dDelta - 7;
+    chart2.config.options.scales.yAxes[0].ticks.max = high + dDelta + 7;
+  } else if (value == 'dist') {
+    chart2.config.options.scales.yAxes[0].ticks.beginAtZero = false;
+    chart2.config.options.scales.yAxes[0].ticks.min = low - dDelta - delta - 10;
+    chart2.config.options.scales.yAxes[0].ticks.max = high + dDelta + delta + 10;
+  } else if (value == 'max') {
+    chart2.config.options.scales.yAxes[0].ticks.beginAtZero = true;
+    chart2.config.options.scales.yAxes[0].ticks.min = low - delta - 25;
+    chart2.config.options.scales.yAxes[0].ticks.max = high + delta + 25;
+  } else if (value == 'all') {
+    chart2.config.options.scales.yAxes[0].ticks.beginAtZero = true;
+    chart2.config.options.scales.yAxes[0].ticks.min = 0;
+    chart2.config.options.scales.yAxes[0].ticks.max = high + 25;
+  }
+};
+
 // ==================================================
 // enums
 // ==================================================
@@ -309,6 +468,7 @@ const ParamPid = {
 const SerialCommand = {
   INIT: 0x20,
   STATUS: 0x21,
+  STATUS2: 0x23,
   AUTO_OFF_LENGTH: 0x35,
   AUTO_OFF_TOGGLE: 0x32,
   ADJUST_AMOUNT: 0x24,
@@ -318,6 +478,7 @@ const SerialCommand = {
   BUMP_LENGTH: 0x45,
   BUMP_TOGGLE: 0x42,
   COIL_TOGGLE: 0x52,
+  COIL_TOGGLE2: 0x53,
   ESP: 0x00,
   FAV_1: 0x86,
   FAV_2: 0x87,
@@ -325,7 +486,9 @@ const SerialCommand = {
   FAV_4: 0x89,
   LED: 0x70,
   PID: 0x90,
+  PID2: 0x91,
   TEMP: 0x10,
+  TEMP2: 0x13,
   UNIT: 0x11,
   WIFI: 0x60
 };
@@ -361,6 +524,7 @@ const TemperatureUnit = {
 
 // state storage object
 let state = {
+  MODEL: 0,
   INITIALIZED: false,
   VERSION: '-',
   NET_VERSION: '-',
@@ -372,12 +536,23 @@ let state = {
   AVG_TEMP: 0,
   TEMPS: [],
   TEMPS_AVG: [],
+  TEMP2: 0,
+  SET_TEMP2: 0,
+  AVG_TEMP2: 0,
+  TEMPS2: [],
+  TEMPS_AVG2: [],
   BUMP: {
     enabled: false,
     length: 0,
     amount: 0
   },
   COIL: {
+    enabled: false,
+    P: 0.0,
+    I: 0.0,
+    D: 0.0
+  },
+  COIL2: {
     enabled: false,
     P: 0.0,
     I: 0.0,
@@ -410,7 +585,8 @@ let state = {
     enabled: false,
     length: 0
   },
-  ZOOM_LEVEL: 'auto'
+  ZOOM_LEVEL: 'auto',
+  ZOOM_LEVEL2: 'auto'
 };
 
 // ==================================================
@@ -642,8 +818,10 @@ const parseInitMessage = (data) => {
     BT_ENABLED,
     _UNUSED_4
   ] = booleanMap;
+  const model = data.slice(608, 609);
 
   return {
+    model,
     ver: `${ver[0]}.${ver[1]}.${ver[2]}`,
     verNet: `${verNet[0]}.${verNet[1]}.${verNet[2]}`,
     ipAddr: `${ipAddr[0]}.${ipAddr[1]}.${ipAddr[2]}.${ipAddr[3]}`,
@@ -701,6 +879,11 @@ function onClose(event) {
 }
 
 const initPageData = async (initData) => {
+  state.MODEL = initData.model;
+  if (document.getElementById('element2')) {
+    document.getElementById('element1').style.display = 'block';
+    document.getElementById('element2').style.display = 'block';
+  }
   //console.log(JSON.stringify(initData, null, 2));
   state.UNIT = initData.unitType;
   if (document.getElementById('wifi_en')) {
@@ -955,6 +1138,8 @@ const initPageData = async (initData) => {
   state.AUTO_OFF.length = initData.autoOffTime;
   if (document.getElementById('aoff_time'))
     document.getElementById('aoff_time').value = `${state.AUTO_OFF.length}`;
+
+  emit_websocket([SerialCommand.PID2, Operation.GET, ParamPid.PARAM_PID]);
 };
 
 const updateTempMeter = () => {
@@ -992,6 +1177,76 @@ const updateTempMeter = () => {
   }
 };
 
+const updateTempMeter_1 = () => {
+  const bar = document.getElementById('bar1');
+  const temp =
+    state.UNIT == TemperatureUnit.FAHRENHEIT
+      ? cToF(state.TEMP).toFixed(1)
+      : state.UNIT == TemperatureUnit.KELVIN
+      ? cToK(state.TEMP).toFixed(1)
+      : cToC(state.TEMP).toFixed(1);
+  const temp_setting =
+    state.UNIT == TemperatureUnit.FAHRENHEIT
+      ? cToF(state.SET_TEMP).toFixed(1)
+      : state.UNIT == TemperatureUnit.KELVIN
+      ? cToK(state.SET_TEMP).toFixed(1)
+      : cToC(state.SET_TEMP).toFixed(1);
+  bar.style.transform = 'rotate(' + (45 + temp * 0.15) + 'deg)';
+  var color = 'black';
+  if (temp >= temp_setting - 7 && temp <= temp_setting + 7) {
+    color = 'green';
+  } else if (temp > temp_setting + 7 && temp <= temp_setting + 15) {
+    color = 'rgba(255, 165, 0, 1)';
+  } else {
+    if (temp > temp_setting + 15) {
+      color = 'red';
+    } else {
+      color = 'rgba(' + temp * 0.12 + ', ' + temp * 0.17 + ', ' + temp * 0.12 + ', 1)';
+    }
+  }
+  bar.style.borderBottomColor = color;
+  if (temp > 600) {
+    bar.style.borderRightColor = color;
+  } else {
+    bar.style.borderRightColor = '#eee';
+  }
+};
+
+const updateTempMeter_2 = () => {
+  const bar = document.getElementById('bar2');
+  const temp =
+    state.UNIT == TemperatureUnit.FAHRENHEIT
+      ? cToF(state.TEMP2).toFixed(1)
+      : state.UNIT == TemperatureUnit.KELVIN
+      ? cToK(state.TEMP2).toFixed(1)
+      : cToC(state.TEMP2).toFixed(1);
+  const temp_setting =
+    state.UNIT == TemperatureUnit.FAHRENHEIT
+      ? cToF(state.SET_TEMP2).toFixed(1)
+      : state.UNIT == TemperatureUnit.KELVIN
+      ? cToK(state.SET_TEMP2).toFixed(1)
+      : cToC(state.SET_TEMP2).toFixed(1);
+  bar.style.transform = 'rotate(' + (45 + temp * 0.15) + 'deg)';
+  var color = 'black';
+  if (temp >= temp_setting - 7 && temp <= temp_setting + 7) {
+    color = 'green';
+  } else if (temp > temp_setting + 7 && temp <= temp_setting + 15) {
+    color = 'rgba(255, 165, 0, 1)';
+  } else {
+    if (temp > temp_setting + 15) {
+      color = 'red';
+    } else {
+      color = 'rgba(' + temp * 0.12 + ', ' + temp * 0.17 + ', ' + temp * 0.12 + ', 1)';
+    }
+  }
+  bar.style.borderBottomColor = color;
+  if (temp > 600) {
+    bar.style.borderRightColor = color;
+  } else {
+    bar.style.borderRightColor = '#eee';
+  }
+};
+
 function updateTempSlider() {
   var elm_ts = document.getElementById('temp_slider');
   var isFocused = document.activeElement === elm_ts;
@@ -1004,6 +1259,34 @@ function updateTempSlider() {
       : state.UNIT == TemperatureUnit.KELVIN
       ? cToK(state.SET_TEMP).toFixed(1)
       : cToC(state.SET_TEMP).toFixed(1);
+}
+
+function updateTempSlider_1() {
+  var elm_ts = document.getElementById('temp_slider_1');
+  var isFocused = document.activeElement === elm_ts;
+  if (isFocused) {
+    return;
+  }
+  document.getElementById('temp_slider_1').value =
+    state.UNIT == TemperatureUnit.FAHRENHEIT
+      ? cToF(state.SET_TEMP).toFixed(1)
+      : state.UNIT == TemperatureUnit.KELVIN
+      ? cToK(state.SET_TEMP).toFixed(1)
+      : cToC(state.SET_TEMP).toFixed(1);
+}
+
+function updateTempSlider_2() {
+  var elm_ts = document.getElementById('temp_slider_2');
+  var isFocused = document.activeElement === elm_ts;
+  if (isFocused) {
+    return;
+  }
+  document.getElementById('temp_slider_2').value =
+    state.UNIT == TemperatureUnit.FAHRENHEIT
+      ? cToF(state.SET_TEMP2).toFixed(1)
+      : state.UNIT == TemperatureUnit.KELVIN
+      ? cToK(state.SET_TEMP2).toFixed(1)
+      : cToC(state.SET_TEMP2).toFixed(1);
 }
 
 const initPageMessage = async (initData) => {
@@ -1069,8 +1352,25 @@ const handleMessage = (dat) => {
           element.style.removeProperty('color');
         }
       }
+      if (document.getElementById('toggle_heat_1')) {
+        const element = document.getElementById('toggle_heat_1');
+        if (state.COIL.enabled) {
+          element.style.setProperty('background-color', '#faa843', 'important');
+          element.style.setProperty('color', 'whitesmoke', 'important');
+        } else {
+          element.style.removeProperty('background-color');
+          element.style.removeProperty('color');
+        }
+      }
       if (document.getElementById('meas_temp'))
         document.getElementById('meas_temp').innerHTML =
+          state.UNIT == TemperatureUnit.FAHRENHEIT
+            ? cToF(state.TEMP).toFixed(1)
+            : state.UNIT == TemperatureUnit.KELVIN
+            ? cToK(state.TEMP).toFixed(1)
+            : cToC(state.TEMP).toFixed(1);
+      if (document.getElementById('meas_temp_1'))
+        document.getElementById('meas_temp_1').innerHTML =
           state.UNIT == TemperatureUnit.FAHRENHEIT
             ? cToF(state.TEMP).toFixed(1)
             : state.UNIT == TemperatureUnit.KELVIN
@@ -1085,8 +1385,75 @@ const handleMessage = (dat) => {
             : state.UNIT == TemperatureUnit.KELVIN
             ? cToK(state.SET_TEMP).toFixed(1)
             : cToC(state.SET_TEMP).toFixed(1);
+      var elm_ts2 = document.getElementById('temp_setting_1');
+      var isFocused2 = document.activeElement === elm_ts2;
+      if (!isFocused2 && document.getElementById('temp_setting_1'))
+        document.getElementById('temp_setting_1').value =
+          state.UNIT == TemperatureUnit.FAHRENHEIT
+            ? cToF(state.SET_TEMP).toFixed(1)
+            : state.UNIT == TemperatureUnit.KELVIN
+            ? cToK(state.SET_TEMP).toFixed(1)
+            : cToC(state.SET_TEMP).toFixed(1);
       updateTempMeter();
+      updateTempMeter_1();
       updateTempSlider();
+      updateTempSlider_1();
+      break;
+    case SerialCommand.STATUS2:
+      pid_enb = dat[2] > 0;
+      var mes_temp = getNumber(dat.slice(3, 5));
+      var avg_temp = getNumber(dat.slice(5, 7));
+      var set_temp = getNumber(dat.slice(7));
+      updateChart2(
+        state,
+        state.UNIT == TemperatureUnit.FAHRENHEIT
+          ? cToF(mes_temp).toFixed(1)
+          : state.UNIT == TemperatureUnit.KELVIN
+          ? cToK(mes_temp).toFixed(1)
+          : cToC(mes_temp).toFixed(1),
+        state.UNIT == TemperatureUnit.FAHRENHEIT
+          ? cToF(avg_temp).toFixed(1)
+          : state.UNIT == TemperatureUnit.KELVIN
+          ? cToK(avg_temp).toFixed(1)
+          : cToC(avg_temp).toFixed(1),
+        state.UNIT == TemperatureUnit.FAHRENHEIT
+          ? cToF(set_temp).toFixed(1)
+          : state.UNIT == TemperatureUnit.KELVIN
+          ? cToK(set_temp).toFixed(1)
+          : cToC(set_temp).toFixed(1)
+      );
+      //console.log('SerialCommand.STATUS: ', pid_enb, mes_temp, avg_temp, set_temp);
+      state.COIL2.enabled = pid_enb;
+      state.TEMP2 = mes_temp;
+      state.SET_TEMP2 = set_temp;
+      if (document.getElementById('toggle_heat_2')) {
+        const element = document.getElementById('toggle_heat_2');
+        if (state.COIL2.enabled) {
+          element.style.setProperty('background-color', '#faa843', 'important');
+          element.style.setProperty('color', 'whitesmoke', 'important');
+        } else {
+          element.style.removeProperty('background-color');
+          element.style.removeProperty('color');
+        }
+      }
+      if (document.getElementById('meas_temp_2'))
+        document.getElementById('meas_temp_2').innerHTML =
+          state.UNIT == TemperatureUnit.FAHRENHEIT
+            ? cToF(state.TEMP2).toFixed(1)
+            : state.UNIT == TemperatureUnit.KELVIN
+            ? cToK(state.TEMP2).toFixed(1)
+            : cToC(state.TEMP2).toFixed(1);
+      var elm_ts = document.getElementById('temp_setting_2');
+      var isFocused = document.activeElement === elm_ts;
+      if (!isFocused && document.getElementById('temp_setting_2'))
+        document.getElementById('temp_setting_2').value =
+          state.UNIT == TemperatureUnit.FAHRENHEIT
+            ? cToF(state.SET_TEMP2).toFixed(1)
+            : state.UNIT == TemperatureUnit.KELVIN
+            ? cToK(state.SET_TEMP2).toFixed(1)
+            : cToC(state.SET_TEMP2).toFixed(1);
+      updateTempMeter_2();
+      updateTempSlider_2();
       break;
     case SerialCommand.TEMP:
       var set_temp = getNumber(dat.slice(2));
@@ -1101,8 +1468,35 @@ const handleMessage = (dat) => {
             : state.UNIT == TemperatureUnit.KELVIN
             ? cToK(state.SET_TEMP).toFixed(1)
             : cToC(state.SET_TEMP).toFixed(1);
+      var elm_ts2 = document.getElementById('temp_setting_1');
+      var isFocused2 = document.activeElement === elm_ts2;
+      if (!isFocused2 && document.getElementById('temp_setting_1'))
+        document.getElementById('temp_setting_1').value =
+          state.UNIT == TemperatureUnit.FAHRENHEIT
+            ? cToF(state.SET_TEMP).toFixed(1)
+            : state.UNIT == TemperatureUnit.KELVIN
+            ? cToK(state.SET_TEMP).toFixed(1)
+            : cToC(state.SET_TEMP).toFixed(1);
       updateTempMeter();
+      updateTempMeter_1();
       updateTempSlider();
+      updateTempSlider_1();
+      break;
+    case SerialCommand.TEMP2:
+      var set_temp = getNumber(dat.slice(2));
+      //console.log('SerialCommand.TEMP: ', set_temp);
+      state.SET_TEMP = set_temp;
+      var elm_ts = document.getElementById('temp_setting_2');
+      var isFocused = document.activeElement === elm_ts;
+      if (!isFocused && document.getElementById('temp_setting_2'))
+        document.getElementById('temp_setting_2').value =
+          state.UNIT == TemperatureUnit.FAHRENHEIT
+            ? cToF(state.SET_TEMP).toFixed(1)
+            : state.UNIT == TemperatureUnit.KELVIN
+            ? cToK(state.SET_TEMP).toFixed(1)
+            : cToC(state.SET_TEMP).toFixed(1);
+      updateTempMeter_2();
+      updateTempSlider_2();
       break;
     case SerialCommand.UNIT:
       const unitType = dat[1];
@@ -1114,6 +1508,30 @@ const handleMessage = (dat) => {
       if (document.getElementById('toggle_heat')) {
         const element = document.getElementById('toggle_heat');
         if (state.COIL.enabled) {
+          element.style.setProperty('background-color', '#faa843', 'important');
+          element.style.setProperty('color', 'whitesmoke', 'important');
+        } else {
+          element.style.removeProperty('background-color');
+          element.style.removeProperty('color');
+        }
+      }
+      if (document.getElementById('toggle_heat_1')) {
+        const element = document.getElementById('toggle_heat_1');
+        if (state.COIL.enabled) {
+          element.style.setProperty('background-color', '#faa843', 'important');
+          element.style.setProperty('color', 'whitesmoke', 'important');
+        } else {
+          element.style.removeProperty('background-color');
+          element.style.removeProperty('color');
+        }
+      }
+      break;
+    case SerialCommand.COIL_TOGGLE2:
+      pid_enb = dat[1] > 0;
+      state.COIL2.enabled = pid_enb;
+      if (document.getElementById('toggle_heat_2')) {
+        const element = document.getElementById('toggle_heat_2');
+        if (state.COIL2.enabled) {
           element.style.setProperty('background-color', '#faa843', 'important');
           element.style.setProperty('color', 'whitesmoke', 'important');
         } else {
@@ -1159,6 +1577,31 @@ const handleMessage = (dat) => {
           }
           if (document.getElementById('d_qset2')) {
             document.getElementById('d_qset2').value = `${state.COIL.D}`;
+          }
+          break;
+        default:
+          break;
+      }
+      break;
+    case SerialCommand.PID2:
+      param = dat[1];
+      switch (param) {
+        case ParamPid.PARAM_PID:
+          const P = bytesToDouble(Uint8Array.from(dat.slice(2, 10)));
+          const I = bytesToDouble(Uint8Array.from(dat.slice(10, 18)));
+          const D = bytesToDouble(Uint8Array.from(dat.slice(18, 26)));
+          //console.log(P, I, D);
+          state.COIL2.P = P;
+          if (document.getElementById('p_qset2b')) {
+            document.getElementById('p_qset2b').value = `${state.COIL2.P}`;
+          }
+          state.COIL2.I = I;
+          if (document.getElementById('i_qset2b')) {
+            document.getElementById('i_qset2b').value = `${state.COIL2.I}`;
+          }
+          state.COIL2.D = D;
+          if (document.getElementById('d_qset2b')) {
+            document.getElementById('d_qset2b').value = `${state.COIL2.D}`;
           }
           break;
         default:
@@ -1583,13 +2026,18 @@ var pChanged = false,
   qdChanged = false,
   qp2Changed = false,
   qi2Changed = false,
-  qd2Changed = false;
+  qd2Changed = false,
+  qp2bChanged = false,
+  qi2bChanged = false,
+  qd2bChanged = false;
 function pidButtonInit() {
   var pidQset2 = document.getElementById('pid_qset2');
+  var pidQset2b = document.getElementById('pid_qset2b');
   var pidQset = document.getElementById('pid_qset');
   var pidSet = document.getElementById('pid_set');
   pidQset.addEventListener('click', sendPidSettings);
   pidQset2.addEventListener('click', sendPidSettings);
+  pidQset2b.addEventListener('click', sendPid2Settings);
   pidSet.addEventListener('click', sendPidSettings);
   document.getElementById('p_set').addEventListener('change', function () {
     pChanged = true;
@@ -1617,6 +2065,15 @@ function pidButtonInit() {
   });
   document.getElementById('d_qset2').addEventListener('change', function () {
     qd2Changed = true;
+  });
+  document.getElementById('p_qset2b').addEventListener('change', function () {
+    qp2bChanged = true;
+  });
+  document.getElementById('i_qset2b').addEventListener('change', function () {
+    qi2bChanged = true;
+  });
+  document.getElementById('d_qset2b').addEventListener('change', function () {
+    qd2bChanged = true;
   });
 }
 
@@ -1729,6 +2186,40 @@ function sendPidSettings() {
       ...doubleToBytes(Number(val))
     ]);
     qd2Changed = false;
+  }
+}
+
+function sendPid2Settings() {
+  console.log('PID2 changes submitted via quick set.');
+  if (qp2bChanged) {
+    let val = document.getElementById('p_qset2b').value;
+    emit_websocket([
+      SerialCommand.PID2,
+      Operation.SET,
+      ParamPid.PID_P,
+      ...doubleToBytes(Number(val))
+    ]);
+    qp2bChanged = false;
+  }
+  if (qi2bChanged) {
+    let val = document.getElementById('i_qset2b').value;
+    emit_websocket([
+      SerialCommand.PID2,
+      Operation.SET,
+      ParamPid.PID_I,
+      ...doubleToBytes(Number(val))
+    ]);
+    qi2bChanged = false;
+  }
+  if (qd2bChanged) {
+    let val = document.getElementById('d_qset2b').value;
+    emit_websocket([
+      SerialCommand.PID2,
+      Operation.SET,
+      ParamPid.PID_D,
+      ...doubleToBytes(Number(val))
+    ]);
+    qd2bChanged = false;
   }
 }
 
@@ -1852,6 +2343,71 @@ const updateTemp = (target) => {
     return;
   }
   emit_websocket([SerialCommand.TEMP, Operation.SET, ...doubleToBytes(Number(selement.value))]);
+};
+
+let timer_temp_setting_1 = undefined;
+let timer_temp_slider_1 = undefined;
+let timer_temp_setting_2 = undefined;
+let timer_temp_slider_2 = undefined;
+
+document.getElementById('temp_setting_1').addEventListener('change', function () {
+  if (timer_temp_setting_1) {
+    clearTimeout(timer_temp_setting_1);
+  }
+  timer_temp_setting_1 = setTimeout(() => {
+    updateTemp_1(0);
+    timer_temp_setting_1 = undefined;
+  }, 700);
+});
+document.getElementById('temp_slider_1').addEventListener('change', function () {
+  if (timer_temp_slider_1) {
+    clearTimeout(timer_temp_slider_1);
+  }
+  timer_temp_slider_1 = setTimeout(() => {
+    updateTemp_1(1);
+    timer_temp_slider_1 = undefined;
+  }, 300);
+});
+const updateTemp_1 = (target) => {
+  let selement;
+  if (target == 1) {
+    selement = document.getElementById('temp_slider_1');
+  } else if (target == 0) {
+    selement = document.getElementById('temp_setting_1');
+  } else {
+    return;
+  }
+  emit_websocket([SerialCommand.TEMP, Operation.SET, ...doubleToBytes(Number(selement.value))]);
+};
+
+document.getElementById('temp_setting_2').addEventListener('change', function () {
+  if (timer_temp_setting_2) {
+    clearTimeout(timer_temp_setting_2);
+  }
+  timer_temp_setting_2 = setTimeout(() => {
+    updateTemp_2(0);
+    timer_temp_setting_2 = undefined;
+  }, 700);
+});
+document.getElementById('temp_slider_2').addEventListener('change', function () {
+  if (timer_temp_slider_2) {
+    clearTimeout(timer_temp_slider_2);
+  }
+  timer_temp_slider_2 = setTimeout(() => {
+    updateTemp_2(1);
+    timer_temp_slider_2 = undefined;
+  }, 300);
+});
+const updateTemp_2 = (target) => {
+  let selement;
+  if (target == 1) {
+    selement = document.getElementById('temp_slider_2');
+  } else if (target == 0) {
+    selement = document.getElementById('temp_setting_2');
+  } else {
+    return;
+  }
+  emit_websocket([SerialCommand.TEMP2, Operation.SET, ...doubleToBytes(Number(selement.value))]);
 };
 
 // Bump Funcs/Vars
@@ -2090,8 +2646,17 @@ const updateBrightness = () => {
 document.getElementById('toggle_heat').addEventListener('click', function () {
   toggleHeat();
 });
+document.getElementById('toggle_heat_1').addEventListener('click', function () {
+  toggleHeat();
+});
 const toggleHeat = () => {
   emit_websocket([SerialCommand.COIL_TOGGLE, Operation.SET, state.COIL.enabled ? 0 : 1]);
+};
+document.getElementById('toggle_heat_2').addEventListener('click', function () {
+  toggleHeat2();
+});
+const toggleHeat2 = () => {
+  emit_websocket([SerialCommand.COIL_TOGGLE2, Operation.SET, state.COIL2.enabled ? 0 : 1]);
 };
 
 // Zoom change
@@ -2101,6 +2666,35 @@ const zoomChange = (obj) => {
   state.ZOOM_LEVEL = value;
   chart.update();
 };
+
+// Zoom change 2
+const zoomChange2 = (obj) => {
+  const value = obj.value;
+  updateZoom2(value);
+  state.ZOOM_LEVEL2 = value;
+  chart2.update();
+};
+
+function openChartTab(evt, tabName) {
+  // Declare all variables
+  var i, tabcontent, tablinks;
+
+  // Get all elements with class="tabcontent" and hide them
+  tabcontent = document.getElementsByClassName('tabcontent');
+  for (i = 0; i < tabcontent.length; i++) {
+    tabcontent[i].style.display = 'none';
+  }
+
+  // Get all elements with class="tablinks" and remove the class "active"
+  tablinks = document.getElementsByClassName('tablinks');
+  for (i = 0; i < tablinks.length; i++) {
+    tablinks[i].className = tablinks[i].className.replace(' active', '');
+  }
+
+  // Show the current tab, and add an "active" class to the button that opened the tab
+  document.getElementById(tabName).style.display = 'block';
+  evt.currentTarget.className += ' active';
+}
 
 // ==================================================
 // ==================================================
@@ -2113,6 +2707,7 @@ const init = () => {
   function onLoad(event) {
     initWebSocket();
   }
+  document.getElementById('element1').click();
 };
 
 init();

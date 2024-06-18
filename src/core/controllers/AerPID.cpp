@@ -22,11 +22,11 @@ AerPID::AerPID(u_int8_t pin, uint8_t ssrPin, uint8_t ssrChan, uint8_t index)
     this->ssrPin = ssrPin;
     this->ssrChan = ssrChan;
     this->ow_pin = pin;
-    // oneWire = new OneWire(pin);
 
     // =======================
     // PID Setup Instance
-    aPID = new PID(&MES_TEMP, &output, &SET_TEMP, kP, kI, kD, DIRECT);
+    aPID = new PID();
+    aPID->begin(&MES_TEMP, &output, &SET_TEMP, kP, kI, kD);
     Serial.println(F(" ok!"));
 };
 
@@ -62,7 +62,6 @@ bool AerPID::init()
     // Setup SSR Pin Control
     double freq_PWN = ledcSetup(ssrChan, _freq_PWN, _resolution_bits);
     ledcAttachPin(ssrPin, ssrChan);
-    // ledcAttachPin(PIN_LED_ACT, PIN_SSR_CHAN);
 
     if (_verbose_d)
     {
@@ -91,8 +90,7 @@ bool AerPID::init()
     // =======================
     // Setup PID timing mode
     int sampleTime = (PID_TIME_OVERSHOOT + PID_SLEEP_TIME_MS) * PID_TICK_MAX; // Default: 100
-    aPID->SetSampleTime(sampleTime);
-    aPID->SetMode(AUTOMATIC);
+    aPID->setSampleTime(sampleTime);
 
     if (_verbose_d)
     {
@@ -113,8 +111,13 @@ bool AerPID::init()
 
     // =======================
     // Set initial PID tunings
-    aPID->SetTunings(kP, kI, kD);
-    aPID->SetOutputLimits(0, PID_OUTPUT_LIMIT);
+    aPID->setCoefficients(kP, kI, kD);
+    aPID->setOutputLimits(0, PID_OUTPUT_LIMIT);
+    aPID->setBias(PID_BIAS);
+    aPID->setWindUpLimits(-PID_WINDUP_LIMIT, PID_WINDUP_LIMIT);
+
+    // start the PID function
+    aPID->start();
 
     // Setup storage arrays..
     for (int i = 0; i < MES_TEMP_SIZE; i++)
@@ -343,15 +346,14 @@ bool AerPID::compute()
         ledcWrite(ssrChan, 0); // output pin off
     }
     // perform PID calculation
-    if (aPID->Compute())
+    // if (aPID->Compute())
+    aPID->compute();
+    if (true)
     {
         double _output = output;
         if (output > 128)
         {
-            _output *= 0.333;
-        }
-        else if (output > 48)
-        {
+            // this helps... with overshoot reduction
             _output *= 0.667;
         }
         _output *= PWM_ScaleFactor;
@@ -583,7 +585,7 @@ double AerPID::getTempMax()
 
 void AerPID::setTunings()
 {
-    aPID->SetTunings(kP, kI, kD);
+    aPID->setCoefficients(kP, kI, kD);
 }
 
 // =============================================================

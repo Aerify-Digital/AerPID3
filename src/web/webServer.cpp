@@ -632,6 +632,11 @@ void WebServer::enPackFill(MessagePack *messagePack)
     bitWrite(bitmap, 1, aerManager.getComms()->getBTEn());    // get status of bluetooth
     bitWrite(bitmap, 0, 0);                                   // unused
     messagePack->setBoleanBitmap(bitmap);
+#if AERPID_COUNT == 2
+    messagePack->setModel(2);
+#else
+    messagePack->setModel(1);
+#endif
 }
 
 void WebServer::sendInitMessage(uint32_t client)
@@ -669,6 +674,18 @@ void WebServer::updateClients()
     cmd->build();
     cmd->emitAll(&ws);
     delete cmd;
+
+#if AERPID_COUNT == 2
+    SocketCmdOp *cmd2 = new SocketCmdOp(SerialCommand::CMD_STATUS2);
+    cmd2->Op(Operation::OP_GET);
+    cmd2->Val(xAerPID2.PID_ON);
+    cmd2->Val(static_cast<uint16_t>(10.0 * xAerPID2.MES_TEMP));
+    cmd2->Val(static_cast<uint16_t>(10.0 * xAerPID2.AVG_TEMP));
+    cmd2->Val(static_cast<uint16_t>(10.0 * xAerPID2.SET_TEMP));
+    cmd2->build();
+    cmd2->emitAll(&ws);
+    delete cmd2;
+#endif
 
     // TODO: Update clients with any changes made locally or via usb.
 
@@ -1035,6 +1052,31 @@ void WebServer::processSocketData(char *data, size_t len, AsyncWebSocketClient *
         delete reply;
     }
     break;
+#if AERPID_COUNT == 2
+    case SerialCommand::COIL_TOGGLE2:
+    {
+        uint8_t op = data[1];
+        uint8_t val;
+        if (op == Operation::OP_GET)
+        {
+            bool enb = xAerPID2.PID_ON;
+            val = enb ? 0x01 : 0x00;
+        }
+        else
+        {
+            val = data[2];
+            bool enb = val > 0 ? true : false;
+            xAerPID2.PID_ON = enb;
+        }
+        SocketCmdOp *reply = new SocketCmdOp(SerialCommand::COIL_TOGGLE2);
+        reply->AddClient(client->id());
+        reply->Val(val);
+        reply->build();
+        reply->emit(&ws);
+        delete reply;
+    }
+    break;
+#endif
     case SerialCommand::CMD_ESP:
     {
         uint8_t op = data[2];
@@ -1375,6 +1417,19 @@ void WebServer::processSocketData(char *data, size_t len, AsyncWebSocketClient *
         uint8_t prm = data[2];
         switch (prm)
         {
+        case PARAM_PID::PARAM_PID:
+        {
+            SocketCmdOp *reply = new SocketCmdOp(SerialCommand::CMD_PID);
+            reply->AddClient(client->id());
+            reply->Param(prm);
+            reply->Val(xAerPID1.kP);
+            reply->Val(xAerPID1.kI);
+            reply->Val(xAerPID1.kD);
+            reply->build();
+            reply->emit(&ws);
+            delete reply;
+        }
+        break;
         case PARAM_PID::PARAM_PID_P:
         {
             double val;
@@ -1466,6 +1521,118 @@ void WebServer::processSocketData(char *data, size_t len, AsyncWebSocketClient *
         }
     }
     break;
+#if AERPID_COUNT == 2
+    case SerialCommand::CMD_PID2:
+    {
+        uint8_t op = data[1];
+        uint8_t prm = data[2];
+        switch (prm)
+        {
+        case PARAM_PID::PARAM_PID:
+        {
+            SocketCmdOp *reply = new SocketCmdOp(SerialCommand::CMD_PID2);
+            reply->AddClient(client->id());
+            reply->Param(PARAM_PID::PARAM_PID);
+            reply->Val(xAerPID2.kP);
+            reply->Val(xAerPID2.kI);
+            reply->Val(xAerPID2.kD);
+            reply->build();
+            reply->emit(&ws);
+            delete reply;
+        }
+        break;
+        case PARAM_PID::PARAM_PID_P:
+        {
+            double val;
+            if (op == OP_GET)
+            {
+                val = xAerPID2.kP;
+            }
+            else if (op == OP_SET)
+            {
+                byteDouble bd;
+                for (int i = 0; i < sizeof(double); i++)
+                {
+                    bd.bytes[i] = data[3 + i];
+                }
+                val = xAerPID2.kP = bd.value;
+                Serial.println(">>> P Val >> " + String(val));
+                xAerPID2.setTunings();
+                aerManager.setPressTick(600);
+                xAerPID2.pid_saved = false;
+            }
+
+            SocketCmdOp *reply = new SocketCmdOp(SerialCommand::CMD_PID2);
+            reply->AddClient(client->id());
+            reply->Param(prm);
+            reply->Val(val);
+            reply->build();
+            reply->emit(&ws);
+            delete reply;
+        }
+        break;
+        case PARAM_PID::PARAM_PID_I:
+        {
+            double val;
+            if (op == OP_GET)
+            {
+                val = xAerPID2.kI;
+            }
+            else if (op == OP_SET)
+            {
+                byteDouble bd;
+                for (int i = 0; i < sizeof(double); i++)
+                {
+                    bd.bytes[i] = data[3 + i];
+                }
+                val = xAerPID2.kI = bd.value;
+                Serial.println(">>> I Val >> " + String(val, 4));
+                xAerPID2.setTunings();
+                aerManager.setPressTick(600);
+                xAerPID2.pid_saved = false;
+            }
+            SocketCmdOp *reply = new SocketCmdOp(SerialCommand::CMD_PID2);
+            reply->AddClient(client->id());
+            reply->Param(prm);
+            reply->Val(val);
+            reply->build();
+            reply->emit(&ws);
+            delete reply;
+        }
+        break;
+        case PARAM_PID::PARAM_PID_D:
+        {
+            double val;
+            if (op == OP_GET)
+            {
+                val = xAerPID2.kD;
+            }
+            else if (op == OP_SET)
+            {
+                byteDouble bd;
+                for (int i = 0; i < sizeof(double); i++)
+                {
+                    bd.bytes[i] = data[3 + i];
+                }
+                val = xAerPID2.kD = bd.value;
+                Serial.println(">>> D Val >> " + String(val));
+                xAerPID2.setTunings();
+                aerManager.setPressTick(600);
+                xAerPID2.pid_saved = false;
+            }
+            SocketCmdOp *reply = new SocketCmdOp(SerialCommand::CMD_PID2);
+            reply->AddClient(client->id());
+            reply->Param(prm);
+            reply->Val(val);
+            reply->build();
+            reply->emit(&ws);
+            delete reply;
+        }
+        break;
+        }
+    }
+    break;
+#endif
     case SerialCommand::CMD_TEMP:
     {
         double val;
@@ -1510,6 +1677,52 @@ void WebServer::processSocketData(char *data, size_t len, AsyncWebSocketClient *
         delete reply;
     }
     break;
+#if AERPID_COUNT == 2
+    case SerialCommand::CMD_TEMP2:
+    {
+        double val;
+        uint8_t op = data[1];
+        if (op == Operation::OP_SET)
+        {
+            byteDouble bd;
+            for (int i = 0; i < sizeof(double); i++)
+            {
+                bd.bytes[i] = data[2 + i];
+            }
+            if (aerManager.getReadingType() == ThermalUnitsType::FAHRENHEIT)
+            { // convert to C
+                Serial.printf(">> Temp-In(f): %f \n", bd.value);
+                val = toCelsius(bd.value);
+            }
+            else if (aerManager.getReadingType() == ThermalUnitsType::KELVIN)
+            { // convert to c
+                Serial.printf(">> Temp-In(k): %f \n", bd.value);
+                val = fromKelvin(bd.value);
+            }
+            else
+            { // is c
+                val = bd.value;
+            }
+            Serial.printf(">> Set Temp(c): %f \n", val);
+            xAerPID2.SET_TEMP = val;
+            aerManager.updateTempStor(1, true);
+            aerManager.setPressTick(250);
+        }
+        else
+        {
+            val = xAerPID2.SET_TEMP;
+        }
+
+        SocketCmdOp *reply = new SocketCmdOp(SerialCommand::CMD_TEMP2);
+        reply->AddClient(client->id());
+        reply->Op(op);
+        reply->Val(static_cast<uint16_t>(10.0 * val));
+        reply->build();
+        reply->emit(&ws);
+        delete reply;
+    }
+    break;
+#endif
     case SerialCommand::CMD_WIFI:
     {
         uint8_t op = data[1];
