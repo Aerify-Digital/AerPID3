@@ -25,7 +25,9 @@
 #define _AERPID_H
 
 #include <OneWire.h>
-#include <PID_v1.h>
+#include <ArduPID.h>
+// Define pointer ref to ArduPID
+#define PID ArduPID
 
 #include <PinDefs.h>
 #include "storage/chartsStor.h"
@@ -45,13 +47,18 @@
 // *************************************
 
 // PWM frequency and resolution
-#define FREQ_PWM_KHz 40
-#define PWM_RESOLUTION 10
+#define FREQ_PWM_KHz 4
+#define PWM_RESOLUTION 14
 
 // PWM output scaling factor
-#define PWM_SCALE_FACTOR 0.105
+#define PWM_SCALE_FACTOR 0.251
 // Output value range limit
 #define PID_OUTPUT_LIMIT 255
+
+// Integral WindUp fix limit
+#define PID_WINDUP_LIMIT 1.256
+// Output Bias for PID function
+#define PID_BIAS 32
 
 // *************************************
 
