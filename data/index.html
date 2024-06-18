@@ -346,7 +346,7 @@
                 <h3 class="w3-padding-16 w3-text-light-grey">Quick-Settings</h3>
                 <div class="w3-row-padding" style="margin: 0 -16px">
                     <div class="w3-half w3-margin-bottom">
-                        <ul class="w3-ul w3-white w3-center w3-opacity w3-hover-opacity-off">
+                        <ul class="w3-ul w3-white w3-center w3-opacity w3-hover-opacity-off colrow-even">
                             <li class="w3-dark-grey w3-xlarge w3-padding-32">PID</li>
                             <li class="w3-padding-16">
                                 P:
@@ -393,7 +393,7 @@
                     </div>
 
                     <div class="w3-half">
-                        <ul class="w3-ul w3-white w3-center w3-opacity w3-hover-opacity-off">
+                        <ul class="w3-ul w3-white w3-center w3-opacity w3-hover-opacity-off colrow-even">
                             <li class="w3-dark-grey w3-xlarge w3-padding-32">LEDs</li>
                             <li class="w3-padding-16">
                                 Red:
@@ -507,7 +507,7 @@
 
                 <div class="sqd-container">
                     <div class="w3-margin-bottom w3-half sqd-wrapper">
-                        <ul class="w3-ul w3-white w3-center sqd-list">
+                        <ul class="w3-ul w3-white w3-center sqd-list colrow-even">
                             <li class="w3-dark-grey w3-xlarge w3-padding-8">Bump</li>
                             <li class="w3-padding-16">
                                 Bump Amt:<small>[in degrees]</small>&nbsp; &nbsp; &nbsp;
@@ -542,7 +542,7 @@
                         </ul>
                     </div>
                     <div class="w3-margin-bottom w3-half sqd-wrapper">
-                        <ul class="w3-ul w3-white w3-center sqd-list">
+                        <ul class="w3-ul w3-white w3-center sqd-list colrow-even">
                             <li class="w3-dark-grey w3-xlarge w3-padding-8">Auto-Off</li>
                             <li class="w3-padding-16">
                                 Enabled:&nbsp;&nbsp;&nbsp;&nbsp;
@@ -586,92 +586,332 @@
                 <div class="w3-row-padding" style="margin: 0 -16px">
 
                     <div class="w3-margin-bottom">
-                        <ul class="w3-ul w3-center">
-                            <div class="chart-container" style="position: relative; height:100%; width:60vw; max-width:1200px">
-                            <canvas id="temp_chart" style="width:100%;max-width:1200px"></canvas>
-                            <div style="background-color: black; color: grey;">X Axis updates every 1 Second</div>
-                            </div>
-                        </ul>
-                        
-                        <div style="margin-top: 1em; margin-bottom: 1em;">
-
-                            <div style="display:inline">
-                                <label for="color_pallete">Choose a color Palette:</label>
-                                <select name="color_pallete" id="color_pallete" onchange="palletChange(this)">
-                                    <option value="warm">Warmish</option>
-                                    <option value="cool">Coolish</option>
-                                    <option value="forest">Forest</option>
-                                    <option value="traffic">Traffic</option>
-                                    <option value="void">Void</option>
-                                </select>
-                            </div>
-
-                            <div style="display:inline; float: center; margin-left: 2em;">
-                                <label for="zoom_level">Y-Axis Zoom Level:</label>
-                                <select name="zoom_level" id="zoom_level" onchange="zoomChange(this)">
-                                    <option value="auto">Auto</option>
-                                    <option value="fine">Fine</option>
-                                    <option value="tiny">Tiny</option>
-                                    <option value="near">Near</option>
-                                    <option value="avg">Basic</option>
-                                    <option value="far">Far</option>
-                                    <option value="dist">Distant</option>
-                                    <option value="max">Max</option>
-                                    <option value="all">All</option>
-                                </select>
-                            </div>
+                        <!-- Tab links -->
+                        <div class="tab">
+                            <button class="tablinks" id="element1" onclick="openChartTab(event, 'elm1')" style="display: none;">Element 1</button>
+                            <button class="tablinks" id="element2" onclick="openChartTab(event, 'elm2')" style="display: none;">Element 2</button>
                         </div>
-                        <!-- Grid for Quick-Settings -->
-                        <h3 class="w3-padding-16 w3-text-light-grey">Quick-Settings</h3>
-                        <div class="w3-row-padding" style="margin: 0 -16px">
-                            <div class="w3-half w3-margin-bottom">
-                                <ul class="w3-ul w3-white w3-center w3-opacity w3-hover-opacity-off">
-                                    <li class="w3-dark-grey w3-xlarge w3-padding-32">PID</li>
-                                    <li class="w3-padding-16">
-                                        P:
-                                        <input type="number" id="p_qset2" name="p_qset2" class="pid_pset" min="0" max="100" step="0.1" value="0"
-                                            style="
-                            background-color: transparent;
-                            border: none;
-                            font-size: 14px;
-                            padding: 3px;
-                            text-align: center;
-                        " />
-                                    </li>
-                                    <li class="w3-padding-16">
-                                        I:
-                                        <input type="number" id="i_qset2" name="i_qset2" class="pid_iset" min="0" max="1" step="0.0001" value="0"
-                                            style="
-                            background-color: transparent;
-                            border: none;
-                            font-size: 14px;
-                            padding: 3px;
-                            text-align: center;
-                        " />
-                                    </li>
-                                    <li class="w3-padding-16">
-                                        D:
-                                        <input type="number" id="d_qset2" name="d_qset2" class="pid_dset" min="0" max="100" step="0.1" value="0"
-                                            style="
-                            background-color: transparent;
-                            border: none;
-                            font-size: 14px;
-                            padding: 3px;
-                            text-align: center;
-                        " />
-                                    </li>
-                                    <li class="w3-padding-8">
-                                        Please confirm all values before submitting these changes.
-                                    </li>
-                                    <li class="w3-light-grey w3-padding-24">
-                                        <button id="pid_qset2" class="w3-button w3-white w3-padding-large w3-hover-black">
-                                            Submit
-                                        </button>
-                                    </li>
-                                </ul>
+
+                        <div id="elm1" class="tabcontent">
+                            <!-- chart 1 -->
+                            <ul class="w3-ul w3-center">
+                                <div class="chart-container">
+                                <canvas id="temp_chart" style="width:100%;max-width:1200px"></canvas>
+                                <div style="background-color: black; color: grey;">X Axis updates every 1 Second</div>
+                                </div>
+                            </ul>
+                            
+                            <div style="margin-top: 1em; margin-bottom: 1em;">
+
+                                <div style="display:inline">
+                                    <label for="color_pallete">Choose a color Palette:</label>
+                                    <select name="color_pallete" id="color_pallete" onchange="palletChange(this)">
+                                        <option value="warm">Warmish</option>
+                                        <option value="cool">Coolish</option>
+                                        <option value="forest">Forest</option>
+                                        <option value="traffic">Traffic</option>
+                                        <option value="void">Void</option>
+                                    </select>
+                                </div>
+
+                                <div style="display:inline; float: center; margin-left: 2em;">
+                                    <label for="zoom_level">Y-Axis Zoom Level:</label>
+                                    <select name="zoom_level" id="zoom_level_1" onchange="zoomChange(this)">
+                                        <option value="auto">Auto</option>
+                                        <option value="fine">Fine</option>
+                                        <option value="tiny">Tiny</option>
+                                        <option value="near">Near</option>
+                                        <option value="avg">Basic</option>
+                                        <option value="far">Far</option>
+                                        <option value="dist">Distant</option>
+                                        <option value="max">Max</option>
+                                        <option value="all">All</option>
+                                    </select>
+                                </div>
                             </div>
+                            
+                            <div style="height: 1px; width: 100%; background: linear-gradient(90deg, rgba(238,238,238,0.6) 0%,  rgba(238,238,238,0.7) 60%,rgba(170,170,170,0) 100%); margin-left: -12px;"></div>
+                            <!-- Grid for Quick-Settings -->
+                            <h3 class="w3-padding-16 w3-text-light-grey">Quick-Settings</h3>
+                            <div class="w3-row-padding" style="margin: 0 -16px">
+                                <div class="w3-half w3-margin-bottom colrow-even">
+                                    <ul class="w3-ul w3-white w3-center">
+                                        <li class="w3-dark-grey w3-xlarge w3-padding-16" style="font-size: 30px !important; height: 98px; padding-top: 25px !important;">PID 1</li>
+                                        <li class="w3-padding-16">
+                                            P:
+                                            <input type="number" id="p_qset2" name="p_qset2" class="pid_pset" min="0" max="100" step="0.1" value="0"
+                                                style="
+                                background-color: transparent;
+                                border: none;
+                                font-size: 14px;
+                                padding: 3px;
+                                text-align: center;
+                            " />
+                                        </li>
+                                        <li class="w3-padding-16">
+                                            I:
+                                            <input type="number" id="i_qset2" name="i_qset2" class="pid_iset" min="0" max="1" step="0.0001" value="0"
+                                                style="
+                                background-color: transparent;
+                                border: none;
+                                font-size: 14px;
+                                padding: 3px;
+                                text-align: center;
+                            " />
+                                        </li>
+                                        <li class="w3-padding-16">
+                                            D:
+                                            <input type="number" id="d_qset2" name="d_qset2" class="pid_dset" min="0" max="100" step="0.1" value="0"
+                                                style="
+                                background-color: transparent;
+                                border: none;
+                                font-size: 14px;
+                                padding: 3px;
+                                text-align: center;
+                            " />
+                                        </li>
+                                        <li class="w3-padding-8">
+                                            Please confirm all values before submitting these changes.
+                                        </li>
+                                        <li class="w3-light-grey w3-padding-24">
+                                            <button id="pid_qset2" class="w3-button w3-white w3-padding-large w3-hover-black">
+                                                Submit
+                                            </button>
+                                        </li>
+                                    </ul>
+                                </div>
+                                
+                                <!-- Current Temp Panel 1 -->
+                                <div class="w3-half w3-margin-bottom">
+                                    <ul class="w3-ul w3-white w3-center colrow-even">
+                                        <li class="w3-dark-grey w3-xlarge" style="position: relative; height: 98px; padding-top: 4px; overflow: hidden">
+                                            <div style="position: absolute; right: 0px; left: 0px; top: 0px">
+                                                <div class="w3-top w3-hide-large w3-hide-medium" style="position: relative">
+                                                    <h1 style="padding-top: 14px">Temp1</h1>
+                                                </div>
+                                                <div class="w3-top w3-hide-small" style="position: relative">
+                                                    <h2 style="padding-top: 14px">Port 1 Temp</h2>
+                                                </div>
+                                            </div>
+                                            <button id="toggle_heat_1" class="w3-button w3-grey w3-section"
+                                                style="position: relative; float: left; z-index: 1">
+                                                <i class="fa fa-power-off"></i>
+                                            </button>
+                                            <!--  Glob feature maybe?
+                                            <button class="w3-button w3-grey w3-section" style="position: relative;float: right;">
+                                            <i class="fa fa-tint"></i>
+                                            </button>
+                                            -->
+                                        </li>
+                                        <li class="w3-padding-16 tempoutter" style="position: relative">
+                                            <div class="temperature">
+                                                <div class="bar2Overflow">
+                                                    <div class="bar2" id="bar1"></div>
+                                                </div>
+                                                <br />
+                                                <span
+                                                    style="font-size: 28px; font-weight: bold; position: relative; bottom: 80%"><span
+                                                        id="meas_temp_1">0.0</span>&deg;&nbsp;F</span>
+                                            </div>
+                                        </li>
+                                        <li class="w3-light-grey w3-padding-24">
+                                            <div class="settemp" style="--step:150; --min:0; --max:1200">
+                                                <input type="number" id="temp_setting_1" name="temp_setting_1" min="3" max="1200"
+                                                    step="0.1" value="32"
+                                                    style="
+                                                    background-color: transparent;
+                                                    border: none;
+                                                    font-size: 24px;
+                                                    font-weight: bold;
+                                                    padding: 14px;
+                                                    " /><br />
+                                                <div class="slider-square-ticks"></div>
+                                                <span
+                                                    style="font-size: 24px; font-weight: bold">&nbsp;&nbsp;&nbsp;0&nbsp;</span><input
+                                                    class="slider slider-square" type="range" id="temp_slider_1" name="temp_slider_1" list="values_1" step="1"
+                                                    min="32" max="1200" value="32.0" style="width: 260px"  /><span
+                                                    style="font-size: 24px; font-weight: bold">&nbsp;1200</span>
+                                                
+                                                <datalist id="values_1" style="padding-left: 8px; padding-right: 25px; max-width: 310px">
+                                                    <option value="32" label=" "></option>
+                                                    <option value="150" label="150"></option>
+                                                    <option value="300" label="300"></option>
+                                                    <option value="450" label="450"></option>
+                                                    <option value="600" label="600"></option>
+                                                    <option value="750" label="750"></option>
+                                                    <option value="900" label="900"></option>
+                                                    <option value="1050" label="1050"></option>
+                                                    <option value="1200" label=" "></option>
+                                                </datalist>
+                                            </div>
+                                        </li>
+                                    </ul>
+                                </div>
+                                <!-- End Current Temp Panel -->
+                            </div>
+                            <!-- End Quick-Settings tables -->
                         </div>
-                        <!-- End Quick-Settings tables -->
+
+                        <div id="elm2" class="tabcontent">
+                            <!-- chart 2 -->
+                            <ul class="w3-ul w3-center">
+                                <div class="chart-container">
+                                <canvas id="temp_chart2" style="width:100%;max-width:1200px"></canvas>
+                                <div style="background-color: black; color: grey;">X Axis updates every 1 Second</div>
+                                </div>
+                            </ul>
+                            
+                            <div style="margin-top: 1em; margin-bottom: 1em;">
+
+                                <div style="display:inline">
+                                    <label for="color_pallete">Choose a color Palette:</label>
+                                    <select name="color_pallete" id="color_pallete" onchange="palletChange2(this)">
+                                        <option value="warm">Warmish</option>
+                                        <option value="cool">Coolish</option>
+                                        <option value="forest">Forest</option>
+                                        <option value="traffic">Traffic</option>
+                                        <option value="void">Void</option>
+                                    </select>
+                                </div>
+
+                                <div style="display:inline; float: center; margin-left: 2em;">
+                                    <label for="zoom_level">Y-Axis Zoom Level:</label>
+                                    <select name="zoom_level" id="zoom_level_2" onchange="zoomChange2(this)">
+                                        <option value="auto">Auto</option>
+                                        <option value="fine">Fine</option>
+                                        <option value="tiny">Tiny</option>
+                                        <option value="near">Near</option>
+                                        <option value="avg">Basic</option>
+                                        <option value="far">Far</option>
+                                        <option value="dist">Distant</option>
+                                        <option value="max">Max</option>
+                                        <option value="all">All</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div style="height: 1px; width: 100%; background: linear-gradient(90deg, rgba(238,238,238,0.6) 0%,  rgba(238,238,238,0.7) 60%,rgba(170,170,170,0) 100%); margin-left: -12px;"></div>
+                            <!-- Grid for Quick-Settings -->
+                            <h3 class="w3-padding-16 w3-text-light-grey">Quick-Settings</h3>
+                            <div class="w3-row-padding" style="margin: 0 -16px">
+                                <div class="w3-half w3-margin-bottom">
+                                    <ul class="w3-ul w3-white w3-center colrow-even">
+                                        <li class="w3-dark-grey w3-xlarge w3-padding-16" style="font-size: 30px !important; height: 98px; padding-top: 25px !important;">PID 2</li>
+                                        <li class="w3-padding-16">
+                                            P:
+                                            <input type="number" id="p_qset2b" name="p_qset2b" class="pid_pset" min="0" max="100" step="0.1" value="0"
+                                                style="
+                                background-color: transparent;
+                                border: none;
+                                font-size: 14px;
+                                padding: 3px;
+                                text-align: center;
+                            " />
+                                        </li>
+                                        <li class="w3-padding-16">
+                                            I:
+                                            <input type="number" id="i_qset2b" name="i_qset2b" class="pid_iset" min="0" max="1" step="0.0001" value="0"
+                                                style="
+                                background-color: transparent;
+                                border: none;
+                                font-size: 14px;
+                                padding: 3px;
+                                text-align: center;
+                            " />
+                                        </li>
+                                        <li class="w3-padding-16">
+                                            D:
+                                            <input type="number" id="d_qset2b" name="d_qset2b" class="pid_dset" min="0" max="100" step="0.1" value="0"
+                                                style="
+                                background-color: transparent;
+                                border: none;
+                                font-size: 14px;
+                                padding: 3px;
+                                text-align: center;
+                            " />
+                                        </li>
+                                        <li class="w3-padding-8">
+                                            Please confirm all values before submitting these changes.
+                                        </li>
+                                        <li class="w3-light-grey w3-padding-24">
+                                            <button id="pid_qset2b" class="w3-button w3-white w3-padding-large w3-hover-black">
+                                                Submit
+                                            </button>
+                                        </li>
+                                    </ul>
+                                </div>
+
+                                <!-- Current Temp Panel 2 -->
+                                <div class="w3-half w3-margin-bottom">
+                                    <ul class="w3-ul w3-white w3-center colrow-even">
+                                        <li class="w3-dark-grey w3-xlarge" style="position: relative; height: 98px; padding-top: 4px; overflow: hidden">
+                                            <div style="position: absolute; right: 0px; left: 0px; top: 0px">
+                                                <div class="w3-top w3-hide-large w3-hide-medium" style="position: relative">
+                                                    <h1 style="padding-top: 14px">Temp2</h1>
+                                                </div>
+                                                <div class="w3-top w3-hide-small" style="position: relative">
+                                                    <h2 style="padding-top: 14px">Port 2 Temp</h2>
+                                                </div>
+                                            </div>
+                                            <button id="toggle_heat_2" class="w3-button w3-grey w3-section"
+                                                style="position: relative; float: left; z-index: 1">
+                                                <i class="fa fa-power-off"></i>
+                                            </button>
+                                            <!--  Glob feature maybe?
+                                            <button class="w3-button w3-grey w3-section" style="position: relative;float: right;">
+                                            <i class="fa fa-tint"></i>
+                                            </button>
+                                            -->
+                                        </li>
+                                        <li class="w3-padding-16 tempoutter" style="position: relative">
+                                            <div class="temperature">
+                                                <div class="bar2Overflow">
+                                                    <div class="bar2" id="bar2"></div>
+                                                </div>
+                                                <br />
+                                                <span
+                                                    style="font-size: 28px; font-weight: bold; position: relative; bottom: 80%"><span
+                                                        id="meas_temp_2">0.0</span>&deg;&nbsp;F</span>
+                                            </div>
+                                        </li>
+                                        <li class="w3-light-grey w3-padding-24">
+                                            <div class="settemp" style="--step:150; --min:0; --max:1200">
+                                                <input type="number" id="temp_setting_2" name="temp_setting_2" min="3" max="1200"
+                                                    step="0.1" value="32"
+                                                    style="
+                                                    background-color: transparent;
+                                                    border: none;
+                                                    font-size: 24px;
+                                                    font-weight: bold;
+                                                    padding: 14px;
+                                                    " /><br />
+                                                <div class="slider-square-ticks"></div>
+                                                <span
+                                                    style="font-size: 24px; font-weight: bold">&nbsp;&nbsp;&nbsp;0&nbsp;</span><input
+                                                    class="slider slider-square" type="range" id="temp_slider_2" name="temp_slider_2" list="values" step="1"
+                                                    min="32" max="1200" value="32.0" style="width: 260px"  /><span
+                                                    style="font-size: 24px; font-weight: bold">&nbsp;1200</span>
+                                                
+                                                <datalist id="values" style="padding-left: 8px; padding-right: 25px; max-width: 310px">
+                                                    <option value="32" label=" "></option>
+                                                    <option value="150" label="150"></option>
+                                                    <option value="300" label="300"></option>
+                                                    <option value="450" label="450"></option>
+                                                    <option value="600" label="600"></option>
+                                                    <option value="750" label="750"></option>
+                                                    <option value="900" label="900"></option>
+                                                    <option value="1050" label="1050"></option>
+                                                    <option value="1200" label=" "></option>
+                                                </datalist>
+                                            </div>
+                                        </li>
+                                    </ul>
+                                </div>
+                                <!-- End Current Temp Panel -->
+                            </div>
+                            <!-- End Quick-Settings tables -->
+                        </div>
+
                     </div>
 
                 </div>
@@ -684,7 +924,7 @@
 
                 <div class="w3-row-padding" style="margin: 0 -16px">
                     <div class="w3-half w3-margin-bottom">
-                        <ul class="w3-ul w3-white w3-center">
+                        <ul class="w3-ul w3-white w3-center colrow2-even">
                             <li class="w3-dark-grey w3-xlarge w3-padding-32">
                                 <i class="fas fa-lightbulb"></i>&nbsp;Gen. LED Settings
                             </li>
@@ -756,9 +996,9 @@
                     </script>
 
                     <div class="w3-half">
-                        <ul class="w3-ul w3-white w3-center">
+                        <ul class="w3-ul w3-white w3-center colrow2-even">
                             <li class="w3-dark-grey w3-xlarge w3-padding-32">Lighting Presets</li>
-                            <li class="w3-padding-16">
+                            <li class="plight-list">
                                 <span class="tooltip"><span style="font-size: 1.2em">Rainbow Wave:</span><span
                                         class="tooltiptext">Each LED will cycle
                                         through the colors of the rainbow one at a time in a wave
@@ -768,7 +1008,7 @@
                                     <span class="ledmodebutton" id="rainbowbut_span">Enable</span>
                                 </button>
                             </li>
-                            <li class="w3-padding-16">
+                            <li class="plight-list">
                                 <span class="tooltip"><span style="font-size: 1.2em">Rainbow:</span><span
                                         class="tooltiptext">The LEDs will cycle thru
                                         the colors of the rainbow at the same time.</span></span>&nbsp;&nbsp;
@@ -777,7 +1017,7 @@
                                     <span class="ledmodebutton" id="rainbowbut2_span">Enable</span>
                                 </button>
                             </li>
-                            <li class="w3-padding-16">
+                            <li class="plight-list">
                                 <span class="tooltip"><span style="font-size: 1.2em">Rainbow Pulse:</span><span
                                         class="tooltiptext">The LEDs will Fade
                                         in and out the colors of the rainbow.</span></span>&nbsp;&nbsp;
@@ -786,7 +1026,7 @@
                                     <span class="ledmodebutton" id="rainbowbut3_span">Enable</span>
                                 </button>
                             </li>
-                            <li class="w3-padding-16">
+                            <li class="plight-list">
                                 <span class="tooltip"><span style="font-size: 1.2em">Color Shift:</span><span
                                         class="tooltiptext">The LEDs will shift
                                         from one color to another randomnly.
@@ -796,7 +1036,7 @@
                                     <span class="ledmodebutton" id="preshiftbut_span">Enable</span>
                                 </button>
                             </li>
-                            <li class="w3-padding-16">
+                            <li class="plight-list">
                                 <span class="tooltip"><span style="font-size: 1.2em">Color Pulse:</span><span
                                         class="tooltiptext">The LEDs will pulse
                                         in and out, fading into a new random color.</span></span>&nbsp;&nbsp;
@@ -813,7 +1053,7 @@
                 </div>
                 <div class="w3-row-padding" style="margin: 0 -16px; margin-top: 1em;">
                     <div class="w3-half w3-margin-bottom">
-                        <ul class="w3-ul w3-white w3-center">
+                        <ul class="w3-ul w3-white w3-center colrow2-even">
                             <li class="w3-dark-grey w3-xlarge w3-padding-32">
                                 <i class="fas fa-lightbulb"></i>Ambient Color Settings
                             </li>
@@ -900,7 +1140,7 @@
                     </div>
 
                     <div class="w3-half">
-                        <ul class="w3-ul w3-white w3-center">
+                        <ul class="w3-ul w3-white w3-center colrow2-even">
                             <li class="w3-dark-grey w3-xlarge w3-padding-32">Ambient Patterns</li>
                             <li class="w3-padding-16">
                                 <span class="tooltip"><span style="font-size: 1.2em">Color Blink:</span><span
@@ -1052,7 +1292,7 @@
 
                 <div class="w3-row-padding" style="margin: 0 -16px">
                     <div class="w3-half w3-margin-bottom">
-                        <ul class="w3-ul w3-white w3-center">
+                        <ul class="w3-ul w3-white w3-center network-row-even">
                             <li class="w3-dark-grey w3-xlarge w3-padding-32">
                                 <i class="fas fa-house-signal"></i>&nbsp;WiFi Networks
                             </li>
@@ -1135,7 +1375,7 @@
                     </div>
 
                     <div class="w3-half">
-                        <ul class="w3-ul w3-white w3-center">
+                        <ul class="w3-ul w3-white w3-center network-row-even">
                             <li class="w3-dark-grey w3-xlarge w3-padding-32">WiFi Services</li>
                             <li class="w3-padding-16">
                                 <span class="tooltip"><span style="font-size: 2em">Enabled:</span><span
@@ -1166,6 +1406,7 @@
                         </ul>
                     </div>
                 </div>
+
                 <h2 class="w3-text-light-grey">Comms Configuration</h2>
                 <hr style="width: 200px" class="w3-opacity" />
 
@@ -1262,7 +1503,7 @@
 
                 <div class="w3-row-padding" style="margin: 0 -16px">
                     <div class="w3-half w3-margin-bottom">
-                        <ul class="w3-ul w3-white w3-center">
+                        <ul class="w3-ul w3-white w3-center settings-row-even">
                             <li class="w3-dark-grey w3-xlarge w3-padding-32">Favorite Temps</li>
                             <li class="w3-padding-16">
                                 <p>#1 Name: <input id="fav1_t" type="text" /></p>
@@ -1287,7 +1528,7 @@
                     </div>
 
                     <div class="w3-half">
-                        <ul class="w3-ul w3-white w3-center">
+                        <ul class="w3-ul w3-white w3-center settings-row-even">
                             <li class="w3-dark-grey w3-xlarge w3-padding-32">Device Settings</li>
                             <li class="w3-padding-16">
                                 Host Name:<br />
@@ -1360,24 +1601,24 @@
                             <li class="w3-dark-grey w3-xlarge w3-padding-32">Aerifty Digital</li>
                             <li class="w3-padding-16">
                                 Visit us at our
-                                <a href="https://AerifyDigital.com">Website</a> for the latest updates and product
+                                <a href="https://AerifyDigital.com" target="_blank" referrerpolicy="no-referrer">Website</a> for the latest updates and product
                                 releases!
                             </li>
                             <li class="w3-padding-16">
                                 Head to the
-                                <a href="https://AerifyDigital.com/store">Web-Store</a> to grab our hottest new
+                                <a href="https://Aerify.Digital/shop" target="_blank" referrerpolicy="no-referrer">Web-Store</a> to grab our hottest new
                                 tech!
                             </li>
-                            <li class="w3-padding-16">
+                            <li class="w3-padding-16" style="display: none;">
                                 Check out our list of Authorized-Retailers
-                                <a href="https://AerifyDigital.com/retail">Here</a> to find us locally!
+                                <a href="https://AerifyDigital.com/retail" target="_blank" referrerpolicy="no-referrer">Here</a> to find us locally!
                             </li>
-                            <li class="w3-light-grey w3-padding-24">
+                            <li class="w3-light-grey w3-padding-24" style="display: none;">
                                 Want to see us in your favorite local shop? Print
-                                <a href="https://AerifyDigital.com/flyer">this</a> and give it to them as a way to
+                                <a href="https://AerifyDigital.com/flyer" target="_blank" referrerpolicy="no-referrer">this</a> and give it to them as a way to
                                 introduce us. <br /><br />
                                 Or fill out a suggestion form
-                                <a href="#https://AerifyDigital.com/suggest">here</a>, and we will reach out
+                                <a href="#https://AerifyDigital.com/suggest" target="_blank" referrerpolicy="no-referrer">here</a>, and we will reach out
                                 ourselves!
                             </li>
                         </ul>
@@ -1389,20 +1630,34 @@
                             <li class="w3-dark-grey w3-xlarge w3-padding-32">Support &amp; Sales</li>
                             <li class="w3-padding-16">
                                 Check the digital
-                                <a href="https://AerifyDigital.com/ug/at/latest">User Guide</a>
-                                for the latest directions on how to use your AerTiny. This is updated with each
-                                major firmware upgrade, and may be downloaded as a pdf.
+                                <a href="https://docs.aerify.digital/" target="_blank" referrerpolicy="no-referrer">Docuemntation Site</a>
+                                for the directions on how to use your AerTiny.
                             </li>
                             <li class="w3-padding-16">
+                                Check out our 
+                                <a href="https://docs.aerify.digital/blog" target="_blank" referrerpolicy="no-referrer">Welcome Post</a> 
+                                and blog for latest development info.
+                            </li>
+                            <li class="w3-padding-16">
+                                If you encounter a bug, have an issue or suggestion,<br/>please open a
+                                <a href="https://github.com/Aerify-Digital/AerPID3/issues" target="_blank" referrerpolicy="no-referrer">Ticket</a> 
+                                on our github source code repository.
+                            </li>
+                            <li class="w3-padding-16">
+                                Grab and review the 
+                                <a href="https://github.com/Aerify-Digital/AerPID3" target="_blank" referrerpolicy="no-referrer">Soure Code</a> 
+                                and contribute to the project.
+                            </li>
+                            <li class="w3-padding-16" style="display: none;">
                                 Head to the
-                                <a href="https://AerifyDigital.com/at/FAQ">FAQ</a> for quick help with your device.
+                                <a href="https://AerifyDigital.com/at/FAQ" target="_blank" referrerpolicy="no-referrer">FAQ</a> for quick help with your device.
                             </li>
                             <li class="w3-padding-16">
                                 Need more help?
-                                <a href="mailto:support@aerifydigital.com">Email Us</a>, we would love the chance to
+                                <a href="mailto:support@aerify.digital" target="_blank" referrerpolicy="no-referrer">Email Us</a>, we would love the chance to
                                 help out!
                             </li>
-                            <li class="w3-light-grey w3-padding-24">
+                            <li class="w3-light-grey w3-padding-24" style="display: none;">
                                 If you are interested in becoming an Authorized-Retailer of our devices please feel
                                 free to fill out an application
                                 <a href="https://AerifyDigital.com/reseller">here</a>. <br /><br />
@@ -1420,7 +1675,7 @@
         <footer class="w3-content w3-padding-64 w3-text-grey w3-xlarge">
             <p class="w3-medium">
                 Powered by:
-                <a href="https://aerifydigital.com" target="_blank" class="w3-hover-text-aqua">Aerify-Digital</a>
+                <a href="https://aerifydigital.com"  target="_blank" referrerpolicy="no-referrer" class="w3-hover-text-aqua">Aerify.Digital</a>
             </p>
             <!-- End footer -->
         </footer>
