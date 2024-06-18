@@ -1,10 +1,10 @@
 {
   "version": {
     "VER_MAJOR": "3",
-    "VER_MINOR": "1",
-    "VER_BUILD": "3",
+    "VER_MINOR": "2",
+    "VER_BUILD": "0",
     "VER_WEB_MAJOR": "0",
     "VER_WEB_MINOR": "3",
-    "VER_WEB_BUILD": "71"
+    "VER_WEB_BUILD": "72"
   }
 }
