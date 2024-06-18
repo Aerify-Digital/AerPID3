@@ -47,7 +47,7 @@
 // *************************************
 
 // PWM frequency and resolution
-#define FREQ_PWM_KHz 4
+#define FREQ_PWM_KHz 3
 #define PWM_RESOLUTION 14
 
 // PWM output scaling factor
