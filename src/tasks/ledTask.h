@@ -73,6 +73,10 @@ void tickBacklightLED(AerManager *_am, long &bl_tick, int16_t &targetBacklightLe
         bool blDimEnb = st7789->isBacklightDimOn();
         uint8_t bll = st7789->getBacklightLevel();
 
+        if (!tftSettingsStorage.isLoaded()) {
+            return;
+        }
+
         uint16_t blTimeout = st7789->getBacklightDimTimeout();
         if (st7789->isBacklightDimmed() && _am->getGUI()->activity_counter <= 1)
         {

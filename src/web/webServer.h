@@ -39,12 +39,15 @@
 #include "serial/messagePack.h"
 
 #include "storage/networkStor.h"
+#include "storage/wifiStor.h"
 #include "core/controllers/AerManager.h"
 #include "core/controllers/AerPID.h"
 
 #include "util/uuid.h"
 #include "util/splitter.h"
 #include "util/thermals.hpp"
+
+#include "page_404.h"
 
 // ======================
 // ======================
@@ -146,25 +149,11 @@ private:
     static void _onEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len);
     static void handleSocketMessage(void *arg, uint8_t *data, size_t len, AsyncWebSocketClient *client);
     static void processSocketData(char *data, size_t len, AsyncWebSocketClient *client);
-    static void processSocketCmd(SerialCommand cmd, AsyncWebSocketClient *client, char *data, size_t len);
 
     static void sendInitMessage(uint32_t client);
 
     static char *configureFavTempName(uint8_t index, char *data);
-    static void configureFavTemp(u_int8_t index, double temp);
-
-    static void sendInitString();
-    static void sendTempStr();
-    static void sendSetTemp();
-    static void sendPIDSet();
-    static void sendCoilStatus();
-    static void sendBumpStatus();
-    static void toggleCoil();
-    static void toggleBump();
-    static void sendLightStatus();
-
-    static void updateLEDVars();
-    static void notifyClients();
+    static void configureFavTemp(uint8_t index, double temp);
 };
 
 extern WebServer webServer;

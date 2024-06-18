@@ -41,7 +41,7 @@ void taskWebWorker(void *parameter)
             webServer.tick();
             xSemaphoreGive(sys1_mutex);
         }
-        vTaskDelay(200 / portTICK_PERIOD_MS);
+        vTaskDelay(100 / portTICK_PERIOD_MS);
     }
     vTaskDelete(NULL);
 }

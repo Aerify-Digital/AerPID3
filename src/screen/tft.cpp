@@ -705,7 +705,7 @@ namespace AerTftUI
 
         uint32_t color1 = color565(128, 128, 0);                                                  // free mem (olive)
         uint32_t color2 = color565(255 - (fPercentA * 0.6), 108 + (fPercentA * 0.4), 0);          // used mem
-        uint32_t color3 = color565(255 - fPercentB, std::min(208 + fPercentA, (uint32_t)255), 0); // used mem
+        uint32_t color3 = color565(255 - fPercentB, std::min(208 + fPercentB, (uint32_t)255), 0); // used mem
         uint32_t color4 = color565(150 + (fPercentC * 0.6), 255 - (fPercentC * 0.4), 30);         // used mem
 
         // widths A bar 1
@@ -868,9 +868,30 @@ namespace AerTftUI
         const uint16_t *image;
         if (unitType == ThermalUnitsType::FAHRENHEIT)
         {
-            tempStr = paddedStr(toStrF(temp, 1, true), 5);
-            tempAvgStr = paddedStr(toStrF(temp_avg, 1, true), 5);
-            tempSetStr = paddedStr(toStrF(temp_set, 0, true), 4);
+            if (temp >= 537.7)
+            {
+                tempStr = paddedStr(toStrF(temp, 0, true), 4);
+            }
+            else
+            {
+                tempStr = paddedStr(toStrF(temp, 1, true), 5);
+            }
+            if (temp_avg >= 537.7)
+            {
+                tempAvgStr = paddedStr(toStrF(temp_avg, 0, true), 4);
+            }
+            else
+            {
+                tempAvgStr = paddedStr(toStrF(temp_avg, 1, true), 5);
+            }
+            if (temp_set >= 537.7)
+            {
+                tempSetStr = paddedStr(toStrF(temp_set, 0, true), 4);
+            }
+            else
+            {
+                tempSetStr = paddedStr(toStrF(temp_set, 1, true), 5);
+            }
             image = image_data_temp_f_l2;
         }
         else if (unitType == ThermalUnitsType::CELSIUS)
@@ -883,7 +904,7 @@ namespace AerTftUI
         else if (unitType == ThermalUnitsType::KELVIN)
         {
             tempStr = paddedStr(toStrK(temp, 0, true), 5);
-            tempAvgStr = paddedStr(toStrK(temp_avg, 0, true), 5);
+            tempAvgStr = paddedStr(toStrK(temp_avg, 0, true), 4);
             tempSetStr = paddedStr(toStrK(temp_set, 0, true), 4);
             image = image_data_temp_k_l2;
         }
@@ -907,23 +928,33 @@ namespace AerTftUI
             spr1->pushSprite(0, 0);
             spr1->deleteSprite();
 
-            spr1->createSprite(272, 74);
-            spr1->fillRect(0, 0, 272, 2, 0x2966);
-            spr1->fillRect(0, 2, 272, 76, 0x31C8);
+            uint sz = 64;
+            // temperature average
+            spr1->createSprite(272 - sz, 74);
+            spr1->fillRect(0, 0, 272 - sz, 2, 0x2966);
+            spr1->fillRect(0, 2, 272 - sz, 76, 0x31C8);
             spr1->setCursor(20, 61 - 42);
             spr1->setTextColor(TFT_WHITE, 0x31C8);
             spr1->setTextSize(6);
             spr1->print(tempAvgStr.c_str());
+            spr1->pushSprite(0, 46);
+            spr1->deleteSprite();
+
+            // temperature live
+            spr1->createSprite(sz, 74);
+            spr1->fillRect(0, 0, sz, 2, 0x2966);
+            spr1->fillRect(0, 2, sz, 76, 0x31C8);
             if (image)
             {
-                spr1->pushImage(222, 65 - 40, 36, 32, image);
+                spr1->pushImage(14, 65 - 40, 36, 32, image);
             }
-            spr1->setCursor(208, 56);
+            spr1->setCursor(0, 56);
             spr1->setTextColor(TFT_SKYBLUE, 0x31C8);
             spr1->setTextSize(2);
             spr1->print(tempStr.c_str());
-            spr1->pushSprite(0, 46);
+            spr1->pushSprite(272 - sz, 46);
             spr1->deleteSprite();
+
             lastTemp = temp;
             updatesProcessed = true;
         }
@@ -931,26 +962,29 @@ namespace AerTftUI
         if (lastTemp_set != temp_set || update)
         {
             // Serial.println("[ShowTempSection] >> Set Temp Update.");
-            spr2->createSprite(204, 106);
+            spr2->createSprite(204, 38);
             spr2->pushImage(0, 0, 204, 38, image_data_bg03_btm_b);
             // spr2->fillRect(3, 3, 204, 32, color565(101, 109, 118));
             // spr1->fillRect(3, 7, 204, 2, 0x2966);
-            spr2->fillRect(0, 38, 3, 106 - 38, TFT_BLACK);
-            spr2->fillRect(3, 38, 204 - 3, 106 - 38, 0x31C8);
+            spr2->fillRect(0, 38, 3, 38, TFT_BLACK);
             spr2->setCursor(15, 8);
             spr2->setTextColor(TFT_WHITE);
             spr2->setTextSize(3);
             spr2->print("Set Value");
+            spr2->pushSprite(68, 134);
+            spr2->deleteSprite();
 
-            spr2->setCursor(110 - 68, 190 - 134);
+            spr2->createSprite(204, 106 - 38);
+            spr2->fillRect(3, 0, 204 - 3, 106 - 38, 0x31C8);
+            spr2->setCursor(88 - 68, 190 - 134 - 38);
             spr2->setTextColor(TFT_WHITE, 0x31C8);
             spr2->setTextSize(4);
             spr2->print(tempSetStr.c_str());
             if (image)
             {
-                spr2->pushImage(222 - 68, 190 - 134, 36, 32, image);
+                spr2->pushImage(222 - 68, 190 - 134 - 38, 36, 32, image);
             }
-            spr2->pushSprite(68, 134);
+            spr2->pushSprite(68, 134 + 38);
             spr2->deleteSprite();
             lastTemp_set = temp_set;
             updatesProcessed = true;

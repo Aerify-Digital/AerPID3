@@ -2299,7 +2299,7 @@ void onEb1Encoder(EncoderButton &eb)
             }
             if (enc_am->getAerPID(elementIndex)->AUTO_OFF_TIME > 18000)
             {
-                enc_am->getAerPID(elementIndex)->AUTO_OFF_TIME = 300;
+                enc_am->getAerPID(elementIndex)->AUTO_OFF_TIME = 900;
             }
             enc_am->updateFlashStor(true);
             enc_am->setPressTick(300);

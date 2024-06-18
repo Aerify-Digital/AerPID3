@@ -7,10 +7,8 @@
 
 #include "esp_log.h"
 
-// #include "HardwareSerial.h"
-
 // check interval span lenth in milliseconds
-static const uint checkIntervalLength = 256;
+static const uint checkIntervalLength = 224;
 
 // current idle call count per interval
 static uint64_t idle0Calls = 0;
@@ -150,7 +148,7 @@ static void perfmon_task(void *args)
             Serial.println("%");
         }*/
 
-        if (millis() > 7000 && cpu0 + cpu1 >= 170)
+        /*if (millis() > 30000 && cpu0 + cpu1 >= 170)
         {
             if (lag < 10)
             {
@@ -160,9 +158,8 @@ static void perfmon_task(void *args)
                     lag++;
                 }
             }
-            vTaskDelay((timeSpan * lag) / portTICK_PERIOD_MS);
-            continue;
-        }
+            vTaskDelay((timeSpan * lag * 0.1) / portTICK_PERIOD_MS);
+        }*/
 
         if (lag > 1)
         {

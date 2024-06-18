@@ -36,6 +36,7 @@
 #if AERPID_COUNT == 2
 #define LM75_ADDRESS_C 0x4A
 #endif
+#define PID_MONITOR_ADDR 0x2D
 
 // ======================
 // Pin Defines

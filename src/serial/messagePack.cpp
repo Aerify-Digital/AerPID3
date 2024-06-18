@@ -85,6 +85,7 @@ uint MessagePack::fetchInitMessage()
     pack(AUTO_OFF_TIME, 2);
     // led data block
     pack(LED_MODE, 1);
+    pack(LED_STATUS, 1);
     pack(LED_COLOR, 3);
     pack(LED_BRIGHTNESS, 1);
 
@@ -190,6 +191,11 @@ void MessagePack::setAutoOffTime(uint16_t time)
 void MessagePack::setLedMode(uint8_t mode)
 {
     LED_MODE[0] = mode;
+}
+
+void MessagePack::setLedSatus(uint8_t status)
+{
+    LED_STATUS[0] = status;
 }
 
 void MessagePack::setLedColor(uint8_t r, uint8_t g, uint8_t b)

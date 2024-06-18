@@ -21,7 +21,8 @@ AerPID::AerPID(u_int8_t pin, uint8_t ssrPin, uint8_t ssrChan, uint8_t index)
     this->index = index;
     this->ssrPin = ssrPin;
     this->ssrChan = ssrChan;
-    oneWire = new OneWire(pin);
+    this->ow_pin = pin;
+    // oneWire = new OneWire(pin);
 
     // =======================
     // PID Setup Instance
@@ -48,6 +49,13 @@ bool AerPID::init()
         Serial.println(F("..."));
         return false;
     }
+
+    // initialize 1wire bus
+    oneWire = new OneWire(ow_pin);
+
+    // set sensor bit resolution
+    setSensorResolution(MEASURE_BIT_PRECISION);
+
     Serial.println(F(" ok!"));
 
     // =======================
@@ -337,11 +345,16 @@ bool AerPID::compute()
     // perform PID calculation
     if (aPID->Compute())
     {
-        double _output = PWM_ScaleFactor * output;
-        if (output > 100)
+        double _output = output;
+        if (output > 128)
         {
             _output *= 0.333;
         }
+        else if (output > 48)
+        {
+            _output *= 0.667;
+        }
+        _output *= PWM_ScaleFactor;
 
         // convert output double to uint32
         uint32_t xOut = static_cast<uint32_t>(_output);
@@ -350,7 +363,7 @@ bool AerPID::compute()
         if (_output > 0.09)
         {
             // output at scaled % value
-            ledcWrite(ssrChan, xOut += 3);
+            ledcWrite(ssrChan, xOut += 1);
             _on = true;
         }
         else
@@ -379,10 +392,10 @@ bool AerPID::compute()
             Serial.print(F(" ms"));
             Serial.print(F(" :: "));
             Serial.print(F("PWM= "));
-            Serial.print(_output);
+            Serial.print(output);
             Serial.print(F(" :: "));
             Serial.print(F("xPWM= "));
-            Serial.print(output);
+            Serial.print(_output);
             Serial.print(F(" :: "));
             Serial.print(F("xOUT= "));
             Serial.println(xOut);
@@ -713,7 +726,7 @@ boolean AerPID::measureElementTemperature()
         if (raw & 0x01)
         {
             // Serial.println("**FAULT!**");
-            delay(300);
+            //  delay(300);
             return false;
         }
     }
@@ -741,4 +754,144 @@ boolean AerPID::measureElementTemperature()
     addToMES_TEMP(celsius + OFFSET_TEMP);
 
     return true;
+}
+
+// set resolution of a device to 9, 10, 11, or 12 bits
+// if new resolution is out of range, 9 bits is used.
+bool AerPID::setSensorResolution(uint8_t newResolution)
+{
+    byte addr[8];
+    uint8_t temptype;
+
+    oneWire->reset_search();
+    if (!oneWire->search(addr))
+    {
+        oneWire->reset_search();
+        return false;
+    }
+
+    if (OneWire::crc8(addr, 7) != addr[7])
+    {
+        Serial.println("CRC is not valid!");
+        return false;
+    }
+
+    // the first ROM byte indicates which chip
+    switch (addr[0])
+    {
+    case 0x3B:
+        Serial.print(" Chip = MAX31850 ...");
+        temptype = TYPE_MAX31850;
+        break;
+    default:
+        Serial.println("Device is not a DS18x20 family device.");
+        return false;
+    }
+
+    if (temptype == TYPE_MAX31850)
+    {
+        uint8_t scratchPad[9];
+        readScratchPad(addr, scratchPad);
+        Serial.print(" Set Resolution: ");
+        switch (newResolution)
+        {
+        case 12:
+            scratchPad[SENSOR_CONFIGURATION_LOCATION] = TEMP_12_BIT;
+            Serial.print(12);
+            break;
+        case 11:
+            scratchPad[SENSOR_CONFIGURATION_LOCATION] = TEMP_11_BIT;
+            Serial.print(11);
+            break;
+        case 10:
+            scratchPad[SENSOR_CONFIGURATION_LOCATION] = TEMP_10_BIT;
+            Serial.print(10);
+            break;
+        case 9:
+        default:
+            scratchPad[SENSOR_CONFIGURATION_LOCATION] = TEMP_9_BIT;
+            Serial.print(9);
+            break;
+        }
+        Serial.println(" bits");
+
+        oneWire->reset();
+        oneWire->select(addr);
+        oneWire->write_bytes(scratchPad, 9);
+        Serial.print("Wrote Scratchpad to Sensor...");
+
+        oneWire->reset();
+    }
+
+    return false;
+}
+
+void AerPID::readScratchPad(uint8_t *deviceAddress, uint8_t *scratchPad)
+{
+    // send the command
+    oneWire->reset();
+    oneWire->select(deviceAddress);
+    oneWire->write(READSCRATCH);
+
+    // TODO => collect all comments &  use simple loop
+    // byte 0: temperature LSB
+    // byte 1: temperature MSB
+    // byte 2: high alarm temp
+    // byte 3: low alarm temp
+    // byte 4: DS18S20: store for crc
+    //         DS18B20 & DS1822: configuration register
+    // byte 5: internal use & crc
+    // byte 6: DS18S20: COUNT_REMAIN
+    //         DS18B20 & DS1822: store for crc
+    // byte 7: DS18S20: COUNT_PER_C
+    //         DS18B20 & DS1822: store for crc
+    // byte 8: SCRATCHPAD_CRC
+    //
+    // for(int i=0; i<9; i++)
+    // {
+    //   scratchPad[i] = _wire->read();
+    // }
+
+    // read the response
+
+    // byte 0: temperature LSB
+    scratchPad[TEMP_LSB] = oneWire->read();
+
+    // byte 1: temperature MSB
+    scratchPad[TEMP_MSB] = oneWire->read();
+
+    // byte 2: high alarm temp
+    scratchPad[HIGH_ALARM_TEMP] = oneWire->read();
+
+    // byte 3: low alarm temp
+    scratchPad[LOW_ALARM_TEMP] = oneWire->read();
+
+    // byte 4:
+    // DS18S20: store for crc
+    // DS18B20 & DS1822: configuration register
+    scratchPad[CONFIGURATION] = oneWire->read();
+
+    // byte 5:
+    // internal use & crc
+    scratchPad[INTERNAL_BYTE] = oneWire->read();
+
+    // byte 6:
+    // DS18S20: COUNT_REMAIN
+    // DS18B20 & DS1822: store for crc
+    scratchPad[COUNT_REMAIN] = oneWire->read();
+
+    // byte 7:
+    // DS18S20: COUNT_PER_C
+    // DS18B20 & DS1822: store for crc
+    scratchPad[COUNT_PER_C] = oneWire->read();
+
+    // byte 8:
+    // SCTRACHPAD_CRC
+    scratchPad[SCRATCHPAD_CRC] = oneWire->read();
+
+    for (uint8_t i = 0; i < 8; i++)
+    {
+        // Serial.print("\n 0x"); Serial.print(scratchPad[i], HEX);
+    }
+    oneWire->reset();
 }

@@ -8,6 +8,7 @@
 #include "common/datatypes/mutex.h"
 #include "core/controllers/AerPID.h"
 
+// @Deprecated
 void pid_task(void *pvParameters);
 
 // Task PID Worker

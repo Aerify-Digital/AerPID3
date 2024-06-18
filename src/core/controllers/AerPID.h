@@ -65,18 +65,21 @@
 // Tick max for PID - sample time scaler
 #define PID_TICK_MAX (PID_SAMPLE_TIME_MS / PID_SLEEP_TIME_MS)
 // Measure Freqeuncy counter max
-#define PID_MEAS_COUNTER 5
+#define PID_MEAS_COUNTER 2
 // Measure tick max - internal to measure()
-#define MEAS_TICK_MAX 7
+#define MEAS_TICK_MAX 3
 
 #define MEAS_TICK_MAX_C ((1000 / PID_SLEEP_TIME_MS) * 3)
 
 // *************************************
 
+// set sensor bit resolution
+#define MEASURE_BIT_PRECISION 11
+
 // Measure sample array sizes
 #define MEASURES_SIZE 64
 #define MEASURES_AVG_TOTAL 64 // must be smaller than MEASURES_SIZE
-#define MES_TEMP_SIZE 2
+#define MES_TEMP_SIZE 3
 
 // *************************************
 // *************************************
@@ -90,6 +93,43 @@
 #else
 #define PIN_LED_ACT 12
 #endif
+
+// *************************************
+// *************************************
+// Sensor Setup
+// *************************************
+
+// Scratchpad Location
+#define SENSOR_CONFIGURATION_LOCATION 4
+// Device resolution
+#define TEMP_9_BIT 0x1F  //!<  9 bit resolution
+#define TEMP_10_BIT 0x3F //!< 10 bit resolution
+#define TEMP_11_BIT 0x5F //!< 11 bit resolution
+#define TEMP_12_BIT 0x7F //!< 12 bit resolution
+
+// OneWire commands
+#define STARTCONVO \
+    0x44                     //!< Tells device to take a temperature reading and put it on the
+                             //!< scratchpad
+#define COPYSCRATCH 0x48     //!< Copy EEPROM
+#define READSCRATCH 0xBE     //!< Read EEPROM
+#define WRITESCRATCH 0x4E    //!< Write to EEPROM
+#define RECALLSCRATCH 0xB8   //!< Reload from last known
+#define READPOWERSUPPLY 0xB4 //!< Determine if device needs parasite power
+#define ALARMSEARCH 0xEC     //!< Query bus for devices with an alarm condition
+
+// Scratchpad locations
+#define TEMP_LSB 0        //!< Temperature LSB byte location
+#define TEMP_MSB 1        //!< Temperature MSB byte location
+#define HIGH_ALARM_TEMP 2 //!< High alarm temp byte location
+#define LOW_ALARM_TEMP 3  //!< Low alarm temp byte location
+#define CONFIGURATION \
+    4                   //!< DS18S20: store for CRC. DS18B20 & DS1822: configuration register
+#define INTERNAL_BYTE 5 //!< Internal use & CRC
+#define COUNT_REMAIN \
+    6                    //!< DS18S20: COUNT_REMAIN, DS18B20 & DS1822: store for CRC
+#define COUNT_PER_C 7    //!< DS18S20: COUNT_PER_C. DS18B20 & DS1822: store for crc
+#define SCRATCHPAD_CRC 8 //!< Scratchpad CRC
 
 // *************************************
 // *************************************
@@ -201,6 +241,7 @@ private:
     // verbose debug output
     bool _verbose_d = VERBOSE_DEBUG == 1;
 
+    uint8_t ow_pin;
     OneWire *oneWire;
 
     uint8_t ssrPin;
@@ -271,6 +312,9 @@ private:
 
     // Measure Temperature
     bool measureElementTemperature();
+
+    bool setSensorResolution(uint8_t newResolution);
+    void readScratchPad(uint8_t *deviceAddress, uint8_t *scratchPad);
 };
 
 extern AerPID xAerPID1;
