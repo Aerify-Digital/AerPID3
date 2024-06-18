@@ -186,12 +186,12 @@ double TempStor::getMaxTemp()
 #if AERPID_COUNT == 2
 void TempStor::setTemp2(double temp)
 {
-  TempStor::set_Temp = temp;
+  TempStor::set_Temp2 = temp;
 }
 
 double TempStor::getTemp2()
 {
-  return TempStor::set_Temp;
+  return TempStor::set_Temp2;
 }
 
 void TempStor::setMaxTemp2(double temp)
