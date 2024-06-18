@@ -807,7 +807,7 @@ const parseInitMessage = (data) => {
   const I = bytesToDouble(Uint8Array.from(data.slice(591, 599)));
   const D = bytesToDouble(Uint8Array.from(data.slice(599, 607)));
   const unitType = data.slice(607, 608)[0];
-  const booleanMap = [...Array(8)].map((_, i) => Boolean(data.slice(608)[0] & (1 << (7 - i))));
+  const booleanMap = [...Array(8)].map((_, i) => Boolean(data.slice(608, 609)[0] & (1 << (7 - i))));
   const [
     AUTO_OFF_ENABLED,
     COIL_ENABLED,
@@ -818,7 +818,7 @@ const parseInitMessage = (data) => {
     BT_ENABLED,
     _UNUSED_4
   ] = booleanMap;
-  const model = data.slice(608, 609);
+  const model = data.slice(609, 610);
 
   return {
     model,
@@ -880,9 +880,13 @@ function onClose(event) {
 
 const initPageData = async (initData) => {
   state.MODEL = initData.model;
-  if (document.getElementById('element2')) {
-    document.getElementById('element1').style.display = 'block';
-    document.getElementById('element2').style.display = 'block';
+  if (state.MODEL == 2) {
+    if (document.getElementById('element1')) {
+      document.getElementById('element1').style.display = 'block';
+    }
+    if (document.getElementById('element2')) {
+      document.getElementById('element2').style.display = 'block';
+    }
   }
   //console.log(JSON.stringify(initData, null, 2));
   state.UNIT = initData.unitType;
