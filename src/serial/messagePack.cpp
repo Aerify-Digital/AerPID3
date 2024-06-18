@@ -115,9 +115,36 @@ uint MessagePack::fetchInitMessage()
     // boolean flags bitmap
     pack(BOOLEAN_BITMAP, 1);
 
+    // device model
+    pack(DEV_MODEL, 1);
+
     packComplete();
 
     return getPackSize();
+}
+
+uint MessagePack::fetchInitMessage2()
+{
+    // init cmd
+    pack(0x22);
+
+    // temperature
+    pack(TEMP_ADJ_AMOUNT, 2);
+    pack(TEMP, 2);
+    pack(SET_TEMP, 2);
+    pack(AVG_TEMP, 2);
+    // pid
+    pack(PID_P, 8);
+    pack(PID_I, 8);
+    pack(PID_D, 8);
+
+    // boolean flags bitmap
+    pack(BOOLEAN_BITMAP, 1);
+}
+
+void MessagePack::setModel(uint8_t model)
+{
+    DEV_MODEL[0] = model;
 }
 
 void MessagePack::setIP(IPAddress ip)

@@ -53,12 +53,14 @@ public:
 
     /* Fetches and builds the init message into a buffer.  Returns size of packed. */
     uint fetchInitMessage();
+    uint fetchInitMessage2();
 
     uint8_t *getPack() { return _packed; }
     uint getPackSize() { return _packedSize; }
     bool isPackComplete();
     void dispose();
 
+    void setModel(uint8_t model);
     void setIP(IPAddress ip);
     void setSSID(const char *ssid);
     void setHostname(const char *name);
@@ -101,6 +103,7 @@ private:
     uint8_t NET_VER_MINOR;
     uint8_t NET_VER_BUILD;
 
+    uint8_t DEV_MODEL[1];       // 1 byte
     uint8_t IP_ADDRESS[4];      // 4 bytes
     uint8_t SSID[32];           // 32 bytes
     uint8_t HOSTNAME[253];      // 253 bytes
