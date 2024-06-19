@@ -1,0 +1,3 @@
+out/
+build/
+!deps/boot_app0.bin

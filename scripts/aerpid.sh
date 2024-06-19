@@ -17,16 +17,28 @@ git pull origin master
 git submodule update --init --recursive
 echo -e "${green}Update Complete!${nc}"
 ;;
-upload)
+upload-1)
+cd ../
 echo -e "${red}Please make sure 'DEBUG' mode is enabled on your device!${nc}"
 sleep 3
 echo -e "${yellow}Uploading Firmware...${nc}"
-pio run -t upload
+pio run -e aerpid -t upload
+echo -e "${yellow}Uploading Web Files...${nc}"
+pio run -t uploadfs
+echo -e "${green}Upload Complete!${nc}"
+;;
+upload-2)
+cd ../
+echo -e "${red}Please make sure 'DEBUG' mode is enabled on your device!${nc}"
+sleep 3
+echo -e "${yellow}Uploading Firmware...${nc}"
+pio run -e aerpid-hp -t upload
 echo -e "${yellow}Uploading Web Files...${nc}"
 pio run -t uploadfs
 echo -e "${green}Upload Complete!${nc}"
 ;;
 upgrade)
+mod=$2
 echo -e "${green}AerPID Project Upgrade${nc}"
 echo -e "${dark_green}-------------------------${nc}"
 sleep 1
@@ -45,7 +57,12 @@ echo -e "${green}Upgrading AerPID Project...${nc}"
 $0 update
 echo -e "${gray}...${nc}"
 sleep 1
-$0 upload
+if [[ "$mod" == 1 ]]; then
+    $0 upload-1
+fi
+if [[ "$mod" == 2 ]]; then
+    $0 upload-2
+fi
 echo -e "${green}AerPID Firmware Upgrade Complete!${nc}"
 ;;
 devices)
@@ -54,6 +71,6 @@ pio device list
 echo -e "${green}Device Listing Complete!${nc}"
 ;;
 *)
-echo -e "${gold}Command Arguments: ${green}update, upload, upgrade, devices${nc}"
+echo -e "${gold}Command Arguments: ${green}update, upload-1, upload-2, upgrade <model>, devices${nc}"
 ;;
 esac
