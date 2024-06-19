@@ -64,6 +64,11 @@ void SerialCom::enPackFill(MessagePack *messagePack)
   bitWrite(bitmap, 1, aerManager->getComms()->getBTEn());    // get status of bluetooth
   bitWrite(bitmap, 0, 0);                                    // unused
   messagePack->setBoleanBitmap(bitmap);
+#if AERPID_COUNT == 2
+    messagePack->setModel(2);
+#else
+    messagePack->setModel(1);
+#endif
 }
 
 void SerialCom::begin(AerManager *aerm)
