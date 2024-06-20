@@ -490,7 +490,8 @@ const SerialCommand = {
   TEMP: 0x10,
   TEMP2: 0x13,
   UNIT: 0x11,
-  WIFI: 0x60
+  WIFI: 0x60,
+  MODE_DEBUG: 0xff
 };
 
 const Operation = {
@@ -586,7 +587,8 @@ let state = {
     length: 0
   },
   ZOOM_LEVEL: 'auto',
-  ZOOM_LEVEL2: 'auto'
+  ZOOM_LEVEL2: 'auto',
+  DEV_MODE_DEBUG: false
 };
 
 // ==================================================
@@ -1967,6 +1969,17 @@ const handleMessage = (dat) => {
           break;
       }
       break;
+    case SerialCommand.MODE_DEBUG:
+      {
+        //const op = dat[1];
+        const val = dat[2];
+        state.DEV_MODE_DEBUG = val == 0 ? false : true;
+        if (document.getElementById('esp_device_debug_checkbox')) {
+          document.getElementById('esp_device_debug_checkbox').checked = state.DEV_MODE_DEBUG;
+        }
+      }
+      break;
+
     default:
       break;
   }

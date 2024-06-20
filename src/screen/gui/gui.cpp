@@ -340,6 +340,15 @@ bool AerGUI::buildMenuDefinitions()
         MENU_WIFI_HOSTNAME,
         MENU_WIFI_IP_ADDR,
         MENU_WIFI_MAC_ADDR,
+        MENU_WIFI_STATIC_ADDR,
+    };
+    std::vector<uint16_t> menus_static_addr = {
+        MENU_WIFI_STATIC_ENABLED,
+        MENU_WIFI_STATIC_IP,
+        MENU_WIFI_STATIC_GATEWAY,
+        MENU_WIFI_STATIC_NETMASK,
+        MENU_WIFI_STATIC_DNS1,
+        MENU_WIFI_STATIC_DNS2,
     };
     std::vector<uint16_t> menus_wifi_password = {
         MENU_WIFI_PASSWORD_EDIT,
@@ -530,6 +539,14 @@ bool AerGUI::buildMenuDefinitions()
     menus.push_back(AerMenu(MENU_WIFI_HOSTNAME, MENU_MAIN_WIFI, menus_wifi_hostname));
     menus.push_back(AerMenu(MENU_WIFI_IP_ADDR, MENU_MAIN_WIFI, {}));
     menus.push_back(AerMenu(MENU_WIFI_MAC_ADDR, MENU_MAIN_WIFI, {}));
+    menus.push_back(AerMenu(MENU_WIFI_STATIC_ADDR, MENU_MAIN_WIFI, menus_static_addr));
+    // Static IPAddress
+    menus.push_back(AerMenu(MENU_WIFI_STATIC_ENABLED, MENU_WIFI_STATIC_ADDR, {MENU_WIFI_STATIC_ENABLED_VAR}));
+    menus.push_back(AerMenu(MENU_WIFI_STATIC_IP, MENU_WIFI_STATIC_ADDR, {MENU_WIFI_STATIC_IP_EDIT, MENU_WIFI_STATIC_IP_SAVE}));
+    menus.push_back(AerMenu(MENU_WIFI_STATIC_GATEWAY, MENU_WIFI_STATIC_ADDR, {MENU_WIFI_STATIC_GATEWAY_EDIT, MENU_WIFI_STATIC_GATEWAY_SAVE}));
+    menus.push_back(AerMenu(MENU_WIFI_STATIC_NETMASK, MENU_WIFI_STATIC_ADDR, {MENU_WIFI_STATIC_NETMASK_EDIT, MENU_WIFI_STATIC_NETMASK_SAVE}));
+    menus.push_back(AerMenu(MENU_WIFI_STATIC_DNS1, MENU_WIFI_STATIC_ADDR, {MENU_WIFI_STATIC_DNS1_EDIT, MENU_WIFI_STATIC_DNS1_SAVE}));
+    menus.push_back(AerMenu(MENU_WIFI_STATIC_DNS2, MENU_WIFI_STATIC_ADDR, {MENU_WIFI_STATIC_DNS1_EDIT, MENU_WIFI_STATIC_DNS2_SAVE}));
     // BLE
     menus.push_back(AerMenu(MENU_MAIN_BLE, MENU_ROOT_MAIN, menus_ble));
     menus.push_back(AerMenu(MENU_BLE_ENABLE, MENU_MAIN_BLE, {}));
@@ -813,6 +830,13 @@ bool AerGUI::buildMenuDefinitions()
     menuNames.insert(std::pair<int, String>(MENU_WIFI_PASSWORD_NETWORK_JOIN_ERROR, "Net Error"));
     menuNames.insert(std::pair<int, String>(MENU_WIFI_PASSWORD_EDIT, "Edit"));
     menuNames.insert(std::pair<int, String>(MENU_WIFI_PASSWORD_SAVE, "Save"));
+    menuNames.insert(std::pair<int, String>(MENU_WIFI_STATIC_ADDR, "Static IP"));
+    menuNames.insert(std::pair<int, String>(MENU_WIFI_STATIC_ENABLED, "Static Enb"));
+    menuNames.insert(std::pair<int, String>(MENU_WIFI_STATIC_IP, "IP Addr"));
+    menuNames.insert(std::pair<int, String>(MENU_WIFI_STATIC_GATEWAY, "Gateway"));
+    menuNames.insert(std::pair<int, String>(MENU_WIFI_STATIC_NETMASK, "NetMask"));
+    menuNames.insert(std::pair<int, String>(MENU_WIFI_STATIC_DNS1, "DNS 1"));
+    menuNames.insert(std::pair<int, String>(MENU_WIFI_STATIC_DNS2, "DNS 2"));
     menuNames.insert(std::pair<int, String>(MENU_BLE_ENABLE, "Enabled"));
     menuNames.insert(std::pair<int, String>(MENU_BLE_MONITOR, "Monitor"));
     menuNames.insert(std::pair<int, String>(MENU_USB_ENABLE, "Enabled"));
@@ -873,7 +897,7 @@ bool AerGUI::buildMenuDefinitions()
 
 // ===========================================================
 
-PropsMenu propsMenu = {1, 0, 0, 0, true, true};
+PropsMenu propsMenu = {1, 0, 0, 0, true, true, "", 0, {0, 0, 0, 0}};
 
 // Initializes the gui class object
 void AerGUI::init()

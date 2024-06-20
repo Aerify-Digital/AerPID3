@@ -119,6 +119,23 @@ void link_task(void *pvParameters)
                 Serial.print(op_state_str);
                 Serial.print(" \n");*/
 
+                if (_am->hasUpdateDTR())
+                {
+                    delayMicroseconds(1000);
+                    Wire.beginTransmission(PID_MONITOR_ADDR);
+                    if (!_am->isEnabledDTR())
+                    {
+                        Wire.write(200);
+                    }
+                    else
+                    {
+                        Wire.write(100);
+                    }
+                    Wire.endTransmission();
+                    _am->hasUpdateDTR(false);
+                    delayMicroseconds(500);
+                }
+
                 if (tick++ >= 5)
                 {
                     tick = 0;

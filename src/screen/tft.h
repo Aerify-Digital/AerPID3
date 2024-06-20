@@ -116,6 +116,13 @@ namespace AerTftUI
     void showWifiScanMenuResults(AerManager *am, bool indexupdate, bool change);
     void showWifiJoinError(AerManager *am, bool update, bool change);     // error menu
     void showWifiDeleteMessage(AerManager *am, bool update, bool change); // message menu
+    void showStaticAddrMenu(AerManager *am, bool update, bool change);
+    void showStaticAddrEnabledMenu(AerManager *am, bool update, bool change);
+    void showStaticAddrIPMenu(AerManager *am, bool update, bool change);
+    void showStaticAddrNetMaskMenu(AerManager *am, bool update, bool change);
+    void showStaticAddrGatewayMenu(AerManager *am, bool update, bool change);
+    void showStaticAddrDNS1Menu(AerManager *am, bool update, bool change);
+    void showStaticAddrDNS2Menu(AerManager *am, bool update, bool change);
     void showUSBMenu(AerManager *am, bool update, bool change);
     void showBleMenu(AerManager *am, bool update, bool change);
     void showKeyboardMenu(AerManager *am, AerGUI *gui, bool indexupdate, bool change);
@@ -142,6 +149,7 @@ namespace AerTftUI
     void showBacklightDim(AerManager *am, bool update, bool change);
     void showBacklightDimTimeout(AerManager *am, bool update, bool change);
     void printSelectedChar(AerGUI *gui, TFT_eSprite *spr, uint type = 0);
+    void printSelectedNumber(AerGUI *gui, TFT_eSprite *spr);
     void showGraphTemperature(AerManager *am, bool update, bool change, uint8_t elementIndex);
     void showGraphTemperatureZoom(AerManager *am, bool update, bool change, uint8_t elementIndex);
     void showGraphTemperatureLong(AerManager *am, bool update, bool change, uint8_t elementIndex);

@@ -3,5 +3,16 @@
   "tabWidth": 2,
   "semi": true,
   "singleQuote": true,
-  "printWidth": 100
+  "printWidth": 100,
+  "overrides": [
+    {
+      "files": ["*.html", "*.htm"],
+      "options": {
+        "tabWidth": 1,
+        "semi": false,
+        "printWidth": 800,
+        "htmlWhitespaceSensitivity": "ignore"
+      }
+    }
+  ]
 }

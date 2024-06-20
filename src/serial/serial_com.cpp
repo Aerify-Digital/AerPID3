@@ -64,6 +64,11 @@ void SerialCom::enPackFill(MessagePack *messagePack)
   bitWrite(bitmap, 1, aerManager->getComms()->getBTEn());    // get status of bluetooth
   bitWrite(bitmap, 0, 0);                                    // unused
   messagePack->setBoleanBitmap(bitmap);
+#if AERPID_COUNT == 2
+  messagePack->setModel(2);
+#else
+  messagePack->setModel(1);
+#endif
 }
 
 void SerialCom::begin(AerManager *aerm)
@@ -899,6 +904,47 @@ void SerialCom::handleEventBuffer()
     }
   }
   break;
+  case SerialCommand::CMD_DEBUG:
+  {
+    uint8_t val;
+    uint8_t op = buffer[1];
+    if (op == Operation::OP_SET)
+    {
+      val = buffer[2];
+      if (xSemaphoreTake(i2c1_mutex, 200) == pdTRUE)
+      {
+        Wire.beginTransmission(PID_MONITOR_ADDR);
+        if (val == 0)
+        {
+          Wire.write(200);
+          aerManager->setEnabledDTR(false);
+        }
+        else
+        {
+          Wire.write(100);
+          aerManager->setEnabledDTR(true);
+          val = 1;
+        }
+        Wire.endTransmission();
+        xSemaphoreGive(i2c1_mutex);
+      }
+    }
+    else if (op == Operation::OP_GET)
+    {
+      val = aerManager->isEnabledDTR() ? 1 : 0;
+    }
+    else
+    {
+      break;
+    }
+    SerialCmdOp *reply = new SerialCmdOp(SerialCommand::CMD_DEBUG);
+    reply->Op(op);
+    reply->Val(val);
+    reply->build();
+    reply->emit();
+    delete reply;
+    break;
+  }
   default:
     break;
   }

@@ -26,6 +26,8 @@
 
 #include "HardwareSerial.h"
 #include "driver/uart.h"
+#include "freertos/semphr.h"
+#include "common/datatypes/mutex.h"
 #include "common/base64/base64.h"
 #include "storage/crypt.h"
 #include "storage/auth.h"

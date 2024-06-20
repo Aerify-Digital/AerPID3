@@ -4,5 +4,4 @@ w3.css
 *.minz.css
 *.min.js
 *.minz.js
-*.html
-*.htm
+*.prettierrc

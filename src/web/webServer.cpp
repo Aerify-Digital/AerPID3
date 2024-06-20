@@ -4,16 +4,8 @@
 AsyncWebServer server(HTTP_ADDRESS);
 AsyncWebSocket ws("/ws");
 
+// web socket accessor
 AsyncWebSocket *WebServer::getWebSocket() { return &ws; };
-
-// Set your Static IP address
-// IPAddress local_IP_s(192, 168, 0, 192);
-// Set your Gateway IP address
-// IPAddress gateway(192, 168, 0, 1);
-
-// IPAddress subnet(255, 255, 0, 0);
-// IPAddress primaryDNS(192, 168, 0, 8); // optional
-// IPAddress secondaryDNS(8, 8, 4, 4);   // optional
 
 // local ssid listing
 std::vector<String> WebServer::_local_ssids = {};
@@ -110,6 +102,11 @@ void WebServer::tickNetworkWifiConnect()
 
 // -----------------------------------------------------------------------------
 // -----------------------------------------------------------------------------
+
+/**
+ * @brief Ticks web server processes
+ *
+ */
 void WebServer::tick()
 {
     // Serial.println(">>WebServer>> Tick: " + String(_tick));
@@ -276,6 +273,8 @@ bool WebServer::scanNetworks(bool restart, String macShrt)
     }
 }
 
+/// @brief Get Hostname
+/// @return net hostname
 char *WebServer::getHost()
 {
     return aerManager.getNet()->getHostname();
@@ -284,7 +283,12 @@ char *WebServer::getHost()
 // -----------------------------------------------------------------------------
 // -----------------------------------------------------------------------------
 // -----------------------------------------------------------------------------
-// Setup the async web handler
+
+/**
+ * @brief Setup the async web handler
+ *
+ * @return boolean success
+ */
 boolean WebServer::setup()
 {
     Serial.println(F(" "));
@@ -320,7 +324,7 @@ boolean WebServer::setup()
         // get or load the hostname
         asprintf(&hostname, "%s-%02X%02X%02X", aerManager.getNetVars()->hostname, mac[3], mac[4], mac[5]);
         aerManager.getNet()->setHostname(hostname);
-        Serial.print(">No host saved!  Setting up default hostname... ");
+        Serial.print(F(">No host saved!  Setting up default hostname... "));
         Serial.println(hostname);
     }
 
@@ -330,7 +334,7 @@ boolean WebServer::setup()
 
     if (MDNS.begin(hostname))
     {
-        Serial.print("mDNS responder started: ");
+        Serial.print(F("mDNS responder started: "));
         Serial.println(hostname);
     }
 
@@ -450,7 +454,9 @@ boolean WebServer::setup()
               { request->send(SPIFFS, "/index.html", "text/html"); });
 
     if (verbose_d)
+    {
         Serial.println(F("Setup 'HTML Interface'"));
+    }
 
     Serial.println("");
 
@@ -555,6 +561,10 @@ boolean WebServer::setup()
 // Web Sockets
 // ========================================================================
 
+/**
+ * @brief Setup web socket event listener
+ *
+ */
 void WebServer::initWebSocket()
 {
     Serial.println(F("Setting up WebSocket Events.."));
@@ -585,6 +595,11 @@ void WebServer::_onEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, A
     }
 }
 
+/**
+ * @brief Packs init message data for web socket
+ *
+ * @param messagePack
+ */
 void WebServer::enPackFill(MessagePack *messagePack)
 {
     NetworkVars *net = aerManager.getNetVars();
@@ -639,6 +654,11 @@ void WebServer::enPackFill(MessagePack *messagePack)
 #endif
 }
 
+/**
+ * @brief Send init message to socket
+ *
+ * @param client
+ */
 void WebServer::sendInitMessage(uint32_t client)
 {
     const xVersion v = aerManager.getVersion()->getVer();
@@ -689,6 +709,16 @@ void WebServer::updateClients()
 
     // TODO: Update clients with any changes made locally or via usb.
 
+    if (aerManager.webUpdateDTR())
+    {
+        SocketCmdOp *cmd = new SocketCmdOp(SerialCommand::CMD_DEBUG);
+        cmd->Op(Operation::OP_GET);
+        cmd->Val(aerManager.isEnabledDTR());
+        cmd->build();
+        cmd->emitAll(&ws);
+        delete cmd;
+        aerManager.webUpdateDTR(false);
+    }
     if (aerManager.webUpdateBLE())
     {
         SocketCmdOp *cmd = new SocketCmdOp(SerialCommand::CMD_BLE);
@@ -1083,12 +1113,17 @@ void WebServer::processSocketData(char *data, size_t len, AsyncWebSocketClient *
         uint8_t prm = data[1];
         if (prm == ESP::PARAM_RESET)
         {
+            Serial.println(F(">>> SOFTWARE RESET TRIGGERED! <<<"));
             // reboot
             ESP.restart();
         }
         else if (prm == ESP::PARAM_DEVICE_RESET)
         {
-            // facfory reset?
+            Serial.println(F(">>> FLASH RESET TRIGGERED! <<<"));
+            // factory reset
+            aerManager.getSettings()->resetFlash();
+            vTaskDelay(3000);
+            esp_restart();
         }
     }
     break;
@@ -1107,7 +1142,8 @@ void WebServer::processSocketData(char *data, size_t len, AsyncWebSocketClient *
             {
                 char *val;
                 val = configureFavTempName(1, data);
-                Serial.println(">>New Name: " + String(val));
+                Serial.print(F(">>New Name: "));
+                Serial.println(String(val));
                 reply->Val(val);
             }
             else
@@ -1157,7 +1193,8 @@ void WebServer::processSocketData(char *data, size_t len, AsyncWebSocketClient *
             {
                 char *val;
                 val = configureFavTempName(2, data);
-                Serial.println(">>New Name: " + String(val));
+                Serial.print(F(">>New Name: "));
+                Serial.println(String(val));
                 reply->Val(val);
             }
             else
@@ -1207,7 +1244,8 @@ void WebServer::processSocketData(char *data, size_t len, AsyncWebSocketClient *
             {
                 char *val;
                 val = configureFavTempName(3, data);
-                Serial.println(">>New Name: " + String(val));
+                Serial.print(F(">>New Name: "));
+                Serial.println(String(val));
                 reply->Val(val);
             }
             else
@@ -1257,7 +1295,8 @@ void WebServer::processSocketData(char *data, size_t len, AsyncWebSocketClient *
             {
                 char *val;
                 val = configureFavTempName(4, data);
-                Serial.println(">>New Name: " + String(val));
+                Serial.print(F(">>New Name: "));
+                Serial.println(String(val));
                 reply->Val(val);
             }
             else
@@ -1321,7 +1360,7 @@ void WebServer::processSocketData(char *data, size_t len, AsyncWebSocketClient *
         else if (prm == LED::PARAM_MODE)
         {
             // change modes.
-            Serial.println(">>> LED: Mode >> ");
+            Serial.println(F(">>> LED: Mode >> "));
             if (op == Operation::OP_GET)
             {
                 val = lightstor.getMode();
@@ -1338,7 +1377,7 @@ void WebServer::processSocketData(char *data, size_t len, AsyncWebSocketClient *
         else if (prm == LED::PARAM_BRIGHTNESS)
         {
             // change brightness
-            Serial.println(">>> LED: Brightness >> ");
+            Serial.println(F(">>> LED: Brightness >> "));
             if (op == Operation::OP_GET)
             {
                 val = lightstor.getBright();
@@ -1354,7 +1393,7 @@ void WebServer::processSocketData(char *data, size_t len, AsyncWebSocketClient *
         else if (prm == LED::PARAM_COLOR)
         {
             // change color
-            Serial.println(">>> LED: Color >>");
+            Serial.println(F(">>> LED: Color >>"));
             if (op == Operation::OP_GET)
             {
                 val = lightstor.getBright(); // just filler for now
@@ -1777,6 +1816,40 @@ void WebServer::processSocketData(char *data, size_t len, AsyncWebSocketClient *
         }
     }
     break;
+    case SerialCommand::CMD_DEBUG:
+    {
+        uint8_t val;
+        uint8_t op = data[1];
+        if (op == Operation::OP_SET)
+        {
+            val = data[2];
+            if (val == 0)
+            {
+                aerManager.setEnabledDTR(false);
+            }
+            else
+            {
+                aerManager.setEnabledDTR(true);
+                val = 1;
+            }
+        }
+        else if (op == Operation::OP_GET)
+        {
+            val = aerManager.isEnabledDTR() ? 1 : 0;
+        }
+        else
+        {
+            break;
+        }
+        SocketCmdOp *reply = new SocketCmdOp(SerialCommand::CMD_DEBUG);
+        reply->AddClient(client->id());
+        reply->Op(op);
+        reply->Val(val);
+        reply->build();
+        reply->emit(&ws);
+        delete reply;
+    }
+    break;
 
     default:
         break;
@@ -1829,69 +1902,6 @@ void WebServer::configureFavTemp(uint8_t index, double temp)
 
 String WebServer::processor(const String &var)
 {
-    if (var == "F_VERSION")
-    {
-        // return globals.version;
-    }
-    if (var == "N_VERSION")
-    {
-        // return globals.webui_version;
-    }
-    if (var == "CLIENT_IP")
-    {
-        return "TODO: Convert IP"; // WiFi.localIP();
-    }
-    if (var == "HOSTNAME")
-    {
-        return String("AerTiny");
-    }
-    if (var == "SSID")
-    {
-        char *ssid = commstor.getSSID();
-        return ssid;
-    }
-    if (var == "FOOTER_NAME")
-    {
-        return String("AerPID-tiny");
-    }
-    if (var == "FOOTER_COPYRIGHT_DATE")
-    {
-        return String("2020");
-    }
-    if (var == "FOOTER_COPYRIGHT")
-    {
-        return String("aerifydigital.com");
-    }
-    if (var == "F_UPTIME")
-    {
-        // return String(globals.uptime);
-    }
-    if (var == "FAV_1")
-    {
-        // return String((int)globals.FAV_A);
-    }
-    if (var == "FAV_2")
-    {
-        // return String((int)globals.FAV_B);
-    }
-    if (var == "FAV_3")
-    {
-        // return String((int)globals.FAV_C);
-    }
-    if (var == "FAV_4")
-    {
-        // return String((int)globals.FAV_D);
-    }
-    if (var == "NONCE_I")
-    {
-        return String(webServer.NONCE_current);
-    }
-    if (var == "NONCE")
-    {
-        return webServer.NONCE_A[webServer.NONCE_current];
-    }
-    // return String(String("%") + String(var.c_str()) + String("%"));
-
     return String(var.c_str());
 }
 

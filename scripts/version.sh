@@ -1,7 +1,7 @@
 #!/bin/bash
 
-header_file="src/version.h"
-output_file="version.json"
+header_file="../src/version.h"
+output_file="../version.json"
 
 # Start JSON output
 echo "{" > "$output_file"

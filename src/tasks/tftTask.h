@@ -408,7 +408,55 @@ void tft_task(void *pvParameters)
                     _menu->menuChange = false;
                     break;
                 }
-                break;
+                case MENU_WIFI_STATIC_ADDR:
+                {
+                    AerTftUI::showStaticAddrMenu(_am, _menu->menuUpdate, _menu->menuChange);
+                    _menu->menuUpdate = false;
+                    _menu->menuChange = false;
+                    break;
+                }
+                case MENU_WIFI_STATIC_ENABLED:
+                {
+                    AerTftUI::showStaticAddrEnabledMenu(_am, _menu->menuUpdate, _menu->menuChange);
+                    _menu->menuUpdate = false;
+                    _menu->menuChange = false;
+                    break;
+                }
+                case MENU_WIFI_STATIC_IP:
+                {
+                    AerTftUI::showStaticAddrIPMenu(_am, _menu->menuUpdate, _menu->menuChange);
+                    _menu->menuUpdate = false;
+                    _menu->menuChange = false;
+                    break;
+                }
+                case MENU_WIFI_STATIC_GATEWAY:
+                {
+                    AerTftUI::showStaticAddrGatewayMenu(_am, _menu->menuUpdate, _menu->menuChange);
+                    _menu->menuUpdate = false;
+                    _menu->menuChange = false;
+                    break;
+                }
+                case MENU_WIFI_STATIC_NETMASK:
+                {
+                    AerTftUI::showStaticAddrNetMaskMenu(_am, _menu->menuUpdate, _menu->menuChange);
+                    _menu->menuUpdate = false;
+                    _menu->menuChange = false;
+                    break;
+                }
+                case MENU_WIFI_STATIC_DNS1:
+                {
+                    AerTftUI::showStaticAddrDNS1Menu(_am, _menu->menuUpdate, _menu->menuChange);
+                    _menu->menuUpdate = false;
+                    _menu->menuChange = false;
+                    break;
+                }
+                case MENU_WIFI_STATIC_DNS2:
+                {
+                    AerTftUI::showStaticAddrDNS2Menu(_am, _menu->menuUpdate, _menu->menuChange);
+                    _menu->menuUpdate = false;
+                    _menu->menuChange = false;
+                    break;
+                }
                 case MENU_MAIN_BLE: /* BLE Settings */
                     AerTftUI::showBleMenu(_am, _menu->menuUpdate, _menu->menuChange);
                     _menu->menuUpdate = false;
