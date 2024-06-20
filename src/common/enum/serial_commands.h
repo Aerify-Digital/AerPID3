@@ -38,6 +38,7 @@ enum SerialCommand
     CMD_UNIT = 0x11,
     CMD_TEMP2 = 0x13,
     CMD_WIFI = 0x60,
+    CMD_DEBUG = 0xff,
 };
 
 enum Operation

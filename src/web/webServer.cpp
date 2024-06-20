@@ -1777,6 +1777,48 @@ void WebServer::processSocketData(char *data, size_t len, AsyncWebSocketClient *
         }
     }
     break;
+    case SerialCommand::CMD_DEBUG:
+    {
+        uint8_t val;
+        uint8_t op = data[1];
+        if (op == Operation::OP_SET)
+        {
+            val = data[2];
+            if (xSemaphoreTake(i2c1_mutex, 200) == pdTRUE)
+            {
+                Wire.beginTransmission(PID_MONITOR_ADDR);
+                if (val == 0)
+                {
+                    Wire.write(200);
+                    aerManager.setEnabledDTR(false);
+                }
+                else
+                {
+                    Wire.write(100);
+                    aerManager.setEnabledDTR(true);
+                    val = 1;
+                }
+                Wire.endTransmission();
+                xSemaphoreGive(i2c1_mutex);
+            }
+        }
+        else if (op == Operation::OP_GET)
+        {
+            val = aerManager.isEnabledDTR() ? 1 : 0;
+        }
+        else
+        {
+            break;
+        }
+        SocketCmdOp *reply = new SocketCmdOp(SerialCommand::CMD_DEBUG);
+        reply->AddClient(client->id());
+        reply->Op(op);
+        reply->Val(val);
+        reply->build();
+        reply->emit(&ws);
+        delete reply;
+    }
+    break;
 
     default:
         break;
