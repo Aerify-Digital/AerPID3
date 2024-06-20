@@ -34,7 +34,6 @@
 
 #include "SocketCmdOp.h"
 #include "common/enum/serial_commands.h"
-#include "common/datatypes/mutex.h"
 
 #include "serial/messagePack.h"
 

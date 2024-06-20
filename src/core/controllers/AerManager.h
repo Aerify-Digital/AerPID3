@@ -237,8 +237,17 @@ public:
     bool getActiveWeb() { return this->active_web; }
     void setActiveWeb(bool b) { this->active_web = b; }
 
-    void setEnabledDTR(bool e) { this->enabled_dtr = e; }
+    void setEnabledDTR(bool e)
+    {
+        this->enabled_dtr = e;
+        this->webUpdateDTR(true);
+        this->hasUpdateDTR(true);
+    }
     bool isEnabledDTR() { return this->enabled_dtr; }
+    bool webUpdateDTR() { return this->webupdatedtr; }
+    void webUpdateDTR(bool b) { this->webupdatedtr = b; }
+    bool hasUpdateDTR() { return this->hasupdatedtr; }
+    void hasUpdateDTR(bool b) { this->hasupdatedtr = b; }
 
     void addWebFName(int f);
     int getWebFnameVal(int f);
@@ -311,6 +320,8 @@ private:
     bool updatetempStor2 = false;
     bool webupdatetemp = false;
     bool webupdatepid = false;
+    bool webupdatedtr = false;
+    bool hasupdatedtr = false;
     bool updatelightState = false;
     bool updateknobState = false;
     bool updateunitsStor = false;

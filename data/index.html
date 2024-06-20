@@ -1565,10 +1565,20 @@
                                 <button id="esp_reset" class="w3-button w3-light-grey w3-padding-large w3-section w3-text-orange" onclick="requestReboot();">
                                     <i class="fas fa-arrows-spin"></i> Reboot AerTiny
                                 </button>
-                                <button id="esp_device_reset"
-                                    class="w3-button w3-light-grey w3-padding-large w3-section w3-text-red">
+                                <button id="esp_device_reset" class="w3-button w3-light-grey w3-padding-large w3-section w3-text-red" onclick="requestResetFactory();">
                                     <i class="fas fa-delete-left"></i> Factory Reset
                                 </button>
+                                <br/>
+                                <div id="esp_device_debug" class="checkbox-wrapper-35 w3-button w3-light-grey w3-section w3-text-amber">
+                                    <input class="switch" id="esp_device_debug_checkbox" type="checkbox" onclick="requestDebugMode();" name="switch" value="private">
+                                    <label for="esp_device_debug_checkbox">
+                                        <span class="switch-x-text">Debug Mode is </span>
+                                        <span class="switch-x-toggletext">
+                                        <span class="switch-x-unchecked"><span class="switch-x-hiddenlabel">Unchecked: </span>Off</span>
+                                        <span class="switch-x-checked"><span class="switch-x-hiddenlabel">Checked: </span>On</span>
+                                        </span>
+                                    </label>
+                                </div>
                             </li>
                             <li class="w3-light-grey w3-padding-24">
                                 Make sure to keep up with our latest updates and news on our
@@ -1582,6 +1592,27 @@
                                         ESP.RESET,
                                         Operation.SET
                                     ]);
+                                };
+                                const requestResetFactory = () => {
+                                    if (confirm("Are you sure your want to reset the Device Flash to factory defaults?\n\nThis will erase and reset ALL settings to their defaults.")) {
+                                        console.log("Requesting Device Factory Reset");
+                                        emit_websocket([
+                                            SerialCommand.ESP,
+                                            ESP.DEVICE_RESET,
+                                            Operation.SET
+                                        ]);
+                                    }
+                                };
+                                const requestDebugMode = () => {
+                                    console.log("Requesting Device Debug Mode");
+                                    if (document.getElementById("esp_device_debug_checkbox")) {
+                                        const c = document.getElementById("esp_device_debug_checkbox").checked;
+                                        emit_websocket([
+                                        SerialCommand.MODE_DEBUG,
+                                        Operation.SET,
+                                        c ? 1 : 0
+                                    ]);
+                                    }
                                 };
                             </script>
                         </ul>
