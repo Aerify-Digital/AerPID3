@@ -658,3 +658,11 @@ h6 {
   font-size: 15px;
   color: #222;
 }
+
+.pid-sets {
+  background-color: transparent;
+  border: none;
+  font-size: 14px;
+  padding: 3px;
+  text-align: center;
+}
