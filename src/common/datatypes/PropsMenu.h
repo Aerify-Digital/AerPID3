@@ -15,6 +15,8 @@ typedef struct PropsMenu
     bool menuUpdate;
     bool menuChange;
     std::string menuItemSelStr;
+    uint8_t menuItemSelIpAddrIndex;
+    uint8_t menuItemIpAddr[4];
 } PropsMenu;
 
 #endif

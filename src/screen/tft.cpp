@@ -2754,6 +2754,166 @@ namespace AerTftUI
         lastindex = mindex;
     }
 
+    void showStaticAddrMenu(AerManager *am, bool update, bool change)
+    {
+        AerGUI *gui = am->getGUI();
+        PropsMenu *props = gui->getMenuProps();
+        uint16_t mindex = props->menuLevelVal;
+        if (lastindex == mindex && !update)
+        {
+            // Indexes match and update is false; return
+            return;
+        }
+        uint16_t mlvl = props->menuIndex;
+        AerMenu menu = gui->getSelectedMenu(mlvl);
+        TFT_eSPI *lcd = gui->getTFT();
+        if (update && change)
+        {
+            lcd->fillScreen(0x0841);
+            drawRoundRectWithBorder2px(lcd, 20, 20, 280, 200, 7, TFT_DARKGREY, TFT_LIGHTGREY);
+        }
+        lcd->setTextWrap(false);
+        lcd->setTextColor(TFT_WHITE, TFT_DARKGREY);
+        lcd->setTextSize(4);
+        lcd->setCursor(67, 22);
+        lcd->print("Static IP");
+        lcd->setTextSize(3);
+        drawSelections(gui, menu, mindex, TFT_DARKGREY);
+        lastindex = mindex;
+    }
+
+    void showStaticAddrEnabledMenu(AerManager *am, bool update, bool change)
+    {
+        AerGUI *gui = am->getGUI();
+        PropsMenu *props = gui->getMenuProps();
+        uint16_t mindex = props->menuLevelVal;
+        if (lastindex == mindex && !update)
+        {
+            // Indexes match and update is false; return
+            return;
+        }
+        uint16_t mlvl = props->menuIndex;
+        AerMenu menu = gui->getSelectedMenu(mlvl);
+        TFT_eSPI *lcd = gui->getTFT();
+        uint16_t bgColor = TFT_DARKGREY;
+
+        if (update && change)
+        {
+            lcd->fillScreen(0x0841);
+            drawRoundRectWithBorder2px(lcd, 20, 20, 280, 200, 7, TFT_DARKGREY, TFT_LIGHTGREY);
+        }
+        lcd->setTextWrap(false);
+        lcd->setTextColor(TFT_WHITE, TFT_DARKGREY);
+        lcd->setTextSize(4);
+        lcd->setCursor(67, 30);
+        lcd->print("Static Enb");
+        lcd->setTextSize(3);
+
+        // printSelections
+        std::vector<uint16_t> items = getSelectionItems(menu, mindex);
+        uint8_t offset = 30;
+
+        uint xi = 30;
+        uint yi = 63;
+
+        uint xt = 64;
+        uint yt = 63;
+
+        for (int i = 0; i < 5; i++)
+        {
+            if (i >= items.size())
+            {
+                TFT_eSprite *spr = gui->getSpriteBuffer(0);
+                spr->createSprite(265, 30);
+                spr->fillRect(0, 0, 265, 30, bgColor);
+                spr->pushSprite(xi, yi + (offset * i), 0xffff);
+                spr->deleteSprite();
+                continue;
+            }
+            TFT_eSprite *spr = gui->getSpriteBuffer(0);
+            spr->createSprite(30, 30);
+            // fill icon background...
+            spr->fillRect(0, 0, 30, 30, bgColor);
+            spr->pushSprite(xi, yi + (offset * i), 0xffff);
+            spr->deleteSprite();
+
+            spr->createSprite(30, 30);
+            spr->fillRect(0, 0, 30, 30, bgColor);
+            // print icon
+            if (items[i] == menu.getChildren()[0])
+            {
+                gui->printIcon(spr, 0, 1, items[i], true);
+            }
+            else
+            {
+                gui->printIcon(spr, 0, 1, items[i], false);
+            }
+            spr->pushSprite(xi, yi + (offset * i), 0xffff);
+            spr->deleteSprite();
+
+            if (items[i] == MENU_WIFI_STATIC_ENABLED_VAR)
+            {
+                spr->createSprite(265 - 30, 30);
+                spr->fillRect(0, 0, 265 - 30, 30, bgColor);
+                spr->setTextColor(items[i] == mindex ? gui->isCursorModify() ? TFT_RED : TFT_CYAN : TFT_WHITE);
+                spr->setCursor(0, 2);
+                spr->setTextSize(2);
+                spr->print(wifiStorage.isUsingStaticIP() ? "Yes" : "No");
+                spr->pushSprite(xt, yt + (offset * i) + 4);
+                spr->deleteSprite();
+                continue;
+            }
+
+            spr->createSprite(265 - 30, 30);
+            spr->fillRect(0, 0, 265 - 30, 30, bgColor);
+            spr->setTextSize(3);
+            spr->setTextWrap(false);
+            // print text
+            if (items[i] == mindex)
+            {
+                spr->setTextColor(TFT_CYAN, bgColor);
+                spr->setCursor(0, 5);
+                spr->print(gui->getMenuName(items[i]));
+            }
+            else
+            {
+                spr->setTextColor(TFT_WHITE, bgColor);
+                spr->setCursor(0, 5);
+                spr->print(gui->getMenuName(items[i]));
+            }
+            // push to screen
+            spr->pushSprite(xt, yt + (offset * i));
+            spr->deleteSprite();
+        }
+
+        lastindex = mindex;
+    }
+
+    void showStaticAddrIPMenu(AerManager *am, bool update, bool change)
+    {
+        showKeyboardMenu(am, am->getGUI(), update, change);
+    }
+
+    void showStaticAddrNetMaskMenu(AerManager *am, bool update, bool change)
+    {
+        showKeyboardMenu(am, am->getGUI(), update, change);
+    }
+
+    void showStaticAddrGatewayMenu(AerManager *am, bool update, bool change)
+    {
+        showKeyboardMenu(am, am->getGUI(), update, change);
+    }
+
+    void showStaticAddrDNS1Menu(AerManager *am, bool update, bool change)
+    {
+        showKeyboardMenu(am, am->getGUI(), update, change);
+    }
+
+    void showStaticAddrDNS2Menu(AerManager *am, bool update, bool change)
+    {
+        showKeyboardMenu(am, am->getGUI(), update, change);
+    }
+
     void showWifiScanMenuResults(AerManager *am, bool update, bool change)
     {
         AerGUI *gui = am->getGUI();
@@ -3473,6 +3633,477 @@ namespace AerTftUI
             break;
         }
 
+        case MENU_WIFI_STATIC_IP:
+        {
+            TFT_eSprite *spr = gui->getSpriteBuffer(0);
+
+            if (update && change)
+            {
+                // lcd->fillScreen(0x0841);
+                lcd->fillScreen(TFT_DARKGREY);
+                spr->createSprite(290, 76);
+                spr->fillRect(0, 0, 290, 76, TFT_BLACK);
+                spr->fillRect(2, 2, 286, 70, 0x5aeb);
+                spr->pushSprite(15, 64);
+                spr->deleteSprite();
+            }
+
+            spr->createSprite(250, 30);
+            spr->fillRect(0, 0, 250, 30, TFT_DARKGREY);
+            spr->setTextWrap(false);
+            spr->setTextColor(TFT_WHITE, TFT_DARKGREY);
+            spr->setTextSize(4);
+            spr->setCursor(17, 0);
+            spr->print("STATIC IP");
+            spr->pushSprite(35, 24);
+            spr->deleteSprite();
+
+            spr->createSprite(276, 30);
+            spr->fillRect(0, 0, 276, 30, 0x5aeb);
+            spr->setTextSize(3);
+            spr->setTextColor(0xC69D);
+            spr->setTextWrap(true);
+            if (update && change)
+            {
+                IPAddress ip = *wifiStorage.getLocalIP();
+                gui->getMenuProps()->menuItemIpAddr[0] = ip[0];
+                gui->getMenuProps()->menuItemIpAddr[1] = ip[1];
+                gui->getMenuProps()->menuItemIpAddr[2] = ip[2];
+                gui->getMenuProps()->menuItemIpAddr[3] = ip[3];
+            }
+            uint8_t index = gui->getMenuProps()->menuItemSelIpAddrIndex;
+            if (index == 0)
+            {
+                spr->setTextColor(TFT_WHITE);
+            }
+            spr->print(gui->getMenuProps()->menuItemIpAddr[0], 10);
+            spr->setTextColor(0xC69D);
+            spr->print(".");
+            if (index == 1)
+            {
+                spr->setTextColor(TFT_WHITE);
+            }
+            spr->print(gui->getMenuProps()->menuItemIpAddr[1], 10);
+            spr->setTextColor(0xC69D);
+            spr->print(".");
+            if (index == 2)
+            {
+                spr->setTextColor(TFT_WHITE);
+            }
+            spr->print(gui->getMenuProps()->menuItemIpAddr[2], 10);
+            spr->setTextColor(0xC69D);
+            spr->print(".");
+            if (index == 3)
+            {
+                spr->setTextColor(TFT_WHITE);
+            }
+            spr->print(gui->getMenuProps()->menuItemIpAddr[3], 10);
+            spr->setTextColor(0xC69D);
+            spr->pushSprite(25, 74);
+            spr->deleteSprite();
+
+            spr->createSprite(250, 46);
+            spr->setTextWrap(false);
+            spr->fillRect(0, 0, 250, 46, TFT_BLACK);
+            spr->fillRect(2, 2, 246, 42, 0x5aeb);
+            printSelectedNumber(gui, spr);
+            spr->pushSprite(35, 140);
+            spr->deleteSprite();
+
+            spr->createSprite(250, 20);
+            spr->fillRect(0, 0, 250, 20, TFT_DARKGREY);
+            spr->setTextSize(2);
+            spr->setCursor(0, 0);
+            bool mod = gui->isCursorModify();
+            spr->setTextColor(mod ? TFT_LIGHTGREY : (mindex == MENU_WIFI_STATIC_ADDR ? TFT_CYAN : TFT_WHITE));
+            spr->print("Back");
+            spr->setCursor(70, 0);
+            spr->setTextColor(mindex == MENU_WIFI_STATIC_IP_EDIT ? mod ? TFT_RED : TFT_CYAN : TFT_WHITE);
+            spr->print("Edit");
+            spr->setCursor(180, 0);
+            spr->setTextColor(mod ? TFT_LIGHTGREY : (mindex == MENU_WIFI_STATIC_IP_SAVE ? TFT_RED : TFT_WHITE));
+            spr->print("Save");
+            spr->pushSprite(40, 197);
+            spr->deleteSprite();
+            break;
+        }
+        case MENU_WIFI_STATIC_GATEWAY:
+        {
+            TFT_eSprite *spr = gui->getSpriteBuffer(0);
+
+            if (update && change)
+            {
+                // lcd->fillScreen(0x0841);
+                lcd->fillScreen(TFT_DARKGREY);
+                spr->createSprite(250, 76);
+                spr->fillRect(0, 0, 250, 76, TFT_BLACK);
+                spr->fillRect(2, 2, 246, 70, 0x5aeb);
+                spr->pushSprite(35, 64);
+                spr->deleteSprite();
+            }
+
+            spr->createSprite(250, 30);
+            spr->fillRect(0, 0, 250, 30, TFT_DARKGREY);
+            spr->setTextWrap(false);
+            spr->setTextColor(TFT_WHITE, TFT_DARKGREY);
+            spr->setTextSize(4);
+            spr->setCursor(3, 0);
+            spr->print("GATEWAY IP");
+            spr->pushSprite(35, 24);
+            spr->deleteSprite();
+
+            spr->createSprite(236, 60);
+            spr->fillRect(0, 0, 236, 60, 0x5aeb);
+            spr->setTextSize(3);
+            spr->setTextColor(0xC69D);
+            spr->setTextWrap(true);
+            if (update && change)
+            {
+                IPAddress ip = *wifiStorage.getGatewayIP();
+                gui->getMenuProps()->menuItemIpAddr[0] = ip[0];
+                gui->getMenuProps()->menuItemIpAddr[1] = ip[1];
+                gui->getMenuProps()->menuItemIpAddr[2] = ip[2];
+                gui->getMenuProps()->menuItemIpAddr[3] = ip[3];
+            }
+            uint8_t index = gui->getMenuProps()->menuItemSelIpAddrIndex;
+            if (index == 0)
+            {
+                spr->setTextColor(TFT_WHITE);
+            }
+            spr->print(gui->getMenuProps()->menuItemIpAddr[0], 10);
+            spr->setTextColor(0xC69D);
+            spr->print(".");
+            if (index == 1)
+            {
+                spr->setTextColor(TFT_WHITE);
+            }
+            spr->print(gui->getMenuProps()->menuItemIpAddr[1], 10);
+            spr->setTextColor(0xC69D);
+            spr->print(".");
+            if (index == 2)
+            {
+                spr->setTextColor(TFT_WHITE);
+            }
+            spr->print(gui->getMenuProps()->menuItemIpAddr[2], 10);
+            spr->setTextColor(0xC69D);
+            spr->print(".");
+            if (index == 3)
+            {
+                spr->setTextColor(TFT_WHITE);
+            }
+            spr->print(gui->getMenuProps()->menuItemIpAddr[3], 10);
+            spr->setTextColor(0xC69D);
+            spr->pushSprite(45, 74);
+            spr->deleteSprite();
+
+            spr->createSprite(250, 46);
+            spr->setTextWrap(false);
+            spr->fillRect(0, 0, 250, 46, TFT_BLACK);
+            spr->fillRect(2, 2, 246, 42, 0x5aeb);
+            printSelectedNumber(gui, spr);
+            spr->pushSprite(35, 140);
+            spr->deleteSprite();
+
+            spr->createSprite(250, 20);
+            spr->fillRect(0, 0, 250, 20, TFT_DARKGREY);
+            spr->setTextSize(2);
+            spr->setCursor(0, 0);
+            bool mod = gui->isCursorModify();
+            spr->setTextColor(mod ? TFT_LIGHTGREY : (mindex == MENU_WIFI_STATIC_ADDR ? TFT_CYAN : TFT_WHITE));
+            spr->print("Back");
+            spr->setCursor(70, 0);
+            spr->setTextColor(mindex == MENU_WIFI_STATIC_GATEWAY_EDIT ? mod ? TFT_RED : TFT_CYAN : TFT_WHITE);
+            spr->print("Edit");
+            spr->setCursor(180, 0);
+            spr->setTextColor(mod ? TFT_LIGHTGREY : (mindex == MENU_WIFI_STATIC_GATEWAY_SAVE ? TFT_RED : TFT_WHITE));
+            spr->print("Save");
+            spr->pushSprite(40, 197);
+            spr->deleteSprite();
+            break;
+        }
+        case MENU_WIFI_STATIC_NETMASK:
+        {
+            TFT_eSprite *spr = gui->getSpriteBuffer(0);
+
+            if (update && change)
+            {
+                // lcd->fillScreen(0x0841);
+                lcd->fillScreen(TFT_DARKGREY);
+                spr->createSprite(250, 76);
+                spr->fillRect(0, 0, 250, 76, TFT_BLACK);
+                spr->fillRect(2, 2, 246, 70, 0x5aeb);
+                spr->pushSprite(35, 64);
+                spr->deleteSprite();
+            }
+
+            spr->createSprite(250, 30);
+            spr->fillRect(0, 0, 250, 30, TFT_DARKGREY);
+            spr->setTextWrap(false);
+            spr->setTextColor(TFT_WHITE, TFT_DARKGREY);
+            spr->setTextSize(4);
+            spr->setCursor(17, 0);
+            spr->print("NETMASK IP");
+            spr->pushSprite(35, 24);
+            spr->deleteSprite();
+
+            spr->createSprite(236, 60);
+            spr->fillRect(0, 0, 236, 60, 0x5aeb);
+            spr->setTextSize(3);
+            spr->setTextColor(0xC69D);
+            spr->setTextWrap(true);
+            if (update && change)
+            {
+                IPAddress ip = *wifiStorage.getNetMask();
+                gui->getMenuProps()->menuItemIpAddr[0] = ip[0];
+                gui->getMenuProps()->menuItemIpAddr[1] = ip[1];
+                gui->getMenuProps()->menuItemIpAddr[2] = ip[2];
+                gui->getMenuProps()->menuItemIpAddr[3] = ip[3];
+            }
+            uint8_t index = gui->getMenuProps()->menuItemSelIpAddrIndex;
+            if (index == 0)
+            {
+                spr->setTextColor(TFT_WHITE);
+            }
+            spr->print(gui->getMenuProps()->menuItemIpAddr[0], 10);
+            spr->setTextColor(0xC69D);
+            spr->print(".");
+            if (index == 1)
+            {
+                spr->setTextColor(TFT_WHITE);
+            }
+            spr->print(gui->getMenuProps()->menuItemIpAddr[1], 10);
+            spr->setTextColor(0xC69D);
+            spr->print(".");
+            if (index == 2)
+            {
+                spr->setTextColor(TFT_WHITE);
+            }
+            spr->print(gui->getMenuProps()->menuItemIpAddr[2], 10);
+            spr->setTextColor(0xC69D);
+            spr->print(".");
+            if (index == 3)
+            {
+                spr->setTextColor(TFT_WHITE);
+            }
+            spr->print(gui->getMenuProps()->menuItemIpAddr[3], 10);
+            spr->setTextColor(0xC69D);
+            spr->pushSprite(45, 74);
+            spr->deleteSprite();
+
+            spr->createSprite(250, 46);
+            spr->setTextWrap(false);
+            spr->fillRect(0, 0, 250, 46, TFT_BLACK);
+            spr->fillRect(2, 2, 246, 42, 0x5aeb);
+            printSelectedNumber(gui, spr);
+            spr->pushSprite(35, 140);
+            spr->deleteSprite();
+
+            spr->createSprite(250, 20);
+            spr->fillRect(0, 0, 250, 20, TFT_DARKGREY);
+            spr->setTextSize(2);
+            spr->setCursor(0, 0);
+            bool mod = gui->isCursorModify();
+            spr->setTextColor(mod ? TFT_LIGHTGREY : (mindex == MENU_WIFI_STATIC_ADDR ? TFT_CYAN : TFT_WHITE));
+            spr->print("Back");
+            spr->setCursor(70, 0);
+            spr->setTextColor(mindex == MENU_WIFI_STATIC_NETMASK_EDIT ? mod ? TFT_RED : TFT_CYAN : TFT_WHITE);
+            spr->print("Edit");
+            spr->setCursor(180, 0);
+            spr->setTextColor(mod ? TFT_LIGHTGREY : (mindex == MENU_WIFI_STATIC_NETMASK_SAVE ? TFT_RED : TFT_WHITE));
+            spr->print("Save");
+            spr->pushSprite(40, 197);
+            spr->deleteSprite();
+            break;
+        }
+        case MENU_WIFI_STATIC_DNS1:
+        {
+            TFT_eSprite *spr = gui->getSpriteBuffer(0);
+
+            if (update && change)
+            {
+                // lcd->fillScreen(0x0841);
+                lcd->fillScreen(TFT_DARKGREY);
+                spr->createSprite(250, 76);
+                spr->fillRect(0, 0, 250, 76, TFT_BLACK);
+                spr->fillRect(2, 2, 246, 70, 0x5aeb);
+                spr->pushSprite(35, 64);
+                spr->deleteSprite();
+            }
+
+            spr->createSprite(250, 30);
+            spr->fillRect(0, 0, 250, 30, TFT_DARKGREY);
+            spr->setTextWrap(false);
+            spr->setTextColor(TFT_WHITE, TFT_DARKGREY);
+            spr->setTextSize(4);
+            spr->setCursor(17, 0);
+            spr->print("DNS IP 1");
+            spr->pushSprite(35, 24);
+            spr->deleteSprite();
+
+            spr->createSprite(236, 60);
+            spr->fillRect(0, 0, 236, 60, 0x5aeb);
+            spr->setTextSize(3);
+            spr->setTextColor(0xC69D);
+            spr->setTextWrap(true);
+            if (update && change)
+            {
+                IPAddress ip = *wifiStorage.getDNS1();
+                gui->getMenuProps()->menuItemIpAddr[0] = ip[0];
+                gui->getMenuProps()->menuItemIpAddr[1] = ip[1];
+                gui->getMenuProps()->menuItemIpAddr[2] = ip[2];
+                gui->getMenuProps()->menuItemIpAddr[3] = ip[3];
+            }
+            uint8_t index = gui->getMenuProps()->menuItemSelIpAddrIndex;
+            if (index == 0)
+            {
+                spr->setTextColor(TFT_WHITE);
+            }
+            spr->print(gui->getMenuProps()->menuItemIpAddr[0], 10);
+            spr->setTextColor(0xC69D);
+            spr->print(".");
+            if (index == 1)
+            {
+                spr->setTextColor(TFT_WHITE);
+            }
+            spr->print(gui->getMenuProps()->menuItemIpAddr[1], 10);
+            spr->setTextColor(0xC69D);
+            spr->print(".");
+            if (index == 2)
+            {
+                spr->setTextColor(TFT_WHITE);
+            }
+            spr->print(gui->getMenuProps()->menuItemIpAddr[2], 10);
+            spr->setTextColor(0xC69D);
+            spr->print(".");
+            if (index == 3)
+            {
+                spr->setTextColor(TFT_WHITE);
+            }
+            spr->print(gui->getMenuProps()->menuItemIpAddr[3], 10);
+            spr->setTextColor(0xC69D);
+            spr->pushSprite(45, 74);
+            spr->deleteSprite();
+
+            spr->createSprite(250, 46);
+            spr->setTextWrap(false);
+            spr->fillRect(0, 0, 250, 46, TFT_BLACK);
+            spr->fillRect(2, 2, 246, 42, 0x5aeb);
+            printSelectedNumber(gui, spr);
+            spr->pushSprite(35, 140);
+            spr->deleteSprite();
+
+            spr->createSprite(250, 20);
+            spr->fillRect(0, 0, 250, 20, TFT_DARKGREY);
+            spr->setTextSize(2);
+            spr->setCursor(0, 0);
+            bool mod = gui->isCursorModify();
+            spr->setTextColor(mod ? TFT_LIGHTGREY : (mindex == MENU_WIFI_STATIC_ADDR ? TFT_CYAN : TFT_WHITE));
+            spr->print("Back");
+            spr->setCursor(70, 0);
+            spr->setTextColor(mindex == MENU_WIFI_STATIC_DNS1_EDIT ? mod ? TFT_RED : TFT_CYAN : TFT_WHITE);
+            spr->print("Edit");
+            spr->setCursor(180, 0);
+            spr->setTextColor(mod ? TFT_LIGHTGREY : (mindex == MENU_WIFI_STATIC_DNS1_SAVE ? TFT_RED : TFT_WHITE));
+            spr->print("Save");
+            spr->pushSprite(40, 197);
+            spr->deleteSprite();
+            break;
+        }
+        case MENU_WIFI_STATIC_DNS2:
+        {
+            TFT_eSprite *spr = gui->getSpriteBuffer(0);
+
+            if (update && change)
+            {
+                // lcd->fillScreen(0x0841);
+                lcd->fillScreen(TFT_DARKGREY);
+                spr->createSprite(250, 76);
+                spr->fillRect(0, 0, 250, 76, TFT_BLACK);
+                spr->fillRect(2, 2, 246, 70, 0x5aeb);
+                spr->pushSprite(35, 64);
+                spr->deleteSprite();
+            }
+
+            spr->createSprite(250, 30);
+            spr->fillRect(0, 0, 250, 30, TFT_DARKGREY);
+            spr->setTextWrap(false);
+            spr->setTextColor(TFT_WHITE, TFT_DARKGREY);
+            spr->setTextSize(4);
+            spr->setCursor(17, 0);
+            spr->print("DNS IP 2");
+            spr->pushSprite(35, 24);
+            spr->deleteSprite();
+
+            spr->createSprite(236, 60);
+            spr->fillRect(0, 0, 236, 60, 0x5aeb);
+            spr->setTextSize(3);
+            spr->setTextColor(0xC69D);
+            spr->setTextWrap(true);
+            if (update && change)
+            {
+                IPAddress ip = *wifiStorage.getDNS2();
+                gui->getMenuProps()->menuItemIpAddr[0] = ip[0];
+                gui->getMenuProps()->menuItemIpAddr[1] = ip[1];
+                gui->getMenuProps()->menuItemIpAddr[2] = ip[2];
+                gui->getMenuProps()->menuItemIpAddr[3] = ip[3];
+            }
+            uint8_t index = gui->getMenuProps()->menuItemSelIpAddrIndex;
+            if (index == 0)
+            {
+                spr->setTextColor(TFT_WHITE);
+            }
+            spr->print(gui->getMenuProps()->menuItemIpAddr[0], 10);
+            spr->setTextColor(0xC69D);
+            spr->print(".");
+            if (index == 1)
+            {
+                spr->setTextColor(TFT_WHITE);
+            }
+            spr->print(gui->getMenuProps()->menuItemIpAddr[1], 10);
+            spr->setTextColor(0xC69D);
+            spr->print(".");
+            if (index == 2)
+            {
+                spr->setTextColor(TFT_WHITE);
+            }
+            spr->print(gui->getMenuProps()->menuItemIpAddr[2], 10);
+            spr->setTextColor(0xC69D);
+            spr->print(".");
+            if (index == 3)
+            {
+                spr->setTextColor(TFT_WHITE);
+            }
+            spr->print(gui->getMenuProps()->menuItemIpAddr[3], 10);
+            spr->setTextColor(0xC69D);
+            spr->pushSprite(45, 74);
+            spr->deleteSprite();
+
+            spr->createSprite(250, 46);
+            spr->setTextWrap(false);
+            spr->fillRect(0, 0, 250, 46, TFT_BLACK);
+            spr->fillRect(2, 2, 246, 42, 0x5aeb);
+            printSelectedNumber(gui, spr);
+            spr->pushSprite(35, 140);
+            spr->deleteSprite();
+
+            spr->createSprite(250, 20);
+            spr->fillRect(0, 0, 250, 20, TFT_DARKGREY);
+            spr->setTextSize(2);
+            spr->setCursor(0, 0);
+            bool mod = gui->isCursorModify();
+            spr->setTextColor(mod ? TFT_LIGHTGREY : (mindex == MENU_WIFI_STATIC_ADDR ? TFT_CYAN : TFT_WHITE));
+            spr->print("Back");
+            spr->setCursor(70, 0);
+            spr->setTextColor(mindex == MENU_WIFI_STATIC_DNS2_EDIT ? mod ? TFT_RED : TFT_CYAN : TFT_WHITE);
+            spr->print("Edit");
+            spr->setCursor(180, 0);
+            spr->setTextColor(mod ? TFT_LIGHTGREY : (mindex == MENU_WIFI_STATIC_DNS2_SAVE ? TFT_RED : TFT_WHITE));
+            spr->print("Save");
+            spr->pushSprite(40, 197);
+            spr->deleteSprite();
+            break;
+        }
+
         default:
             break;
         }
@@ -3559,6 +4190,109 @@ namespace AerTftUI
                 spr->setTextColor(0x9d16);
                 spr->setCursor(10, 16);
                 spr->print("<");
+            }
+        }
+    }
+
+    // print selected utf8 number as sprite
+    void printSelectedNumber(AerGUI *gui, TFT_eSprite *spr)
+    {
+        bool mod = gui->isCursorModify();
+        int sid = (int)gui->getMenuProps()->menuItemId;
+        spr->setCursor(10, 10);
+        spr->setTextSize(3);
+
+        int min = 3;
+        if (sid > 100)
+        {
+            min = 1;
+        }
+        else if (sid > 10)
+        {
+            min = 2;
+        }
+
+        spr->setTextColor(0x9d16);
+        for (int j = std::max(-min, sid - min); j < std::max(0, sid); j++)
+        {
+            if (j < -1)
+            {
+                spr->print("  ");
+                continue;
+            }
+            else if (j < 0)
+            {
+                spr->print("   ");
+                continue;
+            }
+            // char sel = gui->getNumber(j);
+            spr->print(j);
+            spr->print(" ");
+        }
+
+        if (sid >= 0)
+        {
+            // char sel = gui->getNumber(sid);
+            spr->setTextColor(mod ? 0xdffd : 0x9d16);
+            spr->print(sid);
+        }
+
+        int max = 256;
+        spr->setTextColor(0x9d16);
+        for (int j = std::max(0, sid + 1); j < std::max(3, sid + 3); j++)
+        {
+            if (j < 0)
+            {
+                continue;
+            }
+            if (j >= max)
+            {
+                spr->print("  ");
+                continue;
+            }
+            if (j > 0)
+            {
+                spr->print(" ");
+            }
+            // char sel = gui->getNumber(j);
+            spr->print(j);
+        }
+
+        if (sid <= 2)
+        {
+            spr->setTextSize(2);
+            if (sid <= 0)
+            {
+                spr->setTextColor(sid == -4 && mod ? 0xdffd : 0x9d16);
+                spr->setCursor(10, 16);
+                spr->print("bck");
+                spr->setTextColor(sid == -3 && mod ? 0xdffd : 0x9d16);
+                spr->setCursor(52, 16);
+                spr->print("clr");
+                spr->setTextColor(sid == -2 && mod ? 0xdffd : 0x9d16);
+                spr->setCursor(96, 16);
+                spr->print("<");
+                spr->setTextColor(sid == -1 && mod ? 0xdffd : 0x9d16);
+                spr->setCursor(118, 16);
+                spr->print(">");
+            }
+            else if (sid <= 1)
+            {
+                spr->setTextColor(0x9d16);
+                spr->setCursor(10, 16);
+                spr->print("clr");
+                spr->setCursor(52, 16);
+                spr->print("<");
+                spr->setCursor(76, 16);
+                spr->print(">");
+            }
+            else if (sid <= 2)
+            {
+                spr->setTextColor(0x9d16);
+                spr->setCursor(10, 16);
+                spr->print("<");
+                spr->setCursor(36, 16);
+                spr->print(">");
             }
         }
     }

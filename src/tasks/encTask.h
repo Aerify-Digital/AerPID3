@@ -428,6 +428,345 @@ void onEb1Clicked(EncoderButton &eb)
                 return;
             }
         }
+        else if (enc_aerGUI->getMenuProps()->menuIndex == MENU_WIFI_STATIC_ENABLED)
+        {
+            if (enc_aerGUI->getMenuProps()->menuLevelVal == MENU_WIFI_STATIC_ENABLED_VAR)
+            {
+                wifiStorage.setUsingStaticIP(!wifiStorage.isUsingStaticIP());
+                enc_am->setPressTick(500);
+                enc_aerGUI->updateMenu();
+                return;
+            }
+        }
+        else if (enc_aerGUI->getMenuProps()->menuIndex == MENU_WIFI_STATIC_IP)
+        {
+            if (enc_aerGUI->getMenuProps()->menuLevelVal == MENU_WIFI_STATIC_IP_EDIT)
+            {
+                if (!enc_aerGUI->isCursorModify())
+                {
+                    enc_aerGUI->setCursorModify(MENU_WIFI_STATIC_IP_EDIT);
+                    enc_aerGUI->updateMenu();
+                }
+                else if (enc_aerGUI->getMenuProps()->menuItemId >= 0)
+                {
+                    uint8_t i = enc_aerGUI->getMenuProps()->menuItemSelIpAddrIndex;
+                    enc_aerGUI->getMenuProps()->menuItemIpAddr[i] = enc_aerGUI->getMenuProps()->menuItemId;
+                    enc_aerGUI->updateMenu();
+                    enc_aerGUI->getMenuProps()->menuItemSelIpAddrIndex++;
+                    if (enc_aerGUI->getMenuProps()->menuItemSelIpAddrIndex > 3)
+                    {
+                        enc_aerGUI->getMenuProps()->menuItemId = -4;
+                        enc_aerGUI->getMenuProps()->menuItemSelIpAddrIndex = 0;
+                    }
+                }
+                else if (enc_aerGUI->getMenuProps()->menuItemId == -1)
+                {
+                    if (enc_aerGUI->getMenuProps()->menuItemSelIpAddrIndex + 1 < 4)
+                    {
+                        enc_aerGUI->getMenuProps()->menuItemSelIpAddrIndex++;
+                        enc_aerGUI->updateMenu();
+                    }
+                }
+                else if (enc_aerGUI->getMenuProps()->menuItemId == -2)
+                {
+                    if (enc_aerGUI->getMenuProps()->menuItemSelIpAddrIndex - 1 >= 0)
+                    {
+                        enc_aerGUI->getMenuProps()->menuItemSelIpAddrIndex--;
+                        enc_aerGUI->updateMenu();
+                    }
+                }
+                else if (enc_aerGUI->getMenuProps()->menuItemId == -3)
+                {
+                    enc_aerGUI->getMenuProps()->menuItemIpAddr[0] = 0;
+                    enc_aerGUI->getMenuProps()->menuItemIpAddr[1] = 0;
+                    enc_aerGUI->getMenuProps()->menuItemIpAddr[2] = 0;
+                    enc_aerGUI->getMenuProps()->menuItemIpAddr[3] = 0;
+                    enc_aerGUI->updateMenu();
+                }
+                else if (enc_aerGUI->getMenuProps()->menuItemId == -4)
+                {
+                    enc_aerGUI->getMenuProps()->menuItemSelIpAddrIndex = 0;
+                    enc_aerGUI->getMenuProps()->menuItemId = 0;
+                    enc_aerGUI->clearCursorModify();
+                    enc_aerGUI->updateMenu();
+                }
+                return;
+            }
+            else if (enc_aerGUI->getMenuProps()->menuLevelVal == MENU_WIFI_STATIC_IP_SAVE)
+            {
+                enc_aerGUI->getMenuProps()->menuItemSelIpAddrIndex = 0;
+                // save and update hostname
+                const uint8_t *ip = enc_aerGUI->getMenuProps()->menuItemIpAddr;
+                wifiStorage.setLocalIP(IPAddress(ip[0], ip[1], ip[2], ip[3]));
+                enc_am->setPressTick(200);
+                enc_aerGUI->gotoMenu(MENU_WIFI_STATIC_ADDR);
+                return;
+            }
+        }
+        else if (enc_aerGUI->getMenuProps()->menuIndex == MENU_WIFI_STATIC_GATEWAY)
+        {
+            if (enc_aerGUI->getMenuProps()->menuLevelVal == MENU_WIFI_STATIC_GATEWAY_EDIT)
+            {
+                if (!enc_aerGUI->isCursorModify())
+                {
+                    enc_aerGUI->setCursorModify(MENU_WIFI_STATIC_GATEWAY_EDIT);
+                    enc_aerGUI->updateMenu();
+                }
+                else if (enc_aerGUI->getMenuProps()->menuItemId >= 0)
+                {
+                    uint8_t i = enc_aerGUI->getMenuProps()->menuItemSelIpAddrIndex;
+                    // enc_aerGUI->getMenuProps()->menuItemIpAddr[i] = enc_aerGUI->getNumber(enc_aerGUI->getMenuProps()->menuItemId);
+                    enc_aerGUI->getMenuProps()->menuItemIpAddr[i] = enc_aerGUI->getMenuProps()->menuItemId;
+                    enc_aerGUI->updateMenu();
+                    enc_aerGUI->getMenuProps()->menuItemSelIpAddrIndex++;
+                    if (enc_aerGUI->getMenuProps()->menuItemSelIpAddrIndex > 3)
+                    {
+                        enc_aerGUI->getMenuProps()->menuItemId = -4;
+                        enc_aerGUI->getMenuProps()->menuItemSelIpAddrIndex = 0;
+                    }
+                }
+                else if (enc_aerGUI->getMenuProps()->menuItemId == -1)
+                {
+                    if (enc_aerGUI->getMenuProps()->menuItemSelIpAddrIndex + 1 < 4)
+                    {
+                        enc_aerGUI->getMenuProps()->menuItemSelIpAddrIndex++;
+                        enc_aerGUI->updateMenu();
+                    }
+                }
+                else if (enc_aerGUI->getMenuProps()->menuItemId == -2)
+                {
+                    if (enc_aerGUI->getMenuProps()->menuItemSelIpAddrIndex - 1 >= 0)
+                    {
+                        enc_aerGUI->getMenuProps()->menuItemSelIpAddrIndex--;
+                        enc_aerGUI->updateMenu();
+                    }
+                }
+                else if (enc_aerGUI->getMenuProps()->menuItemId == -3)
+                {
+                    enc_aerGUI->getMenuProps()->menuItemIpAddr[0] = 0;
+                    enc_aerGUI->getMenuProps()->menuItemIpAddr[1] = 0;
+                    enc_aerGUI->getMenuProps()->menuItemIpAddr[2] = 0;
+                    enc_aerGUI->getMenuProps()->menuItemIpAddr[3] = 0;
+                    enc_aerGUI->updateMenu();
+                }
+                else if (enc_aerGUI->getMenuProps()->menuItemId == -4)
+                {
+                    enc_aerGUI->getMenuProps()->menuItemSelIpAddrIndex = 0;
+                    enc_aerGUI->getMenuProps()->menuItemId = 0;
+                    enc_aerGUI->clearCursorModify();
+                    enc_aerGUI->updateMenu();
+                }
+                return;
+            }
+            else if (enc_aerGUI->getMenuProps()->menuLevelVal == MENU_WIFI_STATIC_GATEWAY_SAVE)
+            {
+                enc_aerGUI->getMenuProps()->menuItemSelIpAddrIndex = 0;
+                // save and update hostname
+                const uint8_t *ip = enc_aerGUI->getMenuProps()->menuItemIpAddr;
+                wifiStorage.setGatewayIP(IPAddress(ip[0], ip[1], ip[2], ip[3]));
+                enc_am->setPressTick(200);
+                enc_aerGUI->gotoMenu(MENU_WIFI_STATIC_ADDR);
+                return;
+            }
+        }
+        else if (enc_aerGUI->getMenuProps()->menuIndex == MENU_WIFI_STATIC_NETMASK)
+        {
+            if (enc_aerGUI->getMenuProps()->menuLevelVal == MENU_WIFI_STATIC_NETMASK_EDIT)
+            {
+                if (!enc_aerGUI->isCursorModify())
+                {
+                    enc_aerGUI->setCursorModify(MENU_WIFI_STATIC_NETMASK_EDIT);
+                    enc_aerGUI->updateMenu();
+                }
+                else if (enc_aerGUI->getMenuProps()->menuItemId >= 0)
+                {
+                    uint8_t i = enc_aerGUI->getMenuProps()->menuItemSelIpAddrIndex;
+                    // enc_aerGUI->getMenuProps()->menuItemIpAddr[i] = enc_aerGUI->getNumber(enc_aerGUI->getMenuProps()->menuItemId);
+                    enc_aerGUI->getMenuProps()->menuItemIpAddr[i] = enc_aerGUI->getMenuProps()->menuItemId;
+                    enc_aerGUI->updateMenu();
+                    enc_aerGUI->getMenuProps()->menuItemSelIpAddrIndex++;
+                    if (enc_aerGUI->getMenuProps()->menuItemSelIpAddrIndex > 3)
+                    {
+                        enc_aerGUI->getMenuProps()->menuItemId = -4;
+                        enc_aerGUI->getMenuProps()->menuItemSelIpAddrIndex = 0;
+                    }
+                }
+                else if (enc_aerGUI->getMenuProps()->menuItemId == -1)
+                {
+                    if (enc_aerGUI->getMenuProps()->menuItemSelIpAddrIndex + 1 < 4)
+                    {
+                        enc_aerGUI->getMenuProps()->menuItemSelIpAddrIndex++;
+                        enc_aerGUI->updateMenu();
+                    }
+                }
+                else if (enc_aerGUI->getMenuProps()->menuItemId == -2)
+                {
+                    if (enc_aerGUI->getMenuProps()->menuItemSelIpAddrIndex - 1 >= 0)
+                    {
+                        enc_aerGUI->getMenuProps()->menuItemSelIpAddrIndex--;
+                        enc_aerGUI->updateMenu();
+                    }
+                }
+                else if (enc_aerGUI->getMenuProps()->menuItemId == -3)
+                {
+                    enc_aerGUI->getMenuProps()->menuItemIpAddr[0] = 0;
+                    enc_aerGUI->getMenuProps()->menuItemIpAddr[1] = 0;
+                    enc_aerGUI->getMenuProps()->menuItemIpAddr[2] = 0;
+                    enc_aerGUI->getMenuProps()->menuItemIpAddr[3] = 0;
+                    enc_aerGUI->updateMenu();
+                }
+                else if (enc_aerGUI->getMenuProps()->menuItemId == -4)
+                {
+                    enc_aerGUI->getMenuProps()->menuItemSelIpAddrIndex = 0;
+                    enc_aerGUI->getMenuProps()->menuItemId = 0;
+                    enc_aerGUI->clearCursorModify();
+                    enc_aerGUI->updateMenu();
+                }
+                return;
+            }
+            else if (enc_aerGUI->getMenuProps()->menuLevelVal == MENU_WIFI_STATIC_NETMASK_SAVE)
+            {
+                enc_aerGUI->getMenuProps()->menuItemSelIpAddrIndex = 0;
+                // save and update hostname
+                const uint8_t *ip = enc_aerGUI->getMenuProps()->menuItemIpAddr;
+                wifiStorage.setNetMask(IPAddress(ip[0], ip[1], ip[2], ip[3]));
+                enc_am->setPressTick(200);
+                enc_aerGUI->gotoMenu(MENU_WIFI_STATIC_ADDR);
+                return;
+            }
+        }
+        else if (enc_aerGUI->getMenuProps()->menuIndex == MENU_WIFI_STATIC_DNS1)
+        {
+            if (enc_aerGUI->getMenuProps()->menuLevelVal == MENU_WIFI_STATIC_DNS1_EDIT)
+            {
+                if (!enc_aerGUI->isCursorModify())
+                {
+                    enc_aerGUI->setCursorModify(MENU_WIFI_STATIC_DNS1_EDIT);
+                    enc_aerGUI->updateMenu();
+                }
+                else if (enc_aerGUI->getMenuProps()->menuItemId >= 0)
+                {
+                    uint8_t i = enc_aerGUI->getMenuProps()->menuItemSelIpAddrIndex;
+                    // enc_aerGUI->getMenuProps()->menuItemIpAddr[i] = enc_aerGUI->getNumber(enc_aerGUI->getMenuProps()->menuItemId);
+                    enc_aerGUI->getMenuProps()->menuItemIpAddr[i] = enc_aerGUI->getMenuProps()->menuItemId;
+                    enc_aerGUI->updateMenu();
+                    enc_aerGUI->getMenuProps()->menuItemSelIpAddrIndex++;
+                    if (enc_aerGUI->getMenuProps()->menuItemSelIpAddrIndex > 3)
+                    {
+                        enc_aerGUI->getMenuProps()->menuItemId = -4;
+                        enc_aerGUI->getMenuProps()->menuItemSelIpAddrIndex = 0;
+                    }
+                }
+                else if (enc_aerGUI->getMenuProps()->menuItemId == -1)
+                {
+                    if (enc_aerGUI->getMenuProps()->menuItemSelIpAddrIndex + 1 < 4)
+                    {
+                        enc_aerGUI->getMenuProps()->menuItemSelIpAddrIndex++;
+                        enc_aerGUI->updateMenu();
+                    }
+                }
+                else if (enc_aerGUI->getMenuProps()->menuItemId == -2)
+                {
+                    if (enc_aerGUI->getMenuProps()->menuItemSelIpAddrIndex - 1 >= 0)
+                    {
+                        enc_aerGUI->getMenuProps()->menuItemSelIpAddrIndex--;
+                        enc_aerGUI->updateMenu();
+                    }
+                }
+                else if (enc_aerGUI->getMenuProps()->menuItemId == -3)
+                {
+                    enc_aerGUI->getMenuProps()->menuItemIpAddr[0] = 0;
+                    enc_aerGUI->getMenuProps()->menuItemIpAddr[1] = 0;
+                    enc_aerGUI->getMenuProps()->menuItemIpAddr[2] = 0;
+                    enc_aerGUI->getMenuProps()->menuItemIpAddr[3] = 0;
+                    enc_aerGUI->updateMenu();
+                }
+                else if (enc_aerGUI->getMenuProps()->menuItemId == -4)
+                {
+                    enc_aerGUI->getMenuProps()->menuItemSelIpAddrIndex = 0;
+                    enc_aerGUI->getMenuProps()->menuItemId = 0;
+                    enc_aerGUI->clearCursorModify();
+                    enc_aerGUI->updateMenu();
+                }
+                return;
+            }
+            else if (enc_aerGUI->getMenuProps()->menuLevelVal == MENU_WIFI_STATIC_DNS1_SAVE)
+            {
+                enc_aerGUI->getMenuProps()->menuItemSelIpAddrIndex = 0;
+                // save and update hostname
+                const uint8_t *ip = enc_aerGUI->getMenuProps()->menuItemIpAddr;
+                wifiStorage.setDNS1(IPAddress(ip[0], ip[1], ip[2], ip[3]));
+                enc_am->setPressTick(200);
+                enc_aerGUI->gotoMenu(MENU_WIFI_STATIC_ADDR);
+                return;
+            }
+        }
+        else if (enc_aerGUI->getMenuProps()->menuIndex == MENU_WIFI_STATIC_DNS2)
+        {
+            if (enc_aerGUI->getMenuProps()->menuLevelVal == MENU_WIFI_STATIC_DNS2_EDIT)
+            {
+                if (!enc_aerGUI->isCursorModify())
+                {
+                    enc_aerGUI->setCursorModify(MENU_WIFI_STATIC_DNS2_EDIT);
+                    enc_aerGUI->updateMenu();
+                }
+                else if (enc_aerGUI->getMenuProps()->menuItemId >= 0)
+                {
+                    uint8_t i = enc_aerGUI->getMenuProps()->menuItemSelIpAddrIndex;
+                    // enc_aerGUI->getMenuProps()->menuItemIpAddr[i] = enc_aerGUI->getNumber(enc_aerGUI->getMenuProps()->menuItemId);
+                    enc_aerGUI->getMenuProps()->menuItemIpAddr[i] = enc_aerGUI->getMenuProps()->menuItemId;
+                    enc_aerGUI->updateMenu();
+                    enc_aerGUI->getMenuProps()->menuItemSelIpAddrIndex++;
+                    if (enc_aerGUI->getMenuProps()->menuItemSelIpAddrIndex > 3)
+                    {
+                        enc_aerGUI->getMenuProps()->menuItemId = -4;
+                        enc_aerGUI->getMenuProps()->menuItemSelIpAddrIndex = 0;
+                    }
+                }
+                else if (enc_aerGUI->getMenuProps()->menuItemId == -1)
+                {
+                    if (enc_aerGUI->getMenuProps()->menuItemSelIpAddrIndex + 1 < 4)
+                    {
+                        enc_aerGUI->getMenuProps()->menuItemSelIpAddrIndex++;
+                        enc_aerGUI->updateMenu();
+                    }
+                }
+                else if (enc_aerGUI->getMenuProps()->menuItemId == -2)
+                {
+                    if (enc_aerGUI->getMenuProps()->menuItemSelIpAddrIndex - 1 >= 0)
+                    {
+                        enc_aerGUI->getMenuProps()->menuItemSelIpAddrIndex--;
+                        enc_aerGUI->updateMenu();
+                    }
+                }
+                else if (enc_aerGUI->getMenuProps()->menuItemId == -3)
+                {
+                    enc_aerGUI->getMenuProps()->menuItemIpAddr[0] = 0;
+                    enc_aerGUI->getMenuProps()->menuItemIpAddr[1] = 0;
+                    enc_aerGUI->getMenuProps()->menuItemIpAddr[2] = 0;
+                    enc_aerGUI->getMenuProps()->menuItemIpAddr[3] = 0;
+                    enc_aerGUI->updateMenu();
+                }
+                else if (enc_aerGUI->getMenuProps()->menuItemId == -4)
+                {
+                    enc_aerGUI->getMenuProps()->menuItemSelIpAddrIndex = 0;
+                    enc_aerGUI->getMenuProps()->menuItemId = 0;
+                    enc_aerGUI->clearCursorModify();
+                    enc_aerGUI->updateMenu();
+                }
+                return;
+            }
+            else if (enc_aerGUI->getMenuProps()->menuLevelVal == MENU_WIFI_STATIC_DNS2_SAVE)
+            {
+                enc_aerGUI->getMenuProps()->menuItemSelIpAddrIndex = 0;
+                // save and update hostname
+                const uint8_t *ip = enc_aerGUI->getMenuProps()->menuItemIpAddr;
+                wifiStorage.setDNS2(IPAddress(ip[0], ip[1], ip[2], ip[3]));
+                enc_am->setPressTick(200);
+                enc_aerGUI->gotoMenu(MENU_WIFI_STATIC_ADDR);
+                return;
+            }
+        }
         /*else if (enc_aerGUI->getMenuProps()->menuIndex == MENU_LED_AMBIENT)
         {
             if (enc_aerGUI->getMenuProps()->menuLevelVal == MENU_LED_AMBIENT_TOGGLE)
@@ -2247,6 +2586,36 @@ void onEb1Encoder(EncoderButton &eb)
             }
             enc_aerGUI->updateMenu();
             enc_am->webUpdateWIFI(true);
+            break;
+        }
+        case MENU_WIFI_STATIC_IP_EDIT:
+        case MENU_WIFI_STATIC_GATEWAY_EDIT:
+        case MENU_WIFI_STATIC_NETMASK_EDIT:
+        case MENU_WIFI_STATIC_DNS1_EDIT:
+        case MENU_WIFI_STATIC_DNS2_EDIT:
+        {
+            int chng = 0;
+            if (eb.increment() > 0)
+            {
+                chng -= 1 * dir;
+            }
+            else if (eb.increment() < 0)
+            {
+                chng += 1 * dir;
+            }
+            if (enc_aerGUI->getMenuProps()->menuItemId + chng <= -5)
+            {
+                enc_aerGUI->getMenuProps()->menuItemId = 255;
+            }
+            else if (enc_aerGUI->getMenuProps()->menuItemId + chng >= 256)
+            {
+                enc_aerGUI->getMenuProps()->menuItemId = -4;
+            }
+            else if (enc_aerGUI->getMenuProps()->menuItemId + chng >= -4 && enc_aerGUI->getMenuProps()->menuItemId + chng < 256)
+            {
+                enc_aerGUI->getMenuProps()->menuItemId += chng;
+            }
+            enc_aerGUI->updateMenu();
             break;
         }
         case MENU_PID_PWM_FACTOR_VAR:
