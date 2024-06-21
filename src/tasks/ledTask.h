@@ -18,7 +18,7 @@ void led_task(void *pvParameters)
 {
     AerManager *_am = (AerManager *)pvParameters; // task parameters
     LightsStor *_lights = _am->getLights();
-    delay(500);
+    delay(250);
 
     int16_t targetBacklightLevel = 255;
     int16_t priorBacklightLevel = 255;
@@ -40,7 +40,7 @@ void led_task(void *pvParameters)
     printf("> Starting Fancy LED task on core %d\n", xPortGetCoreID());
     while (1)
     {
-        if (xSemaphoreTake(sys1_mutex, 50) == pdTRUE)
+        if (xSemaphoreTake(sys1_mutex, 10) == pdTRUE)
         {
             // tick the fancy leds!
             xled.tickFancyLED(_am, _lights);
@@ -49,15 +49,14 @@ void led_task(void *pvParameters)
         }
         vTaskDelay(15 / portTICK_PERIOD_MS);
 
-        if (xSemaphoreTake(sys1_mutex, 10) == pdTRUE)
+        if (xSemaphoreTake(sys1_mutex, 5) == pdTRUE)
         {
             // tick the backlight
             tickBacklightLED(_am, bl_tick, targetBacklightLevel, priorBacklightLevel);
 
             xSemaphoreGive(sys1_mutex);
         }
-
-        vTaskDelay(1 / portTICK_PERIOD_MS);
+        vTaskDelay(10 / portTICK_PERIOD_MS);
     }
     vTaskDelete(NULL);
 }
@@ -73,7 +72,8 @@ void tickBacklightLED(AerManager *_am, long &bl_tick, int16_t &targetBacklightLe
         bool blDimEnb = st7789->isBacklightDimOn();
         uint8_t bll = st7789->getBacklightLevel();
 
-        if (!tftSettingsStorage.isLoaded()) {
+        if (!tftSettingsStorage.isLoaded())
+        {
             return;
         }
 
