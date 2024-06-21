@@ -86,7 +86,7 @@ static void perfmon_task(void *args)
             continue;
         }
 
-        if (millis() > 5000 && millis() < 30000)
+        if (millis() > 3000 && millis() < 9000) // 30000
         {
             // expand idlecalls...
             if (idle0 > maxIdleCalls0 && idle0 < maxIdleCalls0 * 1.72)
