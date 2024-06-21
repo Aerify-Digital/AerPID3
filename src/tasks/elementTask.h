@@ -62,9 +62,13 @@ void handleBump(AerManager *am, uint8_t elementIndex)
 
 void element_task(void *pvParameters)
 {
+    while (millis() < 3000)
+    {
+        vTaskDelay(100 / portTICK_PERIOD_MS);
+    }
+
     AerManager *_am = (AerManager *)pvParameters; // task parameters
 
-    vTaskDelay(500);
     printf("> Starting Element Feature task on core %d..\n", xPortGetCoreID());
     while (1)
     {

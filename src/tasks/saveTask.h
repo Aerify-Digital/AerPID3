@@ -30,6 +30,11 @@ typedef struct
 
 void save_task(void *pvParameters)
 {
+    while (millis() < 3000)
+    {
+        vTaskDelay(100 / portTICK_PERIOD_MS);
+    }
+
     SaveTaskParams *taskParams = (SaveTaskParams *)pvParameters;
     AerManager *am = taskParams->am;
 
@@ -60,7 +65,7 @@ void save_task(void *pvParameters)
         {
             am->getAerPID(0)->kD = 7.0;
         }
-        Serial.print("Loaded PID: ");
+        Serial.print(F("Loaded PID: "));
         Serial.print(" kP ");
         Serial.print(am->getAerPID(0)->kP, 10);
         Serial.print("  kI ");
@@ -82,7 +87,7 @@ void save_task(void *pvParameters)
         {
             am->getAerPID(1)->kD = 7.0;
         }
-        Serial.print("Loaded PID: ");
+        Serial.print(F("Loaded PID: "));
         Serial.print(" kP ");
         Serial.print(am->getAerPID(1)->kP, 10);
         Serial.print("  kI ");
@@ -111,12 +116,12 @@ void save_task(void *pvParameters)
                 am->setPressTick(100);
             }
 
-            Serial.print("Loaded PWM: ");
-            Serial.print(" Frequency ");
+            Serial.print(F("Loaded PWM: "));
+            Serial.print(F(" Frequency "));
             Serial.print(am->getAerPID(0)->getPwmFreq(), 10);
-            Serial.print("  Scale Factor ");
+            Serial.print(F("  Scale Factor "));
             Serial.print(am->getAerPID(0)->PWM_ScaleFactor, 10);
-            Serial.print("  Cycle Time ");
+            Serial.print(F("  Cycle Time "));
             Serial.println(am->getAerPID(0)->PWM_CycleTime, 10);
         }
 
@@ -141,12 +146,12 @@ void save_task(void *pvParameters)
                 am->setPressTick(100);
             }
 
-            Serial.print("Loaded PWM: ");
-            Serial.print(" Frequency ");
+            Serial.print(F("Loaded PWM: "));
+            Serial.print(F(" Frequency "));
             Serial.print(am->getAerPID(1)->getPwmFreq(), 10);
-            Serial.print("  Scale Factor ");
+            Serial.print(F("  Scale Factor "));
             Serial.print(am->getAerPID(1)->PWM_ScaleFactor, 10);
-            Serial.print("  Cycle Time ");
+            Serial.print(F("  Cycle Time "));
             Serial.println(am->getAerPID(1)->PWM_CycleTime, 10);
         }
 #endif
@@ -479,6 +484,20 @@ void save_task(void *pvParameters)
                 xSemaphoreGive(sys1_mutex);
             }
         }
+#if AERPID_COUNT == 2
+        if (am->isPressTickReady() && fanControlStorage.isNeedSave())
+        {
+            if (xSemaphoreTake(sys1_mutex, 500) == pdTRUE)
+            {
+                if (xSemaphoreTake(spi1_mutex, 50) == pdTRUE)
+                {
+                    fanControlStorage.save();
+                    xSemaphoreGive(spi1_mutex);
+                }
+                xSemaphoreGive(sys1_mutex);
+            }
+        }
+#endif
 
         // tick press tick...
         am->tickPressTick();

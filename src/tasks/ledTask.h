@@ -16,9 +16,13 @@ void tickBacklightLED(AerManager *_am, long &bl_tick, int16_t &targetBacklightLe
 
 void led_task(void *pvParameters)
 {
+    while (millis() < 1000)
+    {
+        vTaskDelay(250 / portTICK_PERIOD_MS);
+    }
+
     AerManager *_am = (AerManager *)pvParameters; // task parameters
     LightsStor *_lights = _am->getLights();
-    delay(250);
 
     int16_t targetBacklightLevel = 255;
     int16_t priorBacklightLevel = 255;
@@ -40,7 +44,7 @@ void led_task(void *pvParameters)
     printf("> Starting Fancy LED task on core %d\n", xPortGetCoreID());
     while (1)
     {
-        if (xSemaphoreTake(sys1_mutex, 10) == pdTRUE)
+        if (xSemaphoreTake(sys1_mutex, 5) == pdTRUE)
         {
             // tick the fancy leds!
             xled.tickFancyLED(_am, _lights);

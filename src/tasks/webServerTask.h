@@ -9,8 +9,13 @@
 // Task 1 Worker
 void taskWebWorker(void *parameter)
 {
-    delay(5000);
-    Serial.print("Task Web Worker starting on core ");
+    while (millis() < 9000)
+    {
+        vTaskDelay(500 / portTICK_PERIOD_MS);
+    }
+    vTaskDelay(1000 / portTICK_PERIOD_MS);
+
+    Serial.print(F("Task Web Worker starting on core "));
     Serial.println(xPortGetCoreID());
 
     // setup web server..
@@ -32,7 +37,8 @@ void taskWebWorker(void *parameter)
 
     // xTaskCreate(webFetch_task, "Web_Fetch", 8192, (void *)&aerManager, 10, &webFetchTask);
 
-    Serial.print("Starting Task Web Worker on core ");
+    vTaskDelay(500 / portTICK_PERIOD_MS);
+    Serial.print(F("Starting Task Web Worker on core "));
     Serial.println(xPortGetCoreID());
     for (;;)
     { // infinite loop

@@ -13,9 +13,13 @@ void pid_task_1(void *pvParameters);
 // Task PID Worker
 void pid_task_1(void *pvParameters)
 {
-    vTaskDelay(3700);
+    while (millis() < 6000)
+    {
+        vTaskDelay(100 / portTICK_PERIOD_MS);
+    }
+        vTaskDelay(250 / portTICK_PERIOD_MS);
 
-    Serial.print("AerPID Worker 1 starting on core ");
+    Serial.print(F("AerPID Worker 1 starting on core "));
     Serial.println(xPortGetCoreID());
 
     // initialize
@@ -23,13 +27,13 @@ void pid_task_1(void *pvParameters)
 
     if (!init1)
     {
-        Serial.print("Failed Starting AerPID Worker 1 on core ");
+        Serial.print(F("Failed Starting AerPID Worker 1 on core "));
         Serial.println(xPortGetCoreID());
         delay(1000);
     }
     else
     {
-        Serial.print("Starting AerPID Worker 1 on core ");
+        Serial.print(F("Starting AerPID Worker 1 on core "));
         Serial.println(xPortGetCoreID());
         for (;;)
         {

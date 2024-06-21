@@ -50,7 +50,7 @@ void serial_task(void *pvParameters)
     initUART();
     serialComm->begin(aerManager);
 
-    Serial.print("> Starting Serial Handler task on core ");
+    Serial.print(F("> Starting Serial Handler task on core "));
     Serial.println(xPortGetCoreID());
     while (1)
     {

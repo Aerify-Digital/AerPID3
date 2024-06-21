@@ -61,8 +61,12 @@ _elm_prot_op_code_t doOpStateCmd(_elm_prot_op_code_t op)
 
 void link_task(void *pvParameters)
 {
+    while (millis() < 500)
+    {
+        vTaskDelay(200 / portTICK_PERIOD_MS);
+    }
+
     AerManager *_am = (AerManager *)pvParameters; // task parameters
-    vTaskDelay(3200);
 
     _elm_prot_op_code_t _op_state = E_PROT_NONE;
 
