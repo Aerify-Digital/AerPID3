@@ -9,18 +9,6 @@ var websocket;
 // ==================================================
 // ==================================================
 
-// chart values
-const xValues = [];
-for (let i = 0; i < 128; i++) {
-  xValues.push(`${i}`);
-}
-
-// chart 2 values
-const xValues2 = [];
-for (let i = 0; i < 128; i++) {
-  xValues2.push(`${i}`);
-}
-
 Chart.defaults.global.animation.duration = 0;
 
 const createChart = (name) => {
@@ -138,42 +126,80 @@ function getTrendLinePoint(x, slope, intercept) {
 
 let zoomRefreshTick = 0;
 
+const maxChartTime = 60 * 10;
+
 const updateChart = (state, t, ta, st) => {
-  if (state.TEMPS.length > 128) {
+  if (state.TEMPS.length > maxChartTime) {
     state.TEMPS.shift();
   }
   state.TEMPS.push(t);
 
-  if (state.TEMPS_AVG.length > 128) {
+  if (state.TEMPS_AVG.length > maxChartTime) {
     state.TEMPS_AVG.shift();
   }
   state.TEMPS_AVG.push(ta);
+
+  let maxTime = 32;
+  if (state.TIME_SPAN1 == 'one') {
+    maxTime = 64;
+  } else if (state.TIME_SPAN1 == 'two') {
+    maxTime = 128;
+  } else if (state.TIME_SPAN1 == 'three') {
+    maxTime = 3 * 60;
+  } else if (state.TIME_SPAN1 == 'five') {
+    maxTime = 5 * 60;
+  } else if (state.TIME_SPAN1 == 'seven') {
+    maxTime = 7 * 60;
+  } else if (state.TIME_SPAN1 == 'ten') {
+    maxTime = 10 * 60;
+  } else if (state.TIME_SPAN1 == 'fifteen') {
+    maxTime = 15 * 60;
+  }
 
   const labels = [];
   const temps = [];
   const set_temps = [];
   const avg_temps = [];
+  let sTemps = [];
   for (let i = 0; i < state.TEMPS.length; i++) {
-    temps.push({ x: i, y: state.TEMPS[i] });
-    avg_temps.push({ x: i, y: state.TEMPS_AVG[i] });
+    sTemps.push(state.TEMPS[i]);
+  }
+  sTemps = sTemps.reverse();
+  let sTempsAvg = [];
+  for (let i = 0; i < state.TEMPS_AVG.length; i++) {
+    sTempsAvg.push(state.TEMPS_AVG[i]);
+  }
+  sTempsAvg = sTempsAvg.reverse();
+  for (let i = 0; i < sTemps.length; i++) {
+    if (i >= maxTime) {
+      break;
+    }
+    temps.push({ x: i, y: sTemps[i] });
+    avg_temps.push({ x: i, y: sTempsAvg[i] });
     set_temps.push({
       x: i,
       y: st
     });
-    if (state.TEMPS.length <= 16) {
+    if (sTemps.length <= 32) {
       if (i % 2 == 0) {
         labels.push(`${i}`);
       } else {
         labels.push('');
       }
-    } else if (state.TEMPS.length <= 32) {
+    } else if (sTemps.length <= 64) {
       if (i % 8 == 0) {
         labels.push(`${i}`);
       } else {
         labels.push('');
       }
-    } else {
+    } else if (sTemps.length <= 128) {
       if (i % 16 == 0) {
+        labels.push(`${i}`);
+      } else {
+        labels.push('');
+      }
+    } else {
+      if (i % 15 == 0) {
         labels.push(`${i}`);
       } else {
         labels.push('');
@@ -181,8 +207,8 @@ const updateChart = (state, t, ta, st) => {
     }
   }
 
-  chart.data.datasets[0].data = temps.reverse(); // reverse order
-  chart.data.datasets[1].data = avg_temps.reverse(); // reverse order
+  chart.data.datasets[0].data = temps;
+  chart.data.datasets[1].data = avg_temps;
   chart.data.datasets[2].data = set_temps;
   chart.data.datasets[3].data = calculateTrendLine(temps);
   chart.data.labels = labels;
@@ -198,41 +224,77 @@ const updateChart = (state, t, ta, st) => {
 let zoomRefreshTick2 = 0;
 
 const updateChart2 = (state, t, ta, st) => {
-  if (state.TEMPS2.length > 128) {
+  if (state.TEMPS2.length > maxChartTime) {
     state.TEMPS2.shift();
   }
   state.TEMPS2.push(t);
 
-  if (state.TEMPS_AVG2.length > 128) {
+  if (state.TEMPS_AVG2.length > maxChartTime) {
     state.TEMPS_AVG2.shift();
   }
   state.TEMPS_AVG2.push(ta);
+
+  let maxTime = 32;
+  if (state.TIME_SPAN2 == 'one') {
+    maxTime = 64;
+  } else if (state.TIME_SPAN2 == 'two') {
+    maxTime = 128;
+  } else if (state.TIME_SPAN2 == 'three') {
+    maxTime = 3 * 60;
+  } else if (state.TIME_SPAN2 == 'five') {
+    maxTime = 5 * 60;
+  } else if (state.TIME_SPAN2 == 'seven') {
+    maxTime = 7 * 60;
+  } else if (state.TIME_SPAN2 == 'ten') {
+    maxTime = 10 * 60;
+  } else if (state.TIME_SPAN2 == 'fifteen') {
+    maxTime = 15 * 60;
+  }
 
   const labels = [];
   const temps = [];
   const set_temps = [];
   const avg_temps = [];
+  let sTemps = [];
   for (let i = 0; i < state.TEMPS2.length; i++) {
-    temps.push({ x: i, y: state.TEMPS2[i] });
-    avg_temps.push({ x: i, y: state.TEMPS_AVG2[i] });
+    sTemps.push(state.TEMPS2[i]);
+  }
+  sTemps = sTemps.reverse();
+  let sTempsAvg = [];
+  for (let i = 0; i < state.TEMPS_AVG2.length; i++) {
+    sTempsAvg.push(state.TEMPS_AVG2[i]);
+  }
+  sTempsAvg = sTempsAvg.reverse();
+  for (let i = 0; i < sTemps.length; i++) {
+    if (i >= maxTime) {
+      break;
+    }
+    temps.push({ x: i, y: sTemps[i] });
+    avg_temps.push({ x: i, y: sTempsAvg[i] });
     set_temps.push({
       x: i,
       y: st
     });
-    if (state.TEMPS2.length <= 16) {
+    if (sTemps.length <= 32) {
       if (i % 2 == 0) {
         labels.push(`${i}`);
       } else {
         labels.push('');
       }
-    } else if (state.TEMPS2.length <= 32) {
+    } else if (sTemps.length <= 64) {
       if (i % 8 == 0) {
         labels.push(`${i}`);
       } else {
         labels.push('');
       }
-    } else {
+    } else if (sTemps.length <= 128) {
       if (i % 16 == 0) {
+        labels.push(`${i}`);
+      } else {
+        labels.push('');
+      }
+    } else {
+      if (i % 15 == 0) {
         labels.push(`${i}`);
       } else {
         labels.push('');
@@ -240,8 +302,8 @@ const updateChart2 = (state, t, ta, st) => {
     }
   }
 
-  chart2.data.datasets[0].data = temps.reverse(); // reverse order
-  chart2.data.datasets[1].data = avg_temps.reverse(); // reverse order
+  chart2.data.datasets[0].data = temps;
+  chart2.data.datasets[1].data = avg_temps;
   chart2.data.datasets[2].data = set_temps;
   chart2.data.datasets[3].data = calculateTrendLine(temps);
   chart2.data.labels = labels;
@@ -588,6 +650,8 @@ let state = {
   },
   ZOOM_LEVEL: 'auto',
   ZOOM_LEVEL2: 'auto',
+  TIME_SPAN1: 'two',
+  TIME_SPAN2: 'two',
   DEV_MODE_DEBUG: false
 };
 
@@ -2689,6 +2753,19 @@ const zoomChange2 = (obj) => {
   const value = obj.value;
   updateZoom2(value);
   state.ZOOM_LEVEL2 = value;
+  chart2.update();
+};
+
+// Time Span change
+const timeChange_1 = (obj) => {
+  const value = obj.value;
+  state.TIME_SPAN1 = value;
+  chart.update();
+};
+
+const timeChange_2 = (obj) => {
+  const value = obj.value;
+  state.TIME_SPAN2 = value;
   chart2.update();
 };
 

@@ -396,6 +396,13 @@ h6 {
   padding: 0.2em 0.6em;
 }
 
+#time_span_1 {
+  padding: 0.2em 0.6em;
+}
+#time_span_2 {
+  padding: 0.2em 0.6em;
+}
+
 .sqd-container {
   min-height: max-content;
   height: 420px;
