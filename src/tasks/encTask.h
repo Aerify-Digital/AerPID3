@@ -17,8 +17,10 @@
 #include "common/datatypes/DateTimeRTC.h"
 #include "common/enum/ThermalUnitsType.h"
 #include "storage/tftSettingsStor.h"
+#if AERPID_COUNT == 2
+#include "storage/fanControlStor.h"
+#endif
 
-#include "pidTask.h"
 #include "web/webServer.h"
 
 /**
@@ -108,6 +110,27 @@ void onBt1Clicked(EncoderButton &eb)
         }
         return;
     }
+#if AERPID_COUNT == 2
+    else if (enc_aerGUI->getMenuProps()->menuIndex == MENU_LOCAL_FAN_CONTROL)
+    {
+        if (enc_aerGUI->getMenuProps()->menuLevelVal == MENU_FAN_CONTROL_SPEED)
+        {
+            int s = fanControlStorage.getFanSpeed();
+            if (s + 8 <= 255)
+            {
+                s += 10;
+            }
+            else if (s + 10 >= 255)
+            {
+                s = 255;
+            }
+            fanControlStorage.setFanSpeed(s);
+            enc_am->setPressTick(100);
+            enc_aerGUI->updateMenu();
+            return;
+        }
+    }
+#endif
     else if (enc_aerGUI->getMenuProps()->menuIndex == MENU_SYSTEM_KNOB_ADJUST)
     {
         if (enc_aerGUI->getMenuProps()->menuLevelVal == MENU_KNOB_ADJUST_AMOUNT)
@@ -182,6 +205,27 @@ void onBt2Clicked(EncoderButton &eb)
         }
         return;
     }
+#if AERPID_COUNT == 2
+    else if (enc_aerGUI->getMenuProps()->menuIndex == MENU_LOCAL_FAN_CONTROL)
+    {
+        if (enc_aerGUI->getMenuProps()->menuLevelVal == MENU_FAN_CONTROL_SPEED)
+        {
+            int s = fanControlStorage.getFanSpeed();
+            if (s - 10 >= 0)
+            {
+                s -= 10;
+            }
+            else if (s - 10 < 0)
+            {
+                s = 0;
+            }
+            fanControlStorage.setFanSpeed(s);
+            enc_am->setPressTick(100);
+            enc_aerGUI->updateMenu();
+            return;
+        }
+    }
+#endif
     else if (enc_aerGUI->getMenuProps()->menuIndex == MENU_SYSTEM_KNOB_ADJUST)
     {
         if (enc_aerGUI->getMenuProps()->menuLevelVal == MENU_KNOB_ADJUST_AMOUNT)
@@ -267,12 +311,49 @@ void onEb1Clicked(EncoderButton &eb)
                     rt = ThermalUnitsType::CELSIUS;
                 }
                 enc_am->setReadingType(rt);
-                enc_am->setPressTick(500);
+                enc_am->setPressTick(300);
                 enc_am->updateUnitsStor(true);
                 enc_aerGUI->updateMenu();
                 return;
             }
         }
+#if AERPID_COUNT == 2
+        if (enc_aerGUI->getMenuProps()->menuIndex == MENU_LOCAL_FAN_CONTROL)
+        {
+            if (enc_aerGUI->getMenuProps()->menuLevelVal == MENU_FAN_CONTROL_ENABLED)
+            {
+                fanControlStorage.setFanEnabled(!fanControlStorage.getFanEnabled());
+                enc_am->setPressTick(100);
+                enc_aerGUI->updateMenu();
+                return;
+            }
+            else if (enc_aerGUI->getMenuProps()->menuLevelVal == MENU_FAN_CONTROL_MODE)
+            {
+                uint8_t m = fanControlStorage.getFanMode();
+                if (m + 1 > 2)
+                {
+                    m = 0;
+                }
+                else
+                {
+                    m++;
+                }
+                fanControlStorage.setFanMode(m);
+                enc_am->setPressTick(200);
+                enc_aerGUI->updateMenu();
+                return;
+            }
+            else if (enc_aerGUI->getMenuProps()->menuLevelVal == MENU_FAN_CONTROL_SPEED)
+            {
+                uint8_t s = fanControlStorage.getFanSpeed();
+                s += 20;
+                fanControlStorage.setFanSpeed(s);
+                enc_am->setPressTick(200);
+                enc_aerGUI->updateMenu();
+                return;
+            }
+        }
+#endif
         else if (enc_aerGUI->getMenuProps()->menuIndex == MENU_SYSTEM_FACTORY_RESET)
         {
             if (enc_aerGUI->getMenuProps()->menuLevelVal == MENU_SYSTEM_FACTORY_RESET_CONFIRM)

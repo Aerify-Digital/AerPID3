@@ -9,9 +9,17 @@
 #include <PinDefs.h>
 #include "common/datatypes/mutex.h"
 #include "core/controllers/AerManager.h"
+#if AERPID_COUNT == 2
+#include "storage/fanControlStor.h"
+#endif
 
 #include "util/time/PCF85063A.h"
 #include <LM75.h>
+
+#if AERPID_COUNT == 2
+uint8_t _fanSpeed;
+void tickFan(double tempA, double tempB, double tempC);
+#endif
 
 void worker_task(void *pvParameters)
 {
@@ -31,10 +39,6 @@ void worker_task(void *pvParameters)
     LM75 sensorB;
 #if AERPID_COUNT == 2
     LM75 sensorC;
-#endif
-
-#if AERPID_COUNT == 2
-    uint8_t fanSpeed = 0;
 #endif
 
     // check if mutex is free
@@ -98,56 +102,8 @@ void worker_task(void *pvParameters)
 #if AERPID_COUNT == 2
                     tempC = sensorC.temp(); // cel
                     _am->setLocalTemps(tempA, tempB, tempC);
+                    tickFan(tempA, tempB, tempC);
 #endif
-
-#if AERPID_COUNT == 2
-                    if (tempB > 44 && fanSpeed <= 250)
-                    {
-                        Serial.println(">> Enabled Fan 100% !");
-                        fanSpeed = 255;
-                        Wire.beginTransmission(PID_MONITOR_ADDR);
-                        const uint8_t data[2] = {50, fanSpeed};
-                        Wire.write(data, 2);
-                        Wire.endTransmission();
-                    }
-                    else if (tempB > 40 && fanSpeed < 192)
-                    {
-                        Serial.println(">> Enabled Fan 75% !");
-                        fanSpeed = 192;
-                        Wire.beginTransmission(PID_MONITOR_ADDR);
-                        const uint8_t data[2] = {50, fanSpeed};
-                        Wire.write(data, 2);
-                        Wire.endTransmission();
-                    }
-                    else if (tempB > 34 && fanSpeed < 128)
-                    {
-                        Serial.println(">> Enabled Fan 50% !");
-                        fanSpeed = 128;
-                        Wire.beginTransmission(PID_MONITOR_ADDR);
-                        const uint8_t data[2] = {50, fanSpeed};
-                        Wire.write(data, 2);
-                        Wire.endTransmission();
-                    }
-                    else if (tempB > 30 && fanSpeed < 64)
-                    {
-                        Serial.println(">> Enabled Fan 37% !");
-                        fanSpeed = 96;
-                        Wire.beginTransmission(PID_MONITOR_ADDR);
-                        const uint8_t data[2] = {50, fanSpeed};
-                        Wire.write(data, 2);
-                        Wire.endTransmission();
-                    }
-                    else if (tempB <= 28 && fanSpeed > 0)
-                    {
-                        Serial.println(">> Disabled Fan!");
-                        fanSpeed = 0;
-                        Wire.beginTransmission(PID_MONITOR_ADDR);
-                        const uint8_t data[2] = {50, fanSpeed};
-                        Wire.write(data, 2);
-                        Wire.endTransmission();
-                    }
-#endif
-
                     xSemaphoreGive(i2c1_mutex);
                 }
                 xSemaphoreGive(sys1_mutex);
@@ -203,5 +159,109 @@ void print2digits(int number)
     }
     Serial.print(number);
 }
+
+#if AERPID_COUNT == 2
+void tickFan(double tempA, double tempB, double tempC)
+{
+    uint8_t e = fanControlStorage.getFanEnabled();
+    uint8_t m = fanControlStorage.getFanMode();
+    uint8_t s = fanControlStorage.getFanSpeed();
+
+    if (!e && tempB < 60)
+    {
+        if (_fanSpeed > 0)
+        {
+            _fanSpeed = 0;
+            Wire.beginTransmission(PID_MONITOR_ADDR);
+            const uint8_t data[2] = {50, _fanSpeed};
+            Wire.write(data, 2);
+            Wire.endTransmission();
+        }
+        return;
+    }
+
+    if (m > 0)
+    {
+        if (m == 1)
+        {
+            if (_fanSpeed != s)
+            {
+                uint speed = ((float)s / 255) * 100;
+                Serial.print(F(">> Enabled Fan "));
+                Serial.print(speed);
+                Serial.println(F("%"));
+                _fanSpeed = s;
+                Wire.beginTransmission(PID_MONITOR_ADDR);
+                const uint8_t data[2] = {50, _fanSpeed};
+                Wire.write(data, 2);
+                Wire.endTransmission();
+            }
+        }
+        else if (m == 2 && tempB < 60)
+        {
+            if (_fanSpeed > 0)
+            {
+                _fanSpeed = 0;
+                Wire.beginTransmission(PID_MONITOR_ADDR);
+                const uint8_t data[2] = {50, _fanSpeed};
+                Wire.write(data, 2);
+                Wire.endTransmission();
+            }
+            return;
+        }
+
+        if (tempB < 60)
+        {
+            return;
+        }
+    }
+
+    if (tempB > 44 && _fanSpeed <= 250)
+    {
+        Serial.println(F(">> Enabled Fan 100% !"));
+        _fanSpeed = 255;
+        Wire.beginTransmission(PID_MONITOR_ADDR);
+        const uint8_t data[2] = {50, _fanSpeed};
+        Wire.write(data, 2);
+        Wire.endTransmission();
+    }
+    else if (tempB > 40 && _fanSpeed < 192)
+    {
+        Serial.println(F(">> Enabled Fan 75% !"));
+        _fanSpeed = 192;
+        Wire.beginTransmission(PID_MONITOR_ADDR);
+        const uint8_t data[2] = {50, _fanSpeed};
+        Wire.write(data, 2);
+        Wire.endTransmission();
+    }
+    else if (tempB > 34 && _fanSpeed < 128)
+    {
+        Serial.println(F(">> Enabled Fan 50% !"));
+        _fanSpeed = 128;
+        Wire.beginTransmission(PID_MONITOR_ADDR);
+        const uint8_t data[2] = {50, _fanSpeed};
+        Wire.write(data, 2);
+        Wire.endTransmission();
+    }
+    else if (tempB > 30 && _fanSpeed < 64)
+    {
+        Serial.println(F(">> Enabled Fan 37% !"));
+        _fanSpeed = 96;
+        Wire.beginTransmission(PID_MONITOR_ADDR);
+        const uint8_t data[2] = {50, _fanSpeed};
+        Wire.write(data, 2);
+        Wire.endTransmission();
+    }
+    else if (tempB <= 28 && _fanSpeed > 0)
+    {
+        Serial.println(F(">> Disabled Fan!"));
+        _fanSpeed = 0;
+        Wire.beginTransmission(PID_MONITOR_ADDR);
+        const uint8_t data[2] = {50, _fanSpeed};
+        Wire.write(data, 2);
+        Wire.endTransmission();
+    }
+}
+#endif // end AERPID_COUNT
 
 #endif

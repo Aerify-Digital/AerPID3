@@ -57,6 +57,9 @@
 #include "storage/wifiStor.h"
 #include "storage/uiSettingsStor.h"
 #include "storage/chartsStor.h"
+#if AERPID_COUNT == 2
+#include "storage/fanControlStor.h"
+#endif
 
 #include "screen/demo/TFT_demo.h"
 #include "core/lighting/FancyLED.h"

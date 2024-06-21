@@ -145,6 +145,7 @@ bool AerGUI::buildMenuDefinitions()
         MENU_LOCAL_TEMPERATURE_2,
 #if AERPID_COUNT == 2
         MENU_LOCAL_TEMPERATURE_3,
+        MENU_LOCAL_FAN_CONTROL,
 #endif
     };
     std::vector<uint16_t> menus_system_display = {
@@ -498,6 +499,7 @@ bool AerGUI::buildMenuDefinitions()
     menus.push_back(AerMenu(MENU_LOCAL_TEMPERATURE_2, MENU_SYSTEM_LOCAL_TEMPERATURE, {}));
 #if AERPID_COUNT == 2
     menus.push_back(AerMenu(MENU_LOCAL_TEMPERATURE_3, MENU_SYSTEM_LOCAL_TEMPERATURE, {}));
+    menus.push_back(AerMenu(MENU_LOCAL_FAN_CONTROL, MENU_SYSTEM_LOCAL_TEMPERATURE, {MENU_FAN_CONTROL_ENABLED, MENU_FAN_CONTROL_MODE, MENU_FAN_CONTROL_SPEED}));
 #endif
     // > knob adjustment
     menus.push_back(AerMenu(MENU_KNOB_ADJUST_AMOUNT, MENU_SYSTEM_KNOB_ADJUST, {}));
@@ -630,6 +632,10 @@ bool AerGUI::buildMenuDefinitions()
     menuNames.insert(std::pair<int, String>(MENU_LOCAL_TEMPERATURE_1, "TEMP 1"));
     menuNames.insert(std::pair<int, String>(MENU_LOCAL_TEMPERATURE_2, "TEMP 2"));
     menuNames.insert(std::pair<int, String>(MENU_LOCAL_TEMPERATURE_3, "TEMP 3"));
+    menuNames.insert(std::pair<int, String>(MENU_LOCAL_FAN_CONTROL, "Fan Control"));
+    menuNames.insert(std::pair<int, String>(MENU_FAN_CONTROL_ENABLED, "Fan Enable"));
+    menuNames.insert(std::pair<int, String>(MENU_FAN_CONTROL_MODE, "Fan Mode"));
+    menuNames.insert(std::pair<int, String>(MENU_FAN_CONTROL_SPEED, "Fan Speed"));
     menuNames.insert(std::pair<int, String>(MENU_DISPLAY_BACKLIGHT, "Backlight Set"));
     menuNames.insert(std::pair<int, String>(MENU_DISPLAY_AUTO_DIM, "Dim Toggle"));
     menuNames.insert(std::pair<int, String>(MENU_DISPLAY_TIMEOUT_DIM, "Dim Timeout"));
@@ -1407,6 +1413,9 @@ void AerGUI::printIcon(uint x, uint y, uint16_t menuIndex, bool selected)
     case MENU_PID_PWM_FREQ:
     case MENU_PID_PWM_FREQ_VAR:
         tft->pushImage(x, y, 28, 28, image_data_pwm_freq, 0xffff);
+        break;
+    case MENU_LOCAL_FAN_CONTROL:
+        tft->pushImage(x, y, 28, 28, image_data_fan_1, 0xffff);
         break;
 
     // colors
@@ -2210,6 +2219,9 @@ void AerGUI::printIcon(TFT_eSprite *spr, uint x, uint y, uint16_t menuIndex, boo
     case MENU_PID_PWM_FREQ:
     case MENU_PID_PWM_FREQ_VAR:
         spr->pushImage(x, y, 28, 28, image_data_pwm_freq);
+        break;
+    case MENU_LOCAL_FAN_CONTROL:
+        spr->pushImage(x, y, 28, 28, image_data_fan_1);
         break;
 
     default:

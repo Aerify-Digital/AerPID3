@@ -103,6 +103,7 @@
 #include "screen/img/icon/pwm_factor.h"
 #include "screen/img/icon/pwm_cycle.h"
 #include "screen/img/icon/pwm_freq.h"
+#include "screen/img/icon/fan_1.h"
 
 /// @brief Storage accesor class for cross thread graphics
 class AerGUI

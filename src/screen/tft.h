@@ -60,6 +60,7 @@
 #include "storage/bumpStor.h"
 #include "storage/lights.h"
 #include "storage/tempStor.h"
+#include "storage/fanControlStor.h"
 #include "IPAddress.h"
 
 #include "esp_heap_trace.h"
@@ -131,6 +132,9 @@ namespace AerTftUI
     void showDisplayMenu(AerManager *am, AerGUI *gui, bool indexupdate, bool change);
     void showNearbyNetworks(AerGUI *gui, bool indexupdate, String json);
     void showSystemTemperature(AerManager *am, AerGUI *gui, bool update, bool change);
+#if AERPID_COUNT == 2
+    void showFanControl(AerManager *am, bool update, bool change);
+#endif
     void showMainClockMenu(AerManager *am, AerGUI *gui, bool update, bool change);
     void showDateEditMenu(AerGUI *gui, bool update, bool change);
     void showDateEditingMenu(AerGUI *gui, bool update, bool change);

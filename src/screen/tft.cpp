@@ -4811,6 +4811,188 @@ namespace AerTftUI
         lastindex = mindex;
     }
 
+#if AERPID_COUNT == 2
+    void showFanControl(AerManager *am, bool update, bool change)
+    {
+        AerGUI *gui = am->getGUI();
+        PropsMenu *props = gui->getMenuProps();
+        uint16_t mindex = props->menuLevelVal;
+        if (lastindex == mindex && !update)
+        {
+            // Indexes match and update is false; return
+            // return;
+        }
+        uint16_t bgColor = TFT_DARKGREY;
+        uint16_t mlvl = props->menuIndex;
+        AerMenu menu = gui->getSelectedMenu(mlvl);
+        TFT_eSPI *lcd = gui->getTFT();
+        if (update && change)
+        {
+            lcd->fillScreen(0x0841);
+            // draw background...
+            drawRoundRectWithBorder2px(lcd, 20, 20, 280, 200, 7, bgColor, TFT_SKYBLUE);
+            lcd->setTextWrap(false);
+            lcd->setTextColor(TFT_WHITE, bgColor);
+            lcd->setTextSize(4);
+            lcd->setCursor(30, 24);
+            lcd->print("Fan Control");
+        }
+
+        std::vector<uint16_t> items = getSelectionItems(menu, mindex);
+
+        uint xi = 30;
+        uint yi = 63;
+
+        uint xt = 64;
+        uint yt = 63;
+
+        uint8_t offset = 30;
+        lcd->setTextSize(3);
+        for (int i = 0; i < 5; i++)
+        {
+            if (i >= items.size())
+            {
+                // print empties at bottom
+                TFT_eSprite *spr = gui->getSpriteBuffer(0);
+                spr->createSprite(265, 30);
+                spr->fillRect(0, 0, 265, 30, bgColor);
+                spr->pushSprite(xi, yi + (offset * i), 0xffff);
+                spr->deleteSprite();
+                continue;
+            }
+
+            if (update)
+            {
+                TFT_eSprite *spr = gui->getSpriteBuffer(0);
+                spr->createSprite(34, 30);
+                // fill icon background...
+                spr->fillRect(0, 0, 34, 30, bgColor);
+                spr->pushSprite(xi, yi + (offset * i), 0xffff);
+                spr->deleteSprite();
+
+                spr->createSprite(30, 30);
+                spr->fillRect(0, 0, 30, 30, bgColor);
+                // print icon
+                if (items[i] == menu.getChildren()[0])
+                {
+                    gui->printIcon(spr, 0, 1, items[i], true);
+                }
+                else
+                {
+                    gui->printIcon(spr, 0, 1, items[i], false);
+                }
+                // push to screen
+                spr->pushSprite(xi, yi + (offset * i), 0xffff);
+                spr->deleteSprite();
+            }
+
+            if (items[i] == MENU_FAN_CONTROL_ENABLED)
+            {
+                // units toggle
+                TFT_eSprite *spr = gui->getSpriteBuffer(0);
+                spr->createSprite(265 - 30, 30);
+                spr->fillRect(0, 0, 265 - 30, 30, bgColor);
+                spr->setTextSize(3);
+                spr->setTextWrap(false);
+
+                spr->setCursor(0, 5);
+                spr->setTextColor(items[i] == mindex ? TFT_CYAN : TFT_WHITE, bgColor);
+                spr->print("Enabled: ");
+
+                spr->setTextColor(items[i] == mindex ? TFT_CYAN : TFT_YELLOW, TFT_DARKGREY);
+                if (fanControlStorage.getFanEnabled())
+                {
+                    spr->print("YES");
+                }
+                else
+                {
+                    spr->print("NO");
+                }
+                // push to screen
+                spr->pushSprite(xt, yt + (offset * i));
+                spr->deleteSprite();
+                continue;
+            }
+            else if (items[i] == MENU_FAN_CONTROL_MODE)
+            {
+                // sys temperature measure 1 - cpu
+                TFT_eSprite *spr = gui->getSpriteBuffer(0);
+                spr->createSprite(265 - 30, 30);
+                spr->fillRect(0, 0, 265 - 30, 30, bgColor);
+                spr->setTextSize(3);
+                spr->setTextWrap(false);
+
+                spr->setTextColor(items[i] == mindex ? TFT_CYAN : TFT_WHITE, TFT_DARKGREY);
+                spr->setCursor(0, 5);
+
+                spr->print("Mode:  ");
+                spr->setTextSize(2);
+                uint8_t s = fanControlStorage.getFanMode();
+                spr->setTextColor(items[i] == mindex ? TFT_CYAN : TFT_YELLOW, TFT_DARKGREY);
+                if (s == 0)
+                {
+                    spr->print("auto");
+                }
+                else if (s == 1)
+                {
+                    spr->print("manual");
+                }
+                else if (s == 2)
+                {
+                    spr->print("off");
+                }
+                // push to screen
+                spr->pushSprite(xt, yt + (offset * i));
+                spr->deleteSprite();
+                continue;
+            }
+            else if (items[i] == MENU_FAN_CONTROL_SPEED)
+            {
+                // sys temperature measure 1 - cpu
+                TFT_eSprite *spr = gui->getSpriteBuffer(0);
+                spr->createSprite(265 - 30, 30);
+                spr->fillRect(0, 0, 265 - 30, 30, bgColor);
+                spr->setTextSize(3);
+                spr->setTextWrap(false);
+
+                spr->setTextColor(items[i] == mindex ? TFT_CYAN : TFT_WHITE, TFT_DARKGREY);
+                spr->setCursor(0, 5);
+
+                spr->print("Speed: ");
+                spr->setTextSize(2);
+                uint8_t s = fanControlStorage.getFanSpeed();
+                uint speed = ((float)s / 255) * 100;
+                spr->setTextColor(items[i] == mindex ? TFT_CYAN : TFT_YELLOW, TFT_DARKGREY);
+                spr->print(speed, 10);
+                spr->print("%");
+                // push to screen
+                spr->pushSprite(xt, yt + (offset * i));
+                spr->deleteSprite();
+                continue;
+            }
+
+            if (!update && !change)
+            {
+                continue;
+            }
+
+            TFT_eSprite *spr = gui->getSpriteBuffer(0);
+            spr->createSprite(265 - 30, 30);
+            spr->fillRect(0, 0, 265 - 30, 30, bgColor);
+            spr->setTextSize(3);
+            spr->setTextWrap(false);
+            // print text
+            spr->setTextColor(items[i] == mindex ? TFT_CYAN : TFT_WHITE, bgColor);
+            spr->setCursor(0, 5);
+            spr->print(gui->getMenuName(items[i]));
+            // push to screen
+            spr->pushSprite(xt, yt + (offset * i));
+            spr->deleteSprite();
+        }
+        lastindex = mindex;
+    }
+#endif
+
     void showMainClockMenu(AerManager *am, AerGUI *gui, bool update, bool change)
     {
         PropsMenu *props = gui->getMenuProps();

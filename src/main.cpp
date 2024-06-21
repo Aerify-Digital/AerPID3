@@ -264,6 +264,10 @@ void setup()
   wifiStorage.init(&flash);
   Serial.println(F("[BOOT] Initializing Charting Storage (chartingStorage)  "));
   chartingStorage.init(&flash);
+#if AERPID_COUNT == 2
+  Serial.println(F("[BOOT] Initializing Fan Control Storage (fanControlStorage)  "));
+  fanControlStorage.init(&flash);
+#endif
   Serial.println(F("[BOOT] Initialized Storage Objects!"));
   Serial.println(F(" ... "));
   delay(50);
@@ -318,6 +322,7 @@ void setup()
 
   // performance monitor task
   perfmon_start(&aerManager, taskStackSize[9]);
+  delay(50);
 
   if (commstor.getBTEn())
   { // Bluetooth Task
@@ -327,7 +332,7 @@ void setup()
   }
 
   // Encoder knob task handler
-  xTaskCreatePinnedToCore(enc_task, "Encoder_Task", taskStackSize[1], (void *)&aerManager, 1, &encTask, 1);
+  xTaskCreatePinnedToCore(enc_task, "Encoder_Task", taskStackSize[1], (void *)&aerManager, 2, &encTask, 1);
 
   // Link task for element monitor
   xTaskCreatePinnedToCore(link_task, "Link_Task", taskStackSize[3], (void *)&aerManager, 5, &linkTask, 0);
@@ -336,10 +341,9 @@ void setup()
   xTaskCreatePinnedToCore(worker_task, "Worker_Task", taskStackSize[2], (void *)&aerManager, 6, &wrkTask, 1);
 
   // PID task
-  // xTaskCreatePinnedToCore(pid_task, "PID_Task", taskStackSize[5], NULL, 2, &pidTask, 1);
-  xTaskCreatePinnedToCore(pid_task_1, "PID_Task_1", taskStackSize[5], NULL, 2, &pidTask1, 1);
+  xTaskCreatePinnedToCore(pid_task_1, "PID_Task_1", taskStackSize[5], NULL, 3, &pidTask1, 1);
 #if AERPID_COUNT == 2
-  xTaskCreatePinnedToCore(pid_task_2, "PID_Task_2", taskStackSize[5], NULL, 2, &pidTask2, 1);
+  xTaskCreatePinnedToCore(pid_task_2, "PID_Task_2", taskStackSize[5], NULL, 3, &pidTask2, 1);
 #endif
 
   xTaskCreatePinnedToCore(element_task, "Element_Task", taskStackSize[12], (void *)&aerManager, 8, &elementTask, 0);
@@ -433,7 +437,7 @@ void loop(void)
   // Status led twinkle...
   // =======================================
   digitalWrite(PIN_LED_C, LOW);
-  vTaskDelay(1);
+  vTaskDelay(2);
   if (xSemaphoreTake(sys1_mutex, 1) == pdTRUE)
   {
     digitalWrite(PIN_LED_C, HIGH);

@@ -16,7 +16,7 @@
 #include "screen/gui/gui.h"
 #include "screen/tft.h"
 
-#define TASK_WAIT 50
+#define TASK_WAIT 60 // 16 fps at 60ms delay
 
 void tft_task(void *pvParameters)
 {
@@ -24,14 +24,7 @@ void tft_task(void *pvParameters)
 
     AerGUI *_aerGUI = _am->getGUI();
     TFT_eSPI *tft = _aerGUI->getTFT();
-
     PropsMenu *_menu = _aerGUI->getMenuProps();
-    // Loaded from AerManager.h
-    // FavsStor *favsObj = _am->getFavs();
-    // CommStor *commsObj = _am->getComms();
-    // LightsStor *lightsObj = _am->getLights();
-    SettingsStorage *settings = _am->getSettings();
-    // BumpStor *bumpObj = _am->getBump();
 
     _aerGUI->getST7789()->initBacklight();
 
@@ -62,11 +55,12 @@ void tft_task(void *pvParameters)
     Serial.println(xPortGetCoreID());
     while (1)
     {
-        if (millis() < 3000)
+        if (millis() < 2500)
         {
             vTaskDelay(200 / portTICK_PERIOD_MS);
             continue;
         }
+        SettingsStorage *settings = _am->getSettings();
         if (_aerGUI->activity_counter < settings->getTimeTillScrnSaverOn() / TASK_WAIT && settings->getScreenSaverEnb())
         {
             _aerGUI->activity_counter++;
@@ -572,6 +566,15 @@ void tft_task(void *pvParameters)
                     _menu->menuChange = false;
                     break;
                 }
+#if AERPID_COUNT == 2
+                case MENU_LOCAL_FAN_CONTROL: /* System Fan Control */
+                {
+                    AerTftUI::showFanControl(_am, _menu->menuUpdate, _menu->menuChange);
+                    _menu->menuUpdate = false;
+                    _menu->menuChange = false;
+                    break;
+                }
+#endif
                 case MENU_MAIN_CLOCK: /* Clock Menu */
                 {
                     AerTftUI::showMainClockMenu(_am, _aerGUI, _menu->menuUpdate, _menu->menuChange);
@@ -686,7 +689,7 @@ void tft_task(void *pvParameters)
             xSemaphoreGive(sys1_mutex);
         }
 
-        vTaskDelay(TASK_WAIT / portTICK_PERIOD_MS); // 20 fps at 50ms delay? :D
+        vTaskDelay(TASK_WAIT / portTICK_PERIOD_MS);
     }
     vTaskDelete(NULL);
 }
