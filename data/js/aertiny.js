@@ -126,7 +126,7 @@ function getTrendLinePoint(x, slope, intercept) {
 
 let zoomRefreshTick = 0;
 
-const maxChartTime = 60 * 10;
+const maxChartTime = 60 * 15;
 
 const updateChart = (state, t, ta, st) => {
   if (state.TEMPS.length > maxChartTime) {
