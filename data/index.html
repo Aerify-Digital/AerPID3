@@ -317,23 +317,32 @@
        <i class="fa fa-fire"></i>
        Enable Bump
       </button>
-      <button id="toggle_aoff" class="w3-button w3-light-grey w3-padding-large w3-section" onclick="toggleAOff();">
+      <button id="toggle_aoff" class="w3-button w3-light-grey w3-padding-large w3-section" onclick="toggleAOff(0);">
        <i class="fas fa-stopwatch"></i>
        Enable Auto-Off
       </button>
       <script>
-       const toggleAOff = () => {
+       const toggleAOff = (t) => {
         state.AUTO_OFF.enabled = !state.AUTO_OFF.enabled
+        if (t == 1) {
+         const element = document.getElementById('aoff_en')
+         state.AUTO_OFF.enabled = element.checked
+        }
         emit_websocket([SerialCommand.AUTO_OFF_TOGGLE, Operation.SET, state.AUTO_OFF.enabled ? 1 : 0])
-        if (document.getElementById('toggle_aoff') && document.getElementById('aoff_en')) {
+        if ((t == 0 || t == 1) && document.getElementById('toggle_aoff')) {
          const element = document.getElementById('toggle_aoff')
-         const element2 = document.getElementById('aoff_en')
          if (state.AUTO_OFF.enabled) {
           element.innerHTML = '<i class="fas fa-stopwatch" style="color:Tomato;"></i> Disable Auto-Off'
-          element2.checked = true
          } else {
           element.innerHTML = '<i class="fas fa-stopwatch" style="color:MediumSeaGreen;"></i> Enable Auto-Off'
-          element2.checked = false
+         }
+        }
+        if ((t == 0 || t == 2) && document.getElementById('aoff_en')) {
+         const element = document.getElementById('aoff_en')
+         if (state.AUTO_OFF.enabled) {
+          element.checked = true
+         } else {
+          element.checked = false
          }
         }
        }
@@ -451,7 +460,7 @@
         <li class="w3-dark-grey w3-xlarge w3-padding-8">Auto-Off</li>
         <li class="w3-padding-16">
          Enabled:&nbsp;&nbsp;&nbsp;&nbsp;
-         <label class="switch" onclick="toggleAOff();">
+         <label class="switch" onclick="toggleAOff(1);">
           <input id="aoff_en" type="checkbox" />
           <span class="slide round"></span>
          </label>
