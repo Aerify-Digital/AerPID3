@@ -384,7 +384,32 @@ const updateZoom = (value) => {
   }
   let low = 1000;
   let high = 0;
-  for (const _t of state.TEMPS) {
+  let sTemps = [];
+  for (let i = 0; i < state.TEMPS.length; i++) {
+    sTemps.push(state.TEMPS[i]);
+  }
+  sTemps = sTemps.reverse();
+  let maxTime = 32;
+  if (state.TIME_SPAN1 == 'one') {
+    maxTime = 64;
+  } else if (state.TIME_SPAN1 == 'two') {
+    maxTime = 128;
+  } else if (state.TIME_SPAN1 == 'three') {
+    maxTime = 3 * 60;
+  } else if (state.TIME_SPAN1 == 'five') {
+    maxTime = 5 * 60;
+  } else if (state.TIME_SPAN1 == 'seven') {
+    maxTime = 7 * 60;
+  } else if (state.TIME_SPAN1 == 'ten') {
+    maxTime = 10 * 60;
+  } else if (state.TIME_SPAN1 == 'fifteen') {
+    maxTime = 15 * 60;
+  }
+  let i = 0;
+  for (const _t of sTemps) {
+    if (i++ > maxTime) {
+      break;
+    }
     const t = Number(_t);
     if (t < low && t > 0) {
       low = t;
@@ -441,7 +466,32 @@ const updateZoom2 = (value) => {
   }
   let low = 1000;
   let high = 0;
-  for (const _t of state.TEMPS2) {
+  let sTemps = [];
+  for (let i = 0; i < state.TEMPS2.length; i++) {
+    sTemps.push(state.TEMPS2[i]);
+  }
+  sTemps = sTemps.reverse();
+  let maxTime = 32;
+  if (state.TIME_SPAN2 == 'one') {
+    maxTime = 64;
+  } else if (state.TIME_SPAN2 == 'two') {
+    maxTime = 128;
+  } else if (state.TIME_SPAN2 == 'three') {
+    maxTime = 3 * 60;
+  } else if (state.TIME_SPAN2 == 'five') {
+    maxTime = 5 * 60;
+  } else if (state.TIME_SPAN2 == 'seven') {
+    maxTime = 7 * 60;
+  } else if (state.TIME_SPAN2 == 'ten') {
+    maxTime = 10 * 60;
+  } else if (state.TIME_SPAN2 == 'fifteen') {
+    maxTime = 15 * 60;
+  }
+  let i = 0;
+  for (const _t of sTemps) {
+    if (i++ > maxTime) {
+      break;
+    }
     const t = Number(_t);
     if (t < low && t > 0) {
       low = t;
