@@ -47,23 +47,33 @@
 // *************************************
 
 // PWM frequency and resolution
-#define FREQ_PWM_KHz 3
+#define FREQ_PWM_KHz 1
 #define PWM_RESOLUTION 14
 
+/*
+8 bit - 256
+9 bit - 512
+10 bit - 1024
+11 bit - 2048
+12 bit - 4096
+13 bit - 8192
+14 bit - 16384
+*/
+
 // PWM output scaling factor
-#define PWM_SCALE_FACTOR 0.251
+#define PWM_SCALE_FACTOR 0.551
 // Output value range limit
-#define PID_OUTPUT_LIMIT 255
+#define PID_OUTPUT_LIMIT 16383
 
 // Integral WindUp fix limit
-#define PID_WINDUP_LIMIT 1.256
+#define PID_WINDUP_LIMIT 5
 // Output Bias for PID function
-#define PID_BIAS 32
+#define PID_BIAS 13
 
 // *************************************
 
 // Sample Time for PID compute in milliseconds
-#define PID_SAMPLE_TIME_MS 150
+#define PID_SAMPLE_TIME_MS 100
 // Sleep Time for PID thread in milliseconds
 #define PID_SLEEP_TIME_MS 50
 // Tick time overshoot amount for PID compute

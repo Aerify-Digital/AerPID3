@@ -351,11 +351,11 @@ bool AerPID::compute()
     if (true)
     {
         double _output = output;
-        if (output > 128)
+        /*if (abs(SET_TEMP - MES_TEMP) <= 7)
         {
-            // this helps... with overshoot reduction
+            // this helps... with something
             _output *= 0.667;
-        }
+        }*/
         _output *= PWM_ScaleFactor;
 
         // convert output double to uint32
@@ -585,6 +585,7 @@ double AerPID::getTempMax()
 
 void AerPID::setTunings()
 {
+    aPID->reset();
     aPID->setCoefficients(kP, kI, kD);
 }
 
