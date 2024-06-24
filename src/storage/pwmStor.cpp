@@ -33,25 +33,25 @@ void PwmStor::save_pwm(int frequency, double scaleFactor, int cycleTime, boolean
     ByteInt ct;
     ct.Num = cycleTime;
 
-    for (int j = 0; j < 20; j++)
-    {
-        if (j < 4)
-        {
-            storageData[j] = f.array[j];
-        }
-        else if (j >= 4 && j < 14)
-        {
-            storageData[j] = sf.array[j - 4];
-        }
-        else if (j >= 14 && j < 19)
-        {
-            storageData[j] = ct.array[j - (8 + 4)];
-        }
-        else
-        {
-            storageData[j] = '\0';
-        }
-    }
+    storageData[0] = f.array[0];
+    storageData[1] = f.array[1];
+    storageData[2] = f.array[2];
+    storageData[3] = f.array[3];
+
+    storageData[4] = sf.array[0];
+    storageData[5] = sf.array[1];
+    storageData[6] = sf.array[2];
+    storageData[7] = sf.array[3];
+    storageData[8] = sf.array[4];
+    storageData[9] = sf.array[5];
+    storageData[10] = sf.array[6];
+    storageData[11] = sf.array[7];
+
+    storageData[12] = ct.array[0];
+    storageData[13] = ct.array[1];
+    storageData[14] = ct.array[2];
+    storageData[15] = ct.array[3];
+
     storageData[19] = autoTune;
 
     flash->saveFile(filename, storageData, leng);
@@ -82,21 +82,24 @@ void PwmStor::load_pwm(int &frequency, double &scaleFactor, int &cycleTime, bool
     ByteDouble sf;
     ByteInt ct;
 
-    for (int j = 0; j < 20; j++)
-    {
-        if (j < 8)
-        {
-            f.array[j] = storageData[j];
-        }
-        else if (j >= 4 && j < 14)
-        {
-            sf.array[j - 4] = storageData[j];
-        }
-        else if (j >= 14 && j < 19)
-        {
-            ct.array[j - (8 + 4)] = storageData[j];
-        }
-    }
+    f.array[0] = storageData[0];
+    f.array[1] = storageData[1];
+    f.array[2] = storageData[2];
+    f.array[3] = storageData[3];
+
+    sf.array[0] = storageData[4];
+    sf.array[1] = storageData[5];
+    sf.array[2] = storageData[6];
+    sf.array[3] = storageData[7];
+    sf.array[4] = storageData[8];
+    sf.array[5] = storageData[9];
+    sf.array[6] = storageData[10];
+    sf.array[7] = storageData[11];
+
+    ct.array[0] = storageData[12];
+    ct.array[1] = storageData[13];
+    ct.array[2] = storageData[14];
+    ct.array[3] = storageData[15];
 
     autoTune = storageData[19];
     frequency = f.Num;
@@ -128,25 +131,25 @@ void PwmStor::save_pwm_2(int frequency, double scaleFactor, int cycleTime, boole
     ByteInt ct;
     ct.Num = cycleTime;
 
-    for (int j = 0; j < 20; j++)
-    {
-        if (j < 4)
-        {
-            storageData[j] = f.array[j];
-        }
-        else if (j >= 4 && j < 14)
-        {
-            storageData[j] = sf.array[j - 4];
-        }
-        else if (j >= 14 && j < 19)
-        {
-            storageData[j] = ct.array[j - (8 + 4)];
-        }
-        else
-        {
-            storageData[j] = '\0';
-        }
-    }
+    storageData[0] = f.array[0];
+    storageData[1] = f.array[1];
+    storageData[2] = f.array[2];
+    storageData[3] = f.array[3];
+
+    storageData[4] = sf.array[0];
+    storageData[5] = sf.array[1];
+    storageData[6] = sf.array[2];
+    storageData[7] = sf.array[3];
+    storageData[8] = sf.array[4];
+    storageData[9] = sf.array[5];
+    storageData[10] = sf.array[6];
+    storageData[11] = sf.array[7];
+
+    storageData[12] = ct.array[0];
+    storageData[13] = ct.array[1];
+    storageData[14] = ct.array[2];
+    storageData[15] = ct.array[3];
+
     storageData[19] = autoTune;
 
     flash->saveFile(filename, storageData, leng);
@@ -177,21 +180,24 @@ void PwmStor::load_pwm_2(int &frequency, double &scaleFactor, int &cycleTime, bo
     ByteDouble sf;
     ByteInt ct;
 
-    for (int j = 0; j < 20; j++)
-    {
-        if (j < 8)
-        {
-            f.array[j] = storageData[j];
-        }
-        else if (j >= 4 && j < 14)
-        {
-            sf.array[j - 4] = storageData[j];
-        }
-        else if (j >= 14 && j < 19)
-        {
-            ct.array[j - (8 + 4)] = storageData[j];
-        }
-    }
+    f.array[0] = storageData[0];
+    f.array[1] = storageData[1];
+    f.array[2] = storageData[2];
+    f.array[3] = storageData[3];
+
+    sf.array[0] = storageData[4];
+    sf.array[1] = storageData[5];
+    sf.array[2] = storageData[6];
+    sf.array[3] = storageData[7];
+    sf.array[4] = storageData[8];
+    sf.array[5] = storageData[9];
+    sf.array[6] = storageData[10];
+    sf.array[7] = storageData[11];
+
+    ct.array[0] = storageData[12];
+    ct.array[1] = storageData[13];
+    ct.array[2] = storageData[14];
+    ct.array[3] = storageData[15];
 
     autoTune = storageData[19];
     frequency = f.Num;

@@ -57,7 +57,7 @@ void save_task(void *pvParameters)
         {
             am->getAerPID(0)->kI = 0.025;
         }
-        else if (am->getAerPID(0)->kI >= 1.0001)
+        else if (am->getAerPID(0)->kI >= 5.0001)
         {
             am->getAerPID(0)->kI = 0.025;
         }
@@ -105,18 +105,20 @@ void save_task(void *pvParameters)
 
             if (am->getAerPID(0)->PWM_ScaleFactor <= 0)
             {
+                Serial.println(F("Invalid PWM 1 Factor: "));
                 am->getAerPID(0)->PWM_ScaleFactor = 0.125;
                 am->getAerPID(0)->pwm_saved = false;
                 am->setPressTick(100);
             }
             if (am->getAerPID(0)->PWM_CycleTime <= 0)
             {
-                am->getAerPID(0)->PWM_CycleTime = 50;
+                Serial.println(F("Invalid PWM 1 Cycle Time: "));
+                am->getAerPID(0)->PWM_CycleTime = 250;
                 am->getAerPID(0)->pwm_saved = false;
                 am->setPressTick(100);
             }
 
-            Serial.print(F("Loaded PWM: "));
+            Serial.print(F("Loaded PWM1: "));
             Serial.print(F(" Frequency "));
             Serial.print(am->getAerPID(0)->getPwmFreq(), 10);
             Serial.print(F("  Scale Factor "));
@@ -135,18 +137,20 @@ void save_task(void *pvParameters)
 
             if (am->getAerPID(1)->PWM_ScaleFactor <= 0)
             {
+                Serial.println(F("Invalid PWM 2 Factor: "));
                 am->getAerPID(1)->PWM_ScaleFactor = 0.125;
                 am->getAerPID(1)->pwm_saved = false;
                 am->setPressTick(100);
             }
             if (am->getAerPID(1)->PWM_CycleTime <= 0)
             {
-                am->getAerPID(1)->PWM_CycleTime = 50;
+                Serial.println(F("Invalid PWM 2 Cycle Time: "));
+                am->getAerPID(1)->PWM_CycleTime = 250;
                 am->getAerPID(1)->pwm_saved = false;
                 am->setPressTick(100);
             }
 
-            Serial.print(F("Loaded PWM: "));
+            Serial.print(F("Loaded PWM2: "));
             Serial.print(F(" Frequency "));
             Serial.print(am->getAerPID(1)->getPwmFreq(), 10);
             Serial.print(F("  Scale Factor "));
