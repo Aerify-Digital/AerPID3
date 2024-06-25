@@ -979,8 +979,17 @@ const parseInitMessage = (data) => {
 
 // ==================================================
 
+let connecting = false;
+let connected = false;
+
 function initWebSocket() {
+  if (connecting) {
+    return;
+  }
   console.log('Attempting to open WebSocket connection...');
+  connecting = true;
+  document.getElementById('sockets-modal').style.display = 'block';
+  document.getElementById('sockets-modal-text').innerHTML = '...Connecting...';
   websocket = new WebSocket(gateway);
   websocket.onopen = onOpen;
   websocket.onclose = onClose;
@@ -988,10 +997,18 @@ function initWebSocket() {
 }
 function onOpen(event) {
   console.log('Connection to host opened!');
+  connecting = false;
+  connected = true;
+  document.getElementById('sockets-modal-text').innerHTML = 'Connected!';
+  document.getElementById('sockets-modal').style.display = 'none';
 }
 function onClose(event) {
   console.log('Connection to host closed!');
-  setTimeout(initWebSocket, 3000);
+  connecting = false;
+  connected = false;
+  document.getElementById('sockets-modal-text').innerHTML = 'Connection Error!';
+  document.getElementById('sockets-modal').style.display = 'block';
+  //setTimeout(initWebSocket, 3000);
 }
 
 const initPageData = async (initData) => {

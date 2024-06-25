@@ -673,3 +673,11 @@ h6 {
   padding: 3px;
   text-align: center;
 }
+
+#sockets-modal {
+  display: block;
+  position: absolute;
+  right: 10px;
+  opacity: 0.8;
+  min-width: 192px;
+}

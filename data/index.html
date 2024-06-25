@@ -191,6 +191,16 @@
     </header>
    </div>
 
+   <div id="sockets-modal" class="" style="z-index: 100">
+    <div class="w3-border w3-border-black">
+     <div class="w3-amber w3-center" style="padding: 20px">
+      <i class="fa-solid fa-spinner fa-spin-pulse w3-text-white w3-xxlarge"></i>
+      <div id="sockets-modal-text">...Connecting...</div>
+      <button onclick="initWebSocket()">Connect</button>
+     </div>
+    </div>
+   </div>
+
    <div class="w3-padding-large">
     <!-- Main Home Section -->
     <div class="w3-content w3-justify w3-text-grey w3-padding-16" id="home_sec">
