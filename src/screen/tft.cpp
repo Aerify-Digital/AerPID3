@@ -1282,6 +1282,234 @@ namespace AerTftUI
         lastindex = mindex;
     }
 
+    void showPIDOutputBiasMenu(AerManager *am, bool update, bool change)
+    {
+        AerGUI *gui = am->getGUI();
+        PropsMenu *props = gui->getMenuProps();
+        uint16_t mindex = props->menuLevelVal;
+        if (lastindex == mindex && !update)
+        {
+            // Indexes match and update is false; return
+            return;
+        }
+        uint16_t mlvl = props->menuIndex;
+        AerMenu menu = gui->getSelectedMenu(mlvl);
+        TFT_eSPI *lcd = gui->getTFT();
+        uint16_t bgColor = TFT_DARKGREY;
+
+        if (update && change)
+        {
+            lcd->fillScreen(0x0841);
+            drawRoundRectWithBorder1px(lcd, 18, 18, 284, 204, 7, bgColor, TFT_ORANGE);
+            lcd->setTextWrap(false);
+            lcd->setTextColor(TFT_WHITE, TFT_DARKGREY);
+            lcd->setTextSize(4);
+            lcd->setCursor(30, 24);
+            lcd->print("Output Bias");
+        }
+
+        uint8_t elementIndex = gui->getElementIndex();
+
+        // printSelections
+        std::vector<uint16_t> items = getSelectionItems(menu, mindex);
+        uint8_t offset = 30;
+
+        uint xi = 30;
+        uint yi = 63;
+
+        uint xt = 64;
+        uint yt = 63;
+
+        for (int i = 0; i < 5; i++)
+        {
+            if (i >= items.size())
+            {
+                TFT_eSprite *spr = gui->getSpriteBuffer(0);
+                spr->createSprite(265, 30);
+                spr->fillRect(0, 0, 265, 30, bgColor);
+                spr->pushSprite(xi, yi + (offset * i), 0xffff);
+                spr->deleteSprite();
+                continue;
+            }
+            TFT_eSprite *spr = gui->getSpriteBuffer(0);
+            spr->createSprite(30, 30);
+            // fill icon background...
+            spr->fillRect(0, 0, 30, 30, bgColor);
+            spr->pushSprite(xi, yi + (offset * i), 0xffff);
+            spr->deleteSprite();
+
+            spr->createSprite(30, 30);
+            spr->fillRect(0, 0, 30, 30, bgColor);
+            // print icon
+            if (items[i] == menu.getChildren()[0])
+            {
+                gui->printIcon(spr, 0, 1, items[i], true);
+            }
+            else
+            {
+                gui->printIcon(spr, 0, 1, items[i], false);
+            }
+            spr->pushSprite(xi, yi + (offset * i), 0xffff);
+            spr->deleteSprite();
+
+            if (items[i] == MENU_PID_PWM_BIAS_VAR)
+            {
+                spr->createSprite(265 - 30, 30);
+                spr->fillRect(0, 0, 265 - 30, 30, bgColor);
+                spr->setTextColor(items[i] == mindex ? gui->isCursorModify() ? TFT_RED : TFT_CYAN : TFT_WHITE);
+                spr->setCursor(0, 2);
+                spr->setTextSize(2);
+                // spr->print(am->getAerPID(0)->PWM_ScaleFactor);
+                char b[10];
+                for (int i = 0; i < 10; i++)
+                {
+                    b[i] = '\0';
+                }
+                spr->print((double)am->getAerPID(elementIndex)->getOutputBias());
+                spr->pushSprite(xt, yt + (offset * i) + 4);
+                spr->deleteSprite();
+                continue;
+            }
+
+            spr->createSprite(265 - 30, 30);
+            spr->fillRect(0, 0, 265 - 30, 30, bgColor);
+            spr->setTextSize(3);
+            spr->setTextWrap(false);
+            // print text
+            if (items[i] == mindex)
+            {
+                spr->setTextColor(TFT_CYAN, bgColor);
+                spr->setCursor(0, 5);
+                spr->print(gui->getMenuName(items[i]));
+            }
+            else
+            {
+                spr->setTextColor(TFT_WHITE, bgColor);
+                spr->setCursor(0, 5);
+                spr->print(gui->getMenuName(items[i]));
+            }
+            // push to screen
+            spr->pushSprite(xt, yt + (offset * i));
+            spr->deleteSprite();
+        }
+        // end printSelections
+        lastindex = mindex;
+    }
+
+    void showPIDWindupLimitMenu(AerManager *am, bool update, bool change)
+    {
+        AerGUI *gui = am->getGUI();
+        PropsMenu *props = gui->getMenuProps();
+        uint16_t mindex = props->menuLevelVal;
+        if (lastindex == mindex && !update)
+        {
+            // Indexes match and update is false; return
+            return;
+        }
+        uint16_t mlvl = props->menuIndex;
+        AerMenu menu = gui->getSelectedMenu(mlvl);
+        TFT_eSPI *lcd = gui->getTFT();
+        uint16_t bgColor = TFT_DARKGREY;
+
+        if (update && change)
+        {
+            lcd->fillScreen(0x0841);
+            drawRoundRectWithBorder1px(lcd, 18, 18, 284, 204, 7, bgColor, TFT_OLIVE);
+            lcd->setTextWrap(false);
+            lcd->setTextColor(TFT_WHITE, TFT_DARKGREY);
+            lcd->setTextSize(4);
+            lcd->setCursor(42, 24);
+            lcd->print("WindUp Max");
+        }
+
+        uint8_t elementIndex = gui->getElementIndex();
+
+        // printSelections
+        std::vector<uint16_t> items = getSelectionItems(menu, mindex);
+        uint8_t offset = 30;
+
+        uint xi = 30;
+        uint yi = 63;
+
+        uint xt = 64;
+        uint yt = 63;
+
+        for (int i = 0; i < 5; i++)
+        {
+            if (i >= items.size())
+            {
+                TFT_eSprite *spr = gui->getSpriteBuffer(0);
+                spr->createSprite(265, 30);
+                spr->fillRect(0, 0, 265, 30, bgColor);
+                spr->pushSprite(xi, yi + (offset * i), 0xffff);
+                spr->deleteSprite();
+                continue;
+            }
+            TFT_eSprite *spr = gui->getSpriteBuffer(0);
+            spr->createSprite(30, 30);
+            // fill icon background...
+            spr->fillRect(0, 0, 30, 30, bgColor);
+            spr->pushSprite(xi, yi + (offset * i), 0xffff);
+            spr->deleteSprite();
+
+            spr->createSprite(30, 30);
+            spr->fillRect(0, 0, 30, 30, bgColor);
+            // print icon
+            if (items[i] == menu.getChildren()[0])
+            {
+                gui->printIcon(spr, 0, 1, items[i], true);
+            }
+            else
+            {
+                gui->printIcon(spr, 0, 1, items[i], false);
+            }
+            spr->pushSprite(xi, yi + (offset * i), 0xffff);
+            spr->deleteSprite();
+
+            if (items[i] == MENU_PID_WINDUP_LIMIT_VAR)
+            {
+                spr->createSprite(265 - 30, 30);
+                spr->fillRect(0, 0, 265 - 30, 30, bgColor);
+                spr->setTextColor(items[i] == mindex ? gui->isCursorModify() ? TFT_RED : TFT_CYAN : TFT_WHITE);
+                spr->setCursor(0, 2);
+                spr->setTextSize(2);
+                // spr->print(am->getAerPID(0)->PWM_ScaleFactor);
+                char b[10];
+                for (int i = 0; i < 10; i++)
+                {
+                    b[i] = '\0';
+                }
+                spr->print((double)am->getAerPID(elementIndex)->getWindupLimit());
+                spr->pushSprite(xt, yt + (offset * i) + 4);
+                spr->deleteSprite();
+                continue;
+            }
+
+            spr->createSprite(265 - 30, 30);
+            spr->fillRect(0, 0, 265 - 30, 30, bgColor);
+            spr->setTextSize(3);
+            spr->setTextWrap(false);
+            // print text
+            if (items[i] == mindex)
+            {
+                spr->setTextColor(TFT_CYAN, bgColor);
+                spr->setCursor(0, 5);
+                spr->print(gui->getMenuName(items[i]));
+            }
+            else
+            {
+                spr->setTextColor(TFT_WHITE, bgColor);
+                spr->setCursor(0, 5);
+                spr->print(gui->getMenuName(items[i]));
+            }
+            // push to screen
+            spr->pushSprite(xt, yt + (offset * i));
+            spr->deleteSprite();
+        }
+        // end printSelections
+        lastindex = mindex;
+    }
+
     void showPIDpwmFactorMenu(AerManager *am, bool update, bool change)
     {
         AerGUI *gui = am->getGUI();

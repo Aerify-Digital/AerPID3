@@ -1415,6 +1415,46 @@ void onEb1Clicked(EncoderButton &eb)
                 return;
             }
         }
+        else if (enc_aerGUI->getMenuProps()->menuIndex == MENU_PID_PWM_BIAS)
+        {
+            if (enc_aerGUI->getMenuProps()->menuLevelVal == MENU_PID_PWM_BIAS_VAR)
+            {
+                uint8_t elementIndex = enc_aerGUI->getElementIndex();
+                if (!enc_aerGUI->isCursorModify())
+                {
+                    enc_aerGUI->setCursorModify(MENU_PID_PWM_BIAS_VAR);
+                }
+                else
+                {
+                    enc_aerGUI->clearCursorModify();
+                    enc_am->getAerPID(elementIndex)->pwm_saved = false;
+                    enc_am->webUpdatePID(true);
+                    enc_am->setPressTick(100);
+                }
+                enc_aerGUI->updateMenu();
+                return;
+            }
+        }
+        else if (enc_aerGUI->getMenuProps()->menuIndex == MENU_PID_WINDUP_LIMIT)
+        {
+            if (enc_aerGUI->getMenuProps()->menuLevelVal == MENU_PID_WINDUP_LIMIT_VAR)
+            {
+                uint8_t elementIndex = enc_aerGUI->getElementIndex();
+                if (!enc_aerGUI->isCursorModify())
+                {
+                    enc_aerGUI->setCursorModify(MENU_PID_WINDUP_LIMIT_VAR);
+                }
+                else
+                {
+                    enc_aerGUI->clearCursorModify();
+                    enc_am->getAerPID(elementIndex)->pwm_saved = false;
+                    enc_am->webUpdatePID(true);
+                    enc_am->setPressTick(100);
+                }
+                enc_aerGUI->updateMenu();
+                return;
+            }
+        }
         else if (enc_aerGUI->getMenuProps()->menuIndex == MENU_PID_PWM_FACTOR)
         {
             if (enc_aerGUI->getMenuProps()->menuLevelVal == MENU_PID_PWM_FACTOR_VAR)
@@ -2711,6 +2751,40 @@ void onEb1Encoder(EncoderButton &eb)
                 chng += 0.001 * dir;
             }
             enc_am->getAerPID(elementIndex)->PWM_ScaleFactor += chng;
+            enc_aerGUI->updateMenu();
+            enc_am->webUpdatePID(true);
+            break;
+        }
+        case MENU_PID_PWM_BIAS_VAR:
+        {
+            double chng = 0;
+            if (eb.increment() > 0)
+            {
+                chng -= 0.5 * dir;
+            }
+            else if (eb.increment() < 0)
+            {
+                chng += 0.5 * dir;
+            }
+            double newVal = enc_am->getAerPID(elementIndex)->getOutputBias() + chng;
+            enc_am->getAerPID(elementIndex)->setOutputBias(newVal);
+            enc_aerGUI->updateMenu();
+            enc_am->webUpdatePID(true);
+            break;
+        }
+        case MENU_PID_WINDUP_LIMIT_VAR:
+        {
+            double chng = 0;
+            if (eb.increment() > 0)
+            {
+                chng -= 0.2 * dir;
+            }
+            else if (eb.increment() < 0)
+            {
+                chng += 0.2 * dir;
+            }
+            double newVal = enc_am->getAerPID(elementIndex)->getWindupLimit() + chng;
+            enc_am->getAerPID(elementIndex)->setWindupLimit(newVal);
             enc_aerGUI->updateMenu();
             enc_am->webUpdatePID(true);
             break;

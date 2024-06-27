@@ -254,6 +254,12 @@ public:
         _freq_PWN = freq;
     }
 
+    void setOutputBias(double bias);
+    double getOutputBias();
+
+    void setWindupLimit(double limit);
+    double getWindupLimit();
+
 private:
     // verbose debug output
     bool _verbose_d = VERBOSE_DEBUG == 1;
@@ -278,6 +284,10 @@ private:
 
     // PID compute output
     double output = 0;
+
+    double bias = 13;
+
+    double windUpLimit = 5;
 
     // Timing vars for ledcSetup
     int _freq_PWN = FREQ_PWM_KHz * 1000;

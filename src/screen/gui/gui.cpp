@@ -32,8 +32,10 @@ bool AerGUI::buildMenuDefinitions()
         // MENU_PID_PWM_FREQ,
     };
     std::vector<uint16_t> menus_pid_tuning = {
-        MENU_PID_AUTO,
+        // MENU_PID_AUTO,
+        MENU_PID_PWM_BIAS,
         MENU_PID_PWM_FACTOR,
+        MENU_PID_WINDUP_LIMIT,
         MENU_PID_PWM_CYCLE,
         MENU_PID_PWM_FREQ,
     };
@@ -446,7 +448,9 @@ bool AerGUI::buildMenuDefinitions()
     // PID Tuning
     menus.push_back(AerMenu(MENU_PID_TUNING, MENU_MAIN_PID, menus_pid_tuning));
     menus.push_back(AerMenu(MENU_PID_AUTO, MENU_PID_TUNING, {MENU_PID_AUTO_TOGGLE}));
+    menus.push_back(AerMenu(MENU_PID_PWM_BIAS, MENU_PID_TUNING, {MENU_PID_PWM_BIAS_VAR}));
     menus.push_back(AerMenu(MENU_PID_PWM_FACTOR, MENU_PID_TUNING, {MENU_PID_PWM_FACTOR_VAR}));
+    menus.push_back(AerMenu(MENU_PID_WINDUP_LIMIT, MENU_PID_TUNING, {MENU_PID_WINDUP_LIMIT_VAR}));
     menus.push_back(AerMenu(MENU_PID_PWM_CYCLE, MENU_PID_TUNING, {MENU_PID_PWM_CYCLE_VAR}));
     menus.push_back(AerMenu(MENU_PID_PWM_FREQ, MENU_PID_TUNING, {MENU_PID_PWM_FREQ_VAR}));
     // Favs
@@ -599,6 +603,8 @@ bool AerGUI::buildMenuDefinitions()
     menuNames.insert(std::pair<int, String>(MENU_PID_TUNING, "PID Tuning"));
     menuNames.insert(std::pair<int, String>(MENU_PID_AUTO, "Auto Tune"));
     menuNames.insert(std::pair<int, String>(MENU_PID_PWM_FACTOR, "PWM Factor"));
+    menuNames.insert(std::pair<int, String>(MENU_PID_PWM_BIAS, "Output Bias"));
+    menuNames.insert(std::pair<int, String>(MENU_PID_WINDUP_LIMIT, "WindUp Limit"));
     menuNames.insert(std::pair<int, String>(MENU_PID_PWM_CYCLE, "PWM Cycle"));
     menuNames.insert(std::pair<int, String>(MENU_PID_PWM_FREQ, "PWM Freq"));
     menuNames.insert(std::pair<int, String>(MENU_FAV_1, "Favorite 1"));
@@ -1402,8 +1408,14 @@ void AerGUI::printIcon(uint x, uint y, uint16_t menuIndex, bool selected)
     case MENU_PID_AUTO_TOGGLE:
         tft->pushImage(x, y, 28, 28, image_data_pwm_auto, 0xffff);
         break;
+    case MENU_PID_PWM_BIAS:
+    case MENU_PID_PWM_BIAS_VAR:
     case MENU_PID_PWM_FACTOR:
     case MENU_PID_PWM_FACTOR_VAR:
+        tft->pushImage(x, y, 28, 28, image_data_pwm_factor, 0xffff);
+        break;
+    case MENU_PID_WINDUP_LIMIT:
+    case MENU_PID_WINDUP_LIMIT_VAR:
         tft->pushImage(x, y, 28, 28, image_data_pwm_factor, 0xffff);
         break;
     case MENU_PID_PWM_CYCLE:
@@ -2208,8 +2220,14 @@ void AerGUI::printIcon(TFT_eSprite *spr, uint x, uint y, uint16_t menuIndex, boo
     case MENU_PID_AUTO_TOGGLE:
         spr->pushImage(x, y, 28, 28, image_data_pwm_auto);
         break;
+    case MENU_PID_PWM_BIAS:
+    case MENU_PID_PWM_BIAS_VAR:
     case MENU_PID_PWM_FACTOR:
     case MENU_PID_PWM_FACTOR_VAR:
+        spr->pushImage(x, y, 28, 28, image_data_pwm_factor);
+        break;
+    case MENU_PID_WINDUP_LIMIT:
+    case MENU_PID_WINDUP_LIMIT_VAR:
         spr->pushImage(x, y, 28, 28, image_data_pwm_factor);
         break;
     case MENU_PID_PWM_CYCLE:

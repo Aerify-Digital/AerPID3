@@ -589,6 +589,28 @@ void AerPID::setTunings()
     aPID->setCoefficients(kP, kI, kD);
 }
 
+void AerPID::setOutputBias(double bias)
+{
+    this->bias = bias;
+    aPID->setBias(bias);
+}
+
+double AerPID::getOutputBias()
+{
+    return bias;
+}
+
+void AerPID::setWindupLimit(double limit)
+{
+    this->windUpLimit = limit;
+    aPID->setWindUpLimits(-limit, limit);
+}
+
+double AerPID::getWindupLimit()
+{
+    return windUpLimit;
+}
+
 // =============================================================
 // =============================================================
 // =============================================================
