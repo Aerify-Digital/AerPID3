@@ -380,13 +380,13 @@ const updateChart2 = (state, t, ta, st, o, s) => {
   }
   sTempsAvg = sTempsAvg.reverse();
   let sOutput = [];
-  for (let i = 0; i < state.OUTPUT.length; i++) {
-    sOutput.push(state.OUTPUT[i]);
+  for (let i = 0; i < state.OUTPUT2.length; i++) {
+    sOutput.push(state.OUTPUT2[i]);
   }
   sOutput = sOutput.reverse();
   let sSigma = [];
-  for (let i = 0; i < state.SIGMA.length; i++) {
-    sSigma.push(state.SIGMA[i]);
+  for (let i = 0; i < state.SIGMA2.length; i++) {
+    sSigma.push(state.SIGMA2[i]);
   }
   sSigma = sSigma.reverse();
   for (let i = 0; i < sTemps.length; i++) {
