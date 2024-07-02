@@ -336,15 +336,15 @@ const updateChart2 = (state, t, ta, st, o, s) => {
   }
   state.TEMPS_AVG2.push(ta);
 
-  if (state.OUTPUT.length > maxChartTime) {
-    state.OUTPUT.shift();
+  if (state.OUTPUT2.length > maxChartTime) {
+    state.OUTPUT2.shift();
   }
-  state.OUTPUT.push(o);
+  state.OUTPUT2.push(o);
 
-  if (state.SIGMA.length > maxChartTime) {
-    state.SIGMA.shift();
+  if (state.SIGMA2.length > maxChartTime) {
+    state.SIGMA2.shift();
   }
-  state.SIGMA.push(s);
+  state.SIGMA2.push(s);
 
   let maxTime = 32;
   if (state.TIME_SPAN2 == 'one') {
