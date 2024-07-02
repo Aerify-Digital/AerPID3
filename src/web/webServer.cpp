@@ -691,6 +691,8 @@ void WebServer::updateClients()
     cmd->Val(static_cast<uint16_t>(10.0 * xAerPID1.MES_TEMP));
     cmd->Val(static_cast<uint16_t>(10.0 * xAerPID1.AVG_TEMP));
     cmd->Val(static_cast<uint16_t>(10.0 * xAerPID1.SET_TEMP));
+    cmd->Val(static_cast<uint16_t>(10.0 * xAerPID1.getOutput()));
+    cmd->Val(static_cast<uint16_t>(10.0 * xAerPID1.getSigma()));
     cmd->build();
     cmd->emitAll(&ws);
     delete cmd;
@@ -702,6 +704,8 @@ void WebServer::updateClients()
     cmd2->Val(static_cast<uint16_t>(10.0 * xAerPID2.MES_TEMP));
     cmd2->Val(static_cast<uint16_t>(10.0 * xAerPID2.AVG_TEMP));
     cmd2->Val(static_cast<uint16_t>(10.0 * xAerPID2.SET_TEMP));
+    cmd2->Val(static_cast<uint16_t>(10.0 * xAerPID2.getOutput()));
+    cmd2->Val(static_cast<uint16_t>(10.0 * xAerPID2.getSigma()));
     cmd2->build();
     cmd2->emitAll(&ws);
     delete cmd2;

@@ -350,6 +350,13 @@ bool AerPID::compute()
     aPID->compute();
     if (true)
     {
+        Sigma sigma = Sigma();
+
+        double aSig = sigma.calcDeviation(aMeasuresArr, MES_TEMP_SIZE);
+        double bSig = sigma.calcDeviation(bMeasuresArr, MEASURES_SIZE);
+        bool aboveTarget = MES_TEMP > SET_TEMP;
+        double delta = SET_TEMP - MES_TEMP;
+
         double _output = output;
         /*if (abs(SET_TEMP - MES_TEMP) <= 7)
         {
@@ -400,7 +407,15 @@ bool AerPID::compute()
             Serial.print(_output);
             Serial.print(F(" :: "));
             Serial.print(F("xOUT= "));
-            Serial.println(xOut);
+            Serial.print(xOut);
+
+            Serial.print(F(" :: "));
+            Serial.print(F("T SIGMA= "));
+            Serial.print(aSig);
+
+            Serial.print(F(" :: "));
+            Serial.print(F("TA SIGMA= "));
+            Serial.println(bSig);
         }
         return true;
     }
@@ -919,4 +934,15 @@ void AerPID::readScratchPad(uint8_t *deviceAddress, uint8_t *scratchPad)
         // Serial.print("\n 0x"); Serial.print(scratchPad[i], HEX);
     }
     oneWire->reset();
+}
+
+double AerPID::getOutput()
+{
+    return output;
+}
+
+double AerPID::getSigma()
+{
+    Sigma sigma = Sigma();
+    return sigma.calcDeviation(bMeasuresArr, MEASURES_SIZE);
 }

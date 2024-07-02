@@ -25,7 +25,8 @@ const createChart = (name) => {
           borderColor: 'red',
           borderWidth: 0.9,
           fill: false,
-          pointRadius: 1.2
+          pointRadius: 1.2,
+          yAxisID: 'y'
         },
         {
           label: 'Average 1 Minute',
@@ -33,7 +34,8 @@ const createChart = (name) => {
           borderColor: 'orange',
           borderWidth: 2.2,
           fill: false,
-          pointRadius: 0.8
+          pointRadius: 0.8,
+          yAxisID: 'y'
         },
         {
           label: 'Set Temperature',
@@ -41,7 +43,8 @@ const createChart = (name) => {
           borderColor: 'yellow',
           borderWidth: 1.8,
           fill: false,
-          pointRadius: 0.0
+          pointRadius: 0.0,
+          yAxisID: 'y'
         },
         {
           label: 'Measure Trend',
@@ -50,7 +53,28 @@ const createChart = (name) => {
           borderWidth: 1,
           fill: false,
           pointRadius: 0,
-          hidden: true
+          hidden: true,
+          yAxisID: 'y'
+        },
+        {
+          label: 'Output',
+          data: [],
+          borderColor: 'magenta',
+          borderWidth: 1,
+          fill: false,
+          pointRadius: 1,
+          hidden: true,
+          yAxisID: 'y1'
+        },
+        {
+          label: 'Sigma',
+          data: [],
+          borderColor: 'purple',
+          borderWidth: 1,
+          fill: false,
+          pointRadius: 0,
+          hidden: true,
+          yAxisID: 'y'
         }
       ]
     },
@@ -59,16 +83,66 @@ const createChart = (name) => {
         xAxes: [
           {
             gridLines: {
+              display: true,
               color: 'rgba(255, 255, 255, 0.1)' // Set the x-axis grid color to a light color
             }
           }
         ],
         yAxes: [
           {
+            id: 'y',
+            type: 'linear',
+            display: true,
+            position: 'left',
             gridLines: {
-              color: 'rgba(255, 255, 255, 0.08)' // Set the y-axis grid color to a light color
+              display: true,
+              color: 'rgba(255, 255, 255, 0.1)' // Set the x-axis grid color to a light color
+            }
+          },
+          {
+            id: 'y1',
+            type: 'linear',
+            display: true,
+            position: 'right',
+            color: 'blue',
+            title: {
+              display: true,
+              color: 'blue'
+            },
+            ticks: {
+              beginAtZero: true,
+              color: 'blue'
+            },
+
+            // grid line settings
+            grid: {
+              drawOnChartArea: false, // only want the grid lines for one axis to show up
+              backdropColor: 'blue',
+              color: 'blue'
             }
           }
+          /*{
+            id: 'y2',
+            type: 'linear',
+            display: true,
+            position: 'right',
+            color: 'purple',
+            title: {
+              display: true,
+              color: 'purple'
+            },
+            ticks: {
+              beginAtZero: true,
+              color: 'purple'
+            },
+
+            // grid line settings
+            grid: {
+              drawOnChartArea: false, // only want the grid lines for one axis to show up
+              backdropColor: 'blue',
+              color: 'purple'
+            }
+          }*/
         ]
       }
     }
@@ -128,7 +202,7 @@ let zoomRefreshTick = 0;
 
 const maxChartTime = 60 * 15;
 
-const updateChart = (state, t, ta, st) => {
+const updateChart = (state, t, ta, st, o, s) => {
   if (state.TEMPS.length > maxChartTime) {
     state.TEMPS.shift();
   }
@@ -138,6 +212,16 @@ const updateChart = (state, t, ta, st) => {
     state.TEMPS_AVG.shift();
   }
   state.TEMPS_AVG.push(ta);
+
+  if (state.OUTPUT.length > maxChartTime) {
+    state.OUTPUT.shift();
+  }
+  state.OUTPUT.push(o);
+
+  if (state.SIGMA.length > maxChartTime) {
+    state.SIGMA.shift();
+  }
+  state.SIGMA.push(s);
 
   let maxTime = 32;
   if (state.TIME_SPAN1 == 'one') {
@@ -160,6 +244,8 @@ const updateChart = (state, t, ta, st) => {
   const temps = [];
   const set_temps = [];
   const avg_temps = [];
+  const outputs = [];
+  const sigmas = [];
   let sTemps = [];
   for (let i = 0; i < state.TEMPS.length; i++) {
     sTemps.push(state.TEMPS[i]);
@@ -170,6 +256,16 @@ const updateChart = (state, t, ta, st) => {
     sTempsAvg.push(state.TEMPS_AVG[i]);
   }
   sTempsAvg = sTempsAvg.reverse();
+  let sOutput = [];
+  for (let i = 0; i < state.OUTPUT.length; i++) {
+    sOutput.push(state.OUTPUT[i]);
+  }
+  sOutput = sOutput.reverse();
+  let sSigma = [];
+  for (let i = 0; i < state.SIGMA.length; i++) {
+    sSigma.push(state.SIGMA[i]);
+  }
+  sSigma = sSigma.reverse();
   for (let i = 0; i < sTemps.length; i++) {
     if (i >= maxTime) {
       break;
@@ -180,6 +276,10 @@ const updateChart = (state, t, ta, st) => {
       x: i,
       y: st
     });
+    //outputs.push({ x: i, y: sOutput[i] });
+    //sigmas.push({ x: i, y: sSigma[i] });
+    outputs.push(sOutput[i]);
+    sigmas.push(sSigma[i]);
     if (sTemps.length <= 32) {
       if (i % 2 == 0) {
         labels.push(`${i}`);
@@ -211,6 +311,8 @@ const updateChart = (state, t, ta, st) => {
   chart.data.datasets[1].data = avg_temps;
   chart.data.datasets[2].data = set_temps;
   chart.data.datasets[3].data = calculateTrendLine(temps);
+  chart.data.datasets[4].data = outputs;
+  chart.data.datasets[5].data = sigmas;
   chart.data.labels = labels;
   if (zoomRefreshTick <= 0) {
     updateZoom(state.ZOOM_LEVEL);
@@ -223,7 +325,7 @@ const updateChart = (state, t, ta, st) => {
 
 let zoomRefreshTick2 = 0;
 
-const updateChart2 = (state, t, ta, st) => {
+const updateChart2 = (state, t, ta, st, o, s) => {
   if (state.TEMPS2.length > maxChartTime) {
     state.TEMPS2.shift();
   }
@@ -233,6 +335,16 @@ const updateChart2 = (state, t, ta, st) => {
     state.TEMPS_AVG2.shift();
   }
   state.TEMPS_AVG2.push(ta);
+
+  if (state.OUTPUT.length > maxChartTime) {
+    state.OUTPUT.shift();
+  }
+  state.OUTPUT.push(o);
+
+  if (state.SIGMA.length > maxChartTime) {
+    state.SIGMA.shift();
+  }
+  state.SIGMA.push(s);
 
   let maxTime = 32;
   if (state.TIME_SPAN2 == 'one') {
@@ -255,6 +367,8 @@ const updateChart2 = (state, t, ta, st) => {
   const temps = [];
   const set_temps = [];
   const avg_temps = [];
+  const outputs = [];
+  const sigmas = [];
   let sTemps = [];
   for (let i = 0; i < state.TEMPS2.length; i++) {
     sTemps.push(state.TEMPS2[i]);
@@ -265,6 +379,16 @@ const updateChart2 = (state, t, ta, st) => {
     sTempsAvg.push(state.TEMPS_AVG2[i]);
   }
   sTempsAvg = sTempsAvg.reverse();
+  let sOutput = [];
+  for (let i = 0; i < state.OUTPUT.length; i++) {
+    sOutput.push(state.OUTPUT[i]);
+  }
+  sOutput = sOutput.reverse();
+  let sSigma = [];
+  for (let i = 0; i < state.SIGMA.length; i++) {
+    sSigma.push(state.SIGMA[i]);
+  }
+  sSigma = sSigma.reverse();
   for (let i = 0; i < sTemps.length; i++) {
     if (i >= maxTime) {
       break;
@@ -275,6 +399,8 @@ const updateChart2 = (state, t, ta, st) => {
       x: i,
       y: st
     });
+    outputs.push(sOutput[i]);
+    sigmas.push(sSigma[i]);
     if (sTemps.length <= 32) {
       if (i % 2 == 0) {
         labels.push(`${i}`);
@@ -306,6 +432,8 @@ const updateChart2 = (state, t, ta, st) => {
   chart2.data.datasets[1].data = avg_temps;
   chart2.data.datasets[2].data = set_temps;
   chart2.data.datasets[3].data = calculateTrendLine(temps);
+  chart2.data.datasets[4].data = outputs;
+  chart2.data.datasets[5].data = sigmas;
   chart2.data.labels = labels;
   if (zoomRefreshTick2 <= 0) {
     updateZoom2(state.ZOOM_LEVEL2);
@@ -654,6 +782,10 @@ let state = {
   AVG_TEMP2: 0,
   TEMPS2: [],
   TEMPS_AVG2: [],
+  OUTPUT: [],
+  SIGMA: [],
+  OUTPUT2: [],
+  SIGMA2: [],
   BUMP: {
     enabled: false,
     length: 0,
@@ -1456,7 +1588,9 @@ const handleMessage = (dat) => {
       pid_enb = dat[2] > 0;
       var mes_temp = getNumber(dat.slice(3, 5));
       var avg_temp = getNumber(dat.slice(5, 7));
-      var set_temp = getNumber(dat.slice(7));
+      var set_temp = getNumber(dat.slice(7, 9));
+      var output = getNumber(dat.slice(9, 11));
+      var sigma = getNumber(dat.slice(11, 13));
       updateChart(
         state,
         state.UNIT == TemperatureUnit.FAHRENHEIT
@@ -1473,7 +1607,9 @@ const handleMessage = (dat) => {
           ? cToF(set_temp).toFixed(1)
           : state.UNIT == TemperatureUnit.KELVIN
           ? cToK(set_temp).toFixed(1)
-          : cToC(set_temp).toFixed(1)
+          : cToC(set_temp).toFixed(1),
+        output / 10,
+        sigma / 10
       );
       //console.log('SerialCommand.STATUS: ', pid_enb, mes_temp, avg_temp, set_temp);
       state.COIL.enabled = pid_enb;
@@ -1540,7 +1676,9 @@ const handleMessage = (dat) => {
       pid_enb = dat[2] > 0;
       var mes_temp = getNumber(dat.slice(3, 5));
       var avg_temp = getNumber(dat.slice(5, 7));
-      var set_temp = getNumber(dat.slice(7));
+      var set_temp = getNumber(dat.slice(7, 9));
+      var output = getNumber(dat.slice(9, 11));
+      var sigma = getNumber(dat.slice(11, 13));
       updateChart2(
         state,
         state.UNIT == TemperatureUnit.FAHRENHEIT
@@ -1557,7 +1695,9 @@ const handleMessage = (dat) => {
           ? cToF(set_temp).toFixed(1)
           : state.UNIT == TemperatureUnit.KELVIN
           ? cToK(set_temp).toFixed(1)
-          : cToC(set_temp).toFixed(1)
+          : cToC(set_temp).toFixed(1),
+        output / 10,
+        sigma / 10
       );
       //console.log('SerialCommand.STATUS: ', pid_enb, mes_temp, avg_temp, set_temp);
       state.COIL2.enabled = pid_enb;
