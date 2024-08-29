@@ -283,11 +283,37 @@ namespace AerTftUI
         SettingsStorage *settings = am->getSettings();
         ELM_PROT_OP_CODE op_state = am->getOpEP();
 
+        if (am->getAerPID(0)->hasFaultError() && !am->getAerPID(0)->hasFaultErrorAlerted())
+        {
+            TFT_eSPI *lcd = aerGUI->getTFT();
+            if (update || am->lastSensorFault(0) != am->getAerPID(0)->hasFaultError())
+            {
+                lcd->fillScreen(0x0841);
+                lcd->fillRoundRect(19, 19, 282, 202, 7, TFT_DARKGREY);
+                lcd->drawRoundRect(18, 18, 284, 204, 7, TFT_RED);
+            }
+            lcd->setTextWrap(false);
+            lcd->setTextColor(TFT_YELLOW, TFT_DARKGREY);
+            lcd->setTextSize(4);
+            lcd->setCursor(28, 24);
+            lcd->print("Sense Error");
+            lcd->setTextSize(2);
+            lcd->setTextWrap(true);
+            lcd->setCursor(32, 64);
+            lcd->setTextColor(TFT_RED, TFT_DARKGREY);
+            lcd->print("Sensor Fault Detected!");
+            lcd->setCursor(35, 90);
+            lcd->setTextColor(TFT_CYAN, TFT_DARKGREY);
+            lcd->print("Instrument '0' --");
+            lcd->setCursor(35, 112);
+            lcd->print("Entering Safe Mode!");
+            am->lastSensorFault(0, am->getAerPID(0)->hasFaultError());
+            return;
+        }
+        am->lastSensorFault(0, am->getAerPID(0)->hasFaultError());
+
         TFT_eSprite *spr1 = aerGUI->getSpriteBuffer(0);
-        TFT_eSprite *spr2 = aerGUI->getSpriteBuffer(1);
-        TFT_eSprite *spr3 = aerGUI->getSpriteBuffer(2);
-        TFT_eSprite *spr4 = aerGUI->getSpriteBuffer(3);
-        TFT_eSprite *spr5 = aerGUI->getSpriteBuffer(4);
+        spr1->deleteSprite();
 
         if ((update) && !modalOpen)
         {
@@ -300,58 +326,90 @@ namespace AerTftUI
 
         if (!modalOpen)
         {
-            spr3->createSprite(48, 240);
-            spr3->pushImage(0, 0, 48, 240, image_data_bg03_right);
+            spr1->createSprite(48, 240);
+            spr1->pushImage(0, 0, 48, 240, image_data_bg03_right);
 
             if (am->isEnabledDTR())
             {
-                spr3->fillRoundRect(277 - 272, 1, 43, 10, 0, tft->color565(30, 255, 200));
-                spr3->drawRoundRect(276 - 272, 0, 45, 12, 0, TFT_BLUE);
-                spr3->setCursor(283 - 272, 3);
-                spr3->setTextSize(1);
-                spr3->setTextColor(TFT_MAROON, tft->color565(30, 255, 200));
-                spr3->print("DEBUG");
+                spr1->fillRoundRect(277 - 272, 1, 43, 10, 0, tft->color565(30, 255, 200));
+                spr1->drawRoundRect(276 - 272, 0, 44, 12, 0, TFT_BLUE);
+                spr1->setCursor(11, 3);
+                spr1->setTextSize(1);
+                spr1->setTextColor(TFT_MAROON, tft->color565(30, 255, 200));
+                spr1->print("DEBUG");
+            }
+            else if (op_state == ELM_PROT_OP_CODE::E_PROT_OKAY || op_state == ELM_PROT_OP_CODE::E_PROT_ACK)
+            {
+                spr1->fillRoundRect(277 - 272, 1, 43, 10, 0, tft->color565(20, 255, 30));
+                spr1->drawRoundRect(276 - 272, 0, 44, 12, 0, TFT_VIOLET);
+                spr1->setCursor(10, 3);
+                spr1->setTextSize(1);
+                spr1->setTextColor(TFT_DARKCYAN, tft->color565(20, 255, 30));
+                spr1->print("NORMAL");
             }
             else
             {
-                // spr3->fillRoundRect(277 - 272, 0, 44, 12, 0, 0x31C8);
+                spr1->fillRoundRect(277 - 272, 1, 43, 10, 0, TFT_YELLOW);
+                spr1->drawRoundRect(276 - 272, 0, 44, 12, 0, TFT_MAROON);
+                spr1->setCursor(13, 3);
+                spr1->setTextSize(1);
+                spr1->setTextColor(tft->color565(252, 65, 3), TFT_YELLOW);
+                spr1->print("WARN!");
+            }
+
+            if (am->getAerPID(0)->hasFaultError())
+            {
+                spr1->fillRoundRect(277 - 272, 1 + 12, 43, 10, 0, TFT_RED);
+                spr1->drawRoundRect(276 - 272, 0 + 12, 44, 12, 0, TFT_ORANGE);
+                spr1->setCursor(6, 3 + 12);
+                spr1->setTextSize(1);
+                spr1->setTextColor(TFT_YELLOW, TFT_RED);
+                spr1->print("FAULT 1");
+            }
+            if (am->getAerPID(1)->hasFaultError())
+            {
+                spr1->fillRoundRect(277 - 272, 1 + 24, 43, 10, 0, TFT_RED);
+                spr1->drawRoundRect(276 - 272, 0 + 24, 44, 12, 0, TFT_ORANGE);
+                spr1->setCursor(8, 3 + 24);
+                spr1->setTextSize(1);
+                spr1->setTextColor(TFT_YELLOW, TFT_RED);
+                spr1->print("FAULT 2");
             }
 
             uint8_t elementIndex = aerGUI->getElementIndex();
-
             if (am->getAerPID(elementIndex)->PID_ON)
             {
-                spr3->pushImage(4, 40, 44, 43, image_data_bg03_right_btn_on);
+                spr1->pushImage(4, 40, 44, 43, image_data_bg03_right_btn_on);
             }
             else
             {
-                spr3->pushImage(4, 40, 44, 43, image_data_bg03_right_btn_off);
+                spr1->pushImage(4, 40, 44, 43, image_data_bg03_right_btn_off);
             }
             if (bumpStor.getEnabled(elementIndex))
             {
-                spr3->pushImage(4, 156, 44, 43, image_data_bg03_right_btn2_on);
+                spr1->pushImage(4, 156, 44, 43, image_data_bg03_right_btn2_on);
             }
             else
             {
-                spr3->pushImage(4, 156, 44, 43, image_data_bg03_right_btn2_off);
+                spr1->pushImage(4, 156, 44, 43, image_data_bg03_right_btn2_off);
             }
-            spr3->pushSprite(272, 0);
-            spr3->deleteSprite();
+            spr1->pushSprite(272, 0);
+            spr1->deleteSprite();
         }
 
         if (modalOpen)
         {
             if (modalUpdate)
             {
-                spr4->createSprite(272, 96);
-                spr4->fillRoundRect(21 - 20, 44 - 43, 270, 94, 3, tft->color565(20, 10, 4));
-                spr4->drawRoundRect(20 - 20, 43 - 43, 272, 96, 3, TFT_MAROON);
-                spr4->setCursor(38 - 20, 63 - 43); // line 1
-                spr4->setTextColor(TFT_WHITE, tft->color565(20, 10, 4));
-                spr4->setTextSize(3);
-                spr4->print("SSR Op State:");
+                spr1->createSprite(272, 96);
+                spr1->fillRoundRect(21 - 20, 44 - 43, 270, 94, 3, tft->color565(20, 10, 4));
+                spr1->drawRoundRect(20 - 20, 43 - 43, 272, 96, 3, TFT_MAROON);
+                spr1->setCursor(38 - 20, 63 - 43); // line 1
+                spr1->setTextColor(TFT_WHITE, tft->color565(20, 10, 4));
+                spr1->setTextSize(3);
+                spr1->print("SSR Op State:");
                 // tft->print("Element State");
-                spr4->setCursor(38 - 20, 99 - 43); // line 2
+                spr1->setCursor(38 - 20, 99 - 43); // line 2
                 uint16_t color = TFT_YELLOW;
                 if (op_state == ELM_PROT_OP_CODE::E_PROT_OKAY || op_state == ELM_PROT_OP_CODE::E_PROT_ACK)
                 {
@@ -369,13 +427,13 @@ namespace AerTftUI
                 {
                     color = TFT_RED;
                 }
-                spr4->setTextColor(color, tft->color565(20, 10, 4));
+                spr1->setTextColor(color, tft->color565(20, 10, 4));
                 String op = OperationToString(op_state);
-                spr4->print(op);
+                spr1->print(op);
                 modalUpdate = false;
 
-                spr4->pushSprite(20, 43);
-                spr4->deleteSprite();
+                spr1->pushSprite(20, 43);
+                spr1->deleteSprite();
             }
         }
 
@@ -406,30 +464,30 @@ namespace AerTftUI
         {
             uint8_t elementIndex = aerGUI->getElementIndex();
 
-            spr5->createSprite(272, 14);
-            spr5->drawRect(0, 0, 272, 3, TFT_BLACK);
-            spr5->pushImage(0, 3, 272, 11, image_data_bg02_mid);
+            spr1->createSprite(272, 14);
+            spr1->drawRect(0, 0, 272, 3, TFT_BLACK);
+            spr1->pushImage(0, 3, 272, 11, image_data_bg02_mid);
             /*if (am->getAerPID(0)->PID_ON)
             {
-                drawBarColorScroll(spr5, 1, 1); // green
-                drawBarColorScroll(spr5, 2, 2); // blue
+                drawBarColorScroll(spr1, 1, 1); // green
+                drawBarColorScroll(spr1, 2, 2); // blue
             }
             else
             {
-                drawBarColorScroll(spr5, 0, 1); // red
-                drawBarColorScroll(spr5, 3, 2); // purple
+                drawBarColorScroll(spr1, 0, 1); // red
+                drawBarColorScroll(spr1, 3, 2); // purple
             }*/
 
 #if AERPID_COUNT == 2
-            spr5->setTextSize(1);
-            spr5->setTextColor(elementIndex == 0 ? TFT_GOLD : 0x0ff6);
-            spr5->setCursor(200, 5);
-            spr5->print("Element #");
-            spr5->print(elementIndex + 1);
+            spr1->setTextSize(1);
+            spr1->setTextColor(elementIndex == 0 ? TFT_GOLD : 0x0ff6);
+            spr1->setCursor(200, 5);
+            spr1->print("Element #");
+            spr1->print(elementIndex + 1);
 #endif
 
-            spr5->pushSprite(0, 120);
-            spr5->deleteSprite();
+            spr1->pushSprite(0, 120);
+            spr1->deleteSprite();
         }
     }
 
@@ -858,9 +916,6 @@ namespace AerTftUI
         AerMenu menu = gui->getSelectedMenu(mlvl);
         TFT_eSPI *lcd = gui->getTFT();
         TFT_eSprite *spr1 = gui->getSpriteBuffer(0);
-        TFT_eSprite *spr2 = gui->getSpriteBuffer(1);
-
-        // lcd->setTextWrap(false);
 
         std::string tempStr;
         std::string tempAvgStr;
@@ -954,7 +1009,7 @@ namespace AerTftUI
             spr1->print(tempStr.c_str());
             spr1->pushSprite(272 - sz, 46);
             spr1->deleteSprite();
-
+            delay(2);
             lastTemp = temp;
             updatesProcessed = true;
         }
@@ -962,30 +1017,31 @@ namespace AerTftUI
         if (lastTemp_set != temp_set || update)
         {
             // Serial.println("[ShowTempSection] >> Set Temp Update.");
-            spr2->createSprite(204, 38);
-            spr2->pushImage(0, 0, 204, 38, image_data_bg03_btm_b);
-            // spr2->fillRect(3, 3, 204, 32, color565(101, 109, 118));
+            spr1->createSprite(204, 38);
+            spr1->pushImage(0, 0, 204, 38, image_data_bg03_btm_b);
+            // spr1->fillRect(3, 3, 204, 32, color565(101, 109, 118));
             // spr1->fillRect(3, 7, 204, 2, 0x2966);
-            spr2->fillRect(0, 38, 3, 38, TFT_BLACK);
-            spr2->setCursor(15, 8);
-            spr2->setTextColor(TFT_WHITE);
-            spr2->setTextSize(3);
-            spr2->print("Set Value");
-            spr2->pushSprite(68, 134);
-            spr2->deleteSprite();
+            spr1->fillRect(0, 38, 3, 38, TFT_BLACK);
+            spr1->setCursor(15, 8);
+            spr1->setTextColor(TFT_WHITE);
+            spr1->setTextSize(3);
+            spr1->print("Set Value");
+            spr1->pushSprite(68, 134);
+            spr1->deleteSprite();
 
-            spr2->createSprite(204, 106 - 38);
-            spr2->fillRect(3, 0, 204 - 3, 106 - 38, 0x31C8);
-            spr2->setCursor(88 - 68, 190 - 134 - 38);
-            spr2->setTextColor(TFT_WHITE, 0x31C8);
-            spr2->setTextSize(4);
-            spr2->print(tempSetStr.c_str());
+            spr1->createSprite(204, 106 - 38);
+            spr1->fillRect(3, 0, 204 - 3, 106 - 38, 0x31C8);
+            spr1->setCursor(88 - 68, 190 - 134 - 38);
+            spr1->setTextColor(TFT_WHITE, 0x31C8);
+            spr1->setTextSize(4);
+            spr1->print(tempSetStr.c_str());
             if (image)
             {
-                spr2->pushImage(222 - 68, 190 - 134 - 38, 36, 32, image);
+                spr1->pushImage(222 - 68, 190 - 134 - 38, 36, 32, image);
             }
-            spr2->pushSprite(68, 134 + 38);
-            spr2->deleteSprite();
+            spr1->pushSprite(68, 134 + 38);
+            spr1->deleteSprite();
+            delay(2);
             lastTemp_set = temp_set;
             updatesProcessed = true;
         }
@@ -6891,7 +6947,7 @@ namespace AerTftUI
         graph->Graph(gui, x, y1, dp, gx - 1, gy, w + 5, h, xlo, xhi, xinc, ylo, yhi, yinc, "", "", "", display1, seriesColor, bgColor);
 
         // sprite buffer
-        TFT_eSprite *spr = gui->getSpriteBuffer(1);
+        TFT_eSprite *spr = gui->getSpriteBuffer(0);
 
         // chunked sprite count
         const uint chnk = 8;
@@ -7087,7 +7143,7 @@ namespace AerTftUI
         graph->Graph(gui, x, y1, dp, gx - 1, gy, w + 5, h, xlo, xhi, xinc, ylo, yhi, yinc, "", "", "", display1, seriesColor, bgColor);
 
         // sprite buffer
-        TFT_eSprite *spr = gui->getSpriteBuffer(1);
+        TFT_eSprite *spr = gui->getSpriteBuffer(0);
 
         // chunked sprite count
         const uint chnk = 8;
@@ -7283,7 +7339,7 @@ namespace AerTftUI
         graph->Graph(gui, x, y1, dp, gx - 1, gy, w + 5, h, xlo, xhi, xinc, ylo, yhi, yinc, "", "", "", display1, seriesColor, bgColor);
 
         // sprite buffer
-        TFT_eSprite *spr = gui->getSpriteBuffer(1);
+        TFT_eSprite *spr = gui->getSpriteBuffer(0);
 
         // chunked sprite count
         const uint chnk = 8;
@@ -7477,7 +7533,7 @@ namespace AerTftUI
         graph->Graph(gui, x, y1, dp, gx - 1, gy, w + 5, h, xlo, xhi, xinc, ylo, yhi, yinc, "", "", "", display1, 0x0000, bgColor);
 
         // sprite buffer
-        TFT_eSprite *spr = gui->getSpriteBuffer(1);
+        TFT_eSprite *spr = gui->getSpriteBuffer(0);
 
         // chunked sprite count
         const uint chnk = 8;
@@ -7685,7 +7741,7 @@ namespace AerTftUI
         graph->Graph(gui, x, y1, dp, gx - 1, gy, w + 5, h, xlo, xhi, xinc, ylo, yhi, yinc, "", "", "", display1, seriesColor, bgColor);
 
         // sprite buffer
-        TFT_eSprite *spr = gui->getSpriteBuffer(1);
+        TFT_eSprite *spr = gui->getSpriteBuffer(0);
 
         // chunked sprite count
         const uint chnk = 8;
@@ -7890,7 +7946,7 @@ namespace AerTftUI
         graph->Graph(gui, x, y1, dp, gx - 1, gy, w + 5, h, xlo, xhi, xinc, ylo, yhi, yinc, "", "", "", display1, seriesColor, bgColor);
 
         // sprite buffer
-        TFT_eSprite *spr = gui->getSpriteBuffer(1);
+        TFT_eSprite *spr = gui->getSpriteBuffer(0);
 
         // chunked sprite count
         const uint chnk = 8;
