@@ -340,6 +340,16 @@ void AerManager::clearWebFTemps()
     std::fill(this->webftemps, this->webftemps + 4, 0);
 }
 
+bool AerManager::lastSensorFault(uint8_t ei)
+{
+    return lastFault[ei];
+}
+
+void AerManager::lastSensorFault(uint8_t ei, bool faulted)
+{
+    lastFault[ei] = faulted;
+}
+
 // ===========================================================
 
 void AerManager::setOpEP(_elm_prot_op_code_t *op)

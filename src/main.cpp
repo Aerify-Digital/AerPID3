@@ -343,7 +343,7 @@ void setup()
   // PID task
   xTaskCreatePinnedToCore(pid_task_1, "PID_Task_1", taskStackSize[5], NULL, 3, &pidTask1, 1);
 #if AERPID_COUNT == 2
-  xTaskCreatePinnedToCore(pid_task_2, "PID_Task_2", taskStackSize[5], NULL, 3, &pidTask2, 1);
+  //xTaskCreatePinnedToCore(pid_task_2, "PID_Task_2", taskStackSize[5], NULL, 3, &pidTask2, 1);
 #endif
 
   xTaskCreatePinnedToCore(element_task, "Element_Task", taskStackSize[12], (void *)&aerManager, 8, &elementTask, 0);

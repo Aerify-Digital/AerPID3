@@ -1489,7 +1489,7 @@ void WebServer::processSocketData(char *data, size_t len, AsyncWebSocketClient *
                 }
                 val = xAerPID1.kP = bd.value;
                 Serial.println(">>> P Val >> " + String(val));
-                xAerPID1.setTunings();
+                xAerPID1.setTunings(true);
                 aerManager.setPressTick(600);
                 xAerPID1.pid_saved = false;
             }
@@ -1519,7 +1519,7 @@ void WebServer::processSocketData(char *data, size_t len, AsyncWebSocketClient *
                 }
                 val = xAerPID1.kI = bd.value;
                 Serial.println(">>> I Val >> " + String(val, 4));
-                xAerPID1.setTunings();
+                xAerPID1.setTunings(true);
                 aerManager.setPressTick(600);
                 xAerPID1.pid_saved = false;
             }
@@ -1548,7 +1548,7 @@ void WebServer::processSocketData(char *data, size_t len, AsyncWebSocketClient *
                 }
                 val = xAerPID1.kD = bd.value;
                 Serial.println(">>> D Val >> " + String(val));
-                xAerPID1.setTunings();
+                xAerPID1.setTunings(true);
                 aerManager.setPressTick(600);
                 xAerPID1.pid_saved = false;
             }
@@ -1600,7 +1600,7 @@ void WebServer::processSocketData(char *data, size_t len, AsyncWebSocketClient *
                 }
                 val = xAerPID2.kP = bd.value;
                 Serial.println(">>> P Val >> " + String(val));
-                xAerPID2.setTunings();
+                xAerPID2.setTunings(true);
                 aerManager.setPressTick(600);
                 xAerPID2.pid_saved = false;
             }
@@ -1630,7 +1630,7 @@ void WebServer::processSocketData(char *data, size_t len, AsyncWebSocketClient *
                 }
                 val = xAerPID2.kI = bd.value;
                 Serial.println(">>> I Val >> " + String(val, 4));
-                xAerPID2.setTunings();
+                xAerPID2.setTunings(true);
                 aerManager.setPressTick(600);
                 xAerPID2.pid_saved = false;
             }
@@ -1659,7 +1659,7 @@ void WebServer::processSocketData(char *data, size_t len, AsyncWebSocketClient *
                 }
                 val = xAerPID2.kD = bd.value;
                 Serial.println(">>> D Val >> " + String(val));
-                xAerPID2.setTunings();
+                xAerPID2.setTunings(true);
                 aerManager.setPressTick(600);
                 xAerPID2.pid_saved = false;
             }

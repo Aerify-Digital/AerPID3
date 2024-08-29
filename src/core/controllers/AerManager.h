@@ -256,6 +256,9 @@ public:
     int getWebFtempVal(int f);
     void clearWebFTemps();
 
+    bool lastSensorFault(uint8_t ei);
+    void lastSensorFault(uint8_t ei, bool faulted);
+
 protected:
     void init();
 
@@ -331,6 +334,8 @@ private:
     bool enabled_dtr = false;
 
     uint64_t btn_press_tick = 100;
+
+    bool lastFault[2] = {false, false};
 
     // task health monitor vars
     int cpu0_usage = 0;

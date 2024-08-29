@@ -12,7 +12,7 @@
  * @param ssrChan SSR PWM Channel
  * @param index Element Index
  */
-AerPID::AerPID(u_int8_t pin, uint8_t ssrPin, uint8_t ssrChan, uint8_t index)
+AerPID::AerPID(uint8_t pin, uint8_t ssrPin, uint8_t ssrChan, uint8_t index)
 {
     Serial.print(F("> "));
     Serial.print(F("Creating new instance of "));
@@ -262,14 +262,19 @@ void AerPID::tick()
     // tick measure counter
     if (meas_counter-- <= 0)
     {
-        // Perform element measurements...
-        if (measureElementTemperature())
+        // Second, Perform element measurements...
+        MeasureResult res = measureElementTemperature();
+        if (res == MeasureResult::ACK)
         {
             meas_counter = PID_MEAS_COUNTER;
             MES_TEMP = avgMES_TEMP();
             addToMeasuresB(MES_TEMP);
+            AVG_TEMP = avgMeasures();
         }
-        AVG_TEMP = avgMeasures();
+        else if (res == MeasureResult::FAULT)
+        {
+            meas_counter = PID_MEAS_COUNTER;
+        }
     }
     if (meas_ticker_c-- <= 0)
     {
@@ -287,7 +292,7 @@ void AerPID::tick()
         }
         else
         {
-            _tick = 3;
+            _tick = 2;
         }
     }
 
@@ -353,26 +358,24 @@ bool AerPID::compute()
         Sigma sigma = Sigma();
 
         double aSig = sigma.calcDeviation(aMeasuresArr, MES_TEMP_SIZE);
-        double bSig = sigma.calcDeviation(bMeasuresArr, MEASURES_SIZE);
+        double bSig = sigma.calcDeviation(bMeasuresArr, MEASURES_SIZE, 28);
+        double bSigAll = sigma.calcDeviation(cMeasuresArr, MEASURES_SIZE);
         bool aboveTarget = MES_TEMP > SET_TEMP;
-        double delta = SET_TEMP - MES_TEMP;
+        double delta = (SET_TEMP - MES_TEMP);
 
         double _output = output;
-        /*if (abs(SET_TEMP - MES_TEMP) <= 7)
-        {
-            // this helps... with something
-            _output *= 0.667;
-        }*/
-        _output *= PWM_ScaleFactor;
+
+        // _output *= PWM_ScaleFactor;
 
         // convert output double to uint32
         uint32_t xOut = static_cast<uint32_t>(_output);
+        xOutput = xOut;
 
         bool _on = false;
         if (_output > 0.09)
         {
             // output at scaled % value
-            ledcWrite(ssrChan, xOut += 1);
+            ledcWrite(ssrChan, xOutput);
             _on = true;
         }
         else
@@ -598,9 +601,12 @@ double AerPID::getTempMax()
     return SET_TEMP_MAX;
 }
 
-void AerPID::setTunings()
+void AerPID::setTunings(bool reset)
 {
-    aPID->reset();
+    if (reset)
+    {
+        aPID->reset();
+    }
     aPID->setCoefficients(kP, kI, kD);
 }
 
@@ -632,28 +638,108 @@ double AerPID::getWindupLimit()
 // Thermocouple Measure
 // =============================================================
 
-#define TYPE_DS18S20 0
-#define TYPE_DS18B20 1
-#define TYPE_DS18S22 2
-#define TYPE_MAX31850 3
+/**
+ * @brief (Safe) Element Measure Function.
+ * This function will handle faults with the instrument sensor
+ * and switch to Blocking mode if too many faults are detected.
+ *
+ * @return true on success.
+ * @return false on error, fail, or busy.
+ */
+AerPID::MeasureResult AerPID::measureElementTemperature()
+{
+    bool useAsync = !_faultError;
+    bool measSuccess = false;
+    bool recentFault = false;
 
-boolean AerPID::measureElementTemperature()
+    if (millis() - _faultLastTime < 10000)
+    {
+        recentFault = true;
+    }
+
+    if (!recentFault && _faultsRecent > 0)
+    {
+        _faultsRecent--;
+    }
+
+    if (_faultsTotal >= 20)
+    {
+        useAsync = false;
+        if (!_faultError)
+        {
+            _faultError = true;
+            Serial.println(F("********************************"));
+            Serial.println(F("*********** WARNING! ***********"));
+            Serial.println(F("********************************"));
+            Serial.println(F(">> Sensor Fault Error Detected!!"));
+            Serial.print(F(">>> FAULT CODE: "));
+            Serial.print(_faultCodeLast);
+            Serial.print(F(" on AerPID #"));
+            Serial.println(index);
+            Serial.println(F(">> Sensor Entering Safe Mode! <<"));
+            Serial.println(F("********************************"));
+            Serial.println(F(">>> If this problem persists:"));
+            Serial.println(F(" there may be noise on the line,"));
+            Serial.println(F(" there is too much interference,"));
+            Serial.println(F(" instrument signal is malformed,"));
+            Serial.println(F(" the cable length is too long,"));
+            Serial.println(F(" the element sensor is faulty,"));
+            Serial.println(F(" or there is nothing connected."));
+            Serial.println(F("********************************"));
+            Serial.println(F(" "));
+        }
+    }
+    else if (_faultsRecent > 3)
+    {
+        useAsync = false;
+    }
+
+    if (_faultError && recentFault && _faultsRecent > 5)
+    {
+        delay(1000);
+    }
+
+    // Firstly, disable the power to the element if in safe mode.
+    if ((!useAsync || _faultError) && PID_ON)
+    {
+        ledcWrite(ssrChan, 0); // output pin off
+        delayMicroseconds(80); // some time to settle...
+    }
+    // Second, perform measurement...
+    MeasureResult result = useAsync ? measureElementTemperatureAsync() : measureElementTemperatureBlocking();
+
+    // Third, re-enable output power to the element.
+    if ((!useAsync || _faultError) && PID_ON && output > 0.09)
+    {
+        uint32_t xOutput = static_cast<uint32_t>(output);
+        ledcWrite(ssrChan, xOutput);
+    }
+
+    return result;
+}
+
+/**
+ * @brief Non-Blocking Temperature Measurement Function
+ *
+ * @return true on success.
+ * @return false on error, fail, or busy.
+ */
+AerPID::MeasureResult AerPID::measureElementTemperatureAsync()
 {
     uint8_t present = 0;
     uint8_t temptype;
-    uint8_t data[12];
+    uint8_t data[9];
     byte addr[8];
     float celsius;
 
-    if (meas_ticker >= meas_ticker_max || meas_ticker == 0)
+    if (meas_ticker == 0 || meas_ticker >= meas_ticker_max - 1)
     {
         oneWire->reset_search();
         if (!oneWire->search(addr))
         {
             oneWire->reset_search();
-            // Serial.println("Measure Reset!");
-            // delay(5); // delay(250);
-            return false;
+            Serial.println("(async) Measure Reset!");
+            return MeasureResult::NACK;
         }
 
         /*Serial.print("ROM =");
@@ -665,8 +751,8 @@ boolean AerPID::measureElementTemperature()
 
         if (OneWire::crc8(addr, 7) != addr[7])
         {
-            Serial.println("CRC is not valid!");
-            return false;
+            Serial.println("(async) CRC is not valid!");
+            return MeasureResult::NACK;
         }
         // Serial.println();
 
@@ -692,10 +778,10 @@ boolean AerPID::measureElementTemperature()
             break;
         default:
             // Serial.println("Device is not a DS18x20 family device.");
-            return false;
+            return MeasureResult::NACK;
         }
     }
-    if (meas_ticker >= meas_ticker_max)
+    if (meas_ticker == meas_ticker_max - 1)
     {
         oneWire->reset();
         oneWire->select(addr);
@@ -707,25 +793,21 @@ boolean AerPID::measureElementTemperature()
     {
         meas_ticker = meas_ticker_max;
     }
+    if (meas_ticker == 0)
+    {
+        meas_ticker = meas_ticker_max;
+    }
     else if (meas_ticker > 0)
     {
         meas_ticker--;
-        return false;
+        return MeasureResult::NACK;
     }
-    else if (meas_ticker == 0)
-    {
-        meas_ticker = meas_ticker_max;
-        // delay(200);
-    }
-
-    // delay(50); //delay(500);     // maybe 750ms is enough, maybe not
-    //  we might do a ds.depower() here, but the reset will take care of it.
 
     present = oneWire->reset();
     if (!present)
     {
-        Serial.println("Measure Abort!!");
-        return false;
+        Serial.println("(async) Measure Abort!!");
+        return MeasureResult::NACK;
     }
     oneWire->select(addr);
     oneWire->write(0xBE); // Read Scratchpad
@@ -765,9 +847,17 @@ boolean AerPID::measureElementTemperature()
         // Serial.println(raw, HEX);
         if (raw & 0x01)
         {
-            // Serial.println("**FAULT!**");
-            //  delay(300);
-            return false;
+            _faultCodeLast = getMax31855ErrorCode(raw);
+            Serial.print(F("(async) ERROR: "));
+            Serial.print(_faultCodeLast, HEX);
+            Serial.println(F(" **MEASURE FAULT!**"));
+            if (_faultsTotal < 0xFFFFFFFF)
+            {
+                _faultsTotal++;
+                _faultsRecent++;
+                _faultLastTime = millis();
+            }
+            return MeasureResult::FAULT;
         }
     }
     else
@@ -775,25 +865,133 @@ boolean AerPID::measureElementTemperature()
         byte cfg = (data[4] & 0x60);
         // at lower res, the low bits are undefined, so let's zero them
         if (cfg == 0x00)
+        {
             raw = raw & ~7; // 9 bit resolution, 93.75 ms
+        }
         else if (cfg == 0x20)
+        {
             raw = raw & ~3; // 10 bit res, 187.5 ms
+        }
         else if (cfg == 0x40)
+        {
             raw = raw & ~1; // 11 bit res, 375 ms
                             //// default is 12 bit resolution, 750 ms conversion time
+        }
+    }
+
+    celsius = ((float)raw / 16.0) + OFFSET_TEMP;
+
+    Sigma sigma = Sigma();
+    double bSig = sigma.calcDeviation(bMeasuresArr, MEASURES_AVG_TOTAL);
+    /*Serial.print(F("SIGMA= "));
+    Serial.print(AVG_TEMP + bSig * 3);
+    Serial.print(" < ");
+    Serial.print(celsius);
+    Serial.print(" > ");
+    Serial.println(AVG_TEMP - bSig * 3);*/
+    double meas = (celsius + AVG_TEMP) / 2;
+    if ((celsius > meas + (bSig * 1) || celsius < meas - (bSig * 1)) && abs(celsius - AVG_TEMP) > 3)
+    {
+        Serial.print(F("SIGMA= "));
+        Serial.print(AVG_TEMP + bSig * 1);
+        Serial.print(" < ");
+        Serial.print(celsius);
+        Serial.print(" > ");
+        Serial.println(AVG_TEMP - bSig * 1);
+
+        _faultsRecent++;
+        _faultLastTime = millis();
+        return AerPID::FAULT;
+    }
+
+    addToMES_TEMP(celsius);
+    return MeasureResult::ACK;
+}
+
+/**
+ * @brief Minified 'Blocking' Temperature Measurement Function
+ *
+ * @return true on success.
+ * @return false on error, fail, or busy.
+ */
+AerPID::MeasureResult AerPID::measureElementTemperatureBlocking()
+{
+    uint8_t present = 0;
+    uint8_t temptype;
+    uint8_t data[9];
+    byte addr[8];
+    float celsius;
+
+    oneWire->reset_search();
+    if (!oneWire->search(addr))
+    { // Reset if no response on search
+        oneWire->reset_search();
+        Serial.println("Measure Reset!");
+        return MeasureResult::NACK;
+    }
+
+    if (OneWire::crc8(addr, 7) != addr[7])
+    { // Check if the CRC is even valid
+        Serial.println("CRC is not valid!");
+        return MeasureResult::NACK;
+    }
+
+    switch (addr[0]) // first ROM byte indicates chip type
+    {
+    case 0x3B:
+        // Serial.println("  Chip = MAX31850");
+        temptype = TYPE_MAX31850;
+        break;
+    default:
+        // Serial.println("Device is not a MAX3185x family device.");
+        return MeasureResult::NACK;
+    }
+
+    oneWire->reset();      // reset the bus
+    oneWire->select(addr); // select the chip
+    oneWire->write(0x44);  // start conversion
+
+#if MEASURE_BIT_PRECISION == 9
+    delay(94);
+#endif
+#if MEASURE_BIT_PRECISION == 10
+    delay(190);
+#endif
+#if MEASURE_BIT_PRECISION == 11
+    delay(375);
+#endif
+#if MEASURE_BIT_PRECISION == 12
+    delay(750);
+#endif
+
+    present = oneWire->reset(); // presense check
+    if (!present)
+    { // check if chip is even present!
+        Serial.println("Measure Abort!!");
+        return MeasureResult::NACK;
+    }
+    oneWire->select(addr); // select the chip
+    oneWire->write(0xBE);  // Read Scratchpad
+
+    for (uint8_t i = 0; i < 9; i++)
+    { // we need 9 bytes
+        data[i] = oneWire->read();
+    }
+
+    int16_t raw = (data[1] << 8) | data[0];
+    // Serial.println(raw, HEX);
+    if (raw & 0x01)
+    {
+        _faultCodeLast = getMax31855ErrorCode(raw);
+        Serial.print(F("ERROR: "));
+        Serial.print(_faultCodeLast, HEX);
+        Serial.println(F(" **FAULT!**"));
+        return MeasureResult::FAULT;
     }
 
     celsius = (float)raw / 16.0;
-    /*float fahrenheit = celsius * 1.8 + 32.0;
-    Serial.print("  Temperature = ");
-    Serial.print(celsius);
-    Serial.print(" Celsius, ");
-    Serial.print(fahrenheit);
-    Serial.println(" Fahrenheit");*/
-
     addToMES_TEMP(celsius + OFFSET_TEMP);
-
-    return true;
+    return MeasureResult::ACK;
 }
 
 // set resolution of a device to 9, 10, 11, or 12 bits
@@ -936,13 +1134,60 @@ void AerPID::readScratchPad(uint8_t *deviceAddress, uint8_t *scratchPad)
     oneWire->reset();
 }
 
+AerPID::Max3185xState AerPID::getMax31855ErrorCode(uint16_t egtPacket)
+{
+#define MAX31855_RESERVED_BITS 0x20008
+#define MAX33855_FAULT_BIT BIT(16)
+#define MAX33855_OPEN_BIT BIT(0)
+#define MAX33855_GND_BIT BIT(1)
+#define MAX33855_VCC_BIT BIT(2)
+
+    if (((egtPacket & MAX31855_RESERVED_BITS) != 0) ||
+        (egtPacket == 0x0) ||
+        (egtPacket == 0xffffffff))
+    {
+        return MAX3185X_NO_REPLY;
+    }
+    else if ((egtPacket & MAX33855_OPEN_BIT) != 0)
+    {
+        return MAX3185X_OPEN_CIRCUIT;
+    }
+    else if ((egtPacket & MAX33855_GND_BIT) != 0)
+    {
+        return MAX3185X_SHORT_TO_GND;
+    }
+    else if ((egtPacket & MAX33855_VCC_BIT) != 0)
+    {
+        return MAX3185X_SHORT_TO_VCC;
+    }
+    else
+    {
+        return MAX3185X_OK;
+    }
+}
+
 double AerPID::getOutput()
 {
-    return output;
+    return this->xOutput;
 }
 
 double AerPID::getSigma()
 {
     Sigma sigma = Sigma();
-    return sigma.calcDeviation(bMeasuresArr, MEASURES_SIZE);
+    return sigma.calcDeviation(cMeasuresArr, MEASURES_SIZE, 28);
+}
+
+bool AerPID::hasFaultError()
+{
+    return this->_faultError;
+}
+
+bool AerPID::hasFaultErrorAlerted()
+{
+    return this->_faultErrorAlerted;
+}
+
+void AerPID::setFaultErrorAlert(bool alerted)
+{
+    this->_faultErrorAlerted = alerted;
 }

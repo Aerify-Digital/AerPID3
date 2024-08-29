@@ -34,10 +34,10 @@ double Sigma::calcMode(double *vals, uint s)
     return 0.0;
 }
 
-double Sigma::calcDeviation(double *vals, uint samples)
+double Sigma::calcDeviation(double *vals, uint size, uint samples)
 {
     // uint size = sizeof(vals) / sizeof(vals[0]);
-    double mean = calcMean(vals, samples);
+    double mean = calcMean(vals, size);
     double sum = 0;
 
     for (int i = 0; i < samples; i++)
@@ -45,13 +45,13 @@ double Sigma::calcDeviation(double *vals, uint samples)
         sum += pow(vals[i] - mean, 2);
     }
 
-    double variance = sum / (samples);
+    double variance = sum / (samples - 1);
     return sqrt(variance);
 }
 
-double Sigma::calcDeviation(double *vals)
+double Sigma::calcDeviation(double *vals, uint size)
 {
-    uint size = sizeof(vals) / sizeof(vals[0]);
+    // uint size = sizeof(vals) / sizeof(vals[0]);
     double mean = calcMean(vals, size);
     double sum = 0;
 

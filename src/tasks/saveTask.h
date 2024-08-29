@@ -101,16 +101,18 @@ void save_task(void *pvParameters)
             int freq;
             double bias;
             double windup;
+            double scaleFactor;
             // load PWM settings from flash
             pwmStor.load_pwm(freq, am->getAerPID(0)->PWM_ScaleFactor, am->getAerPID(0)->PWM_CycleTime, am->getAerPID(0)->AUTO_TUNE_ACTIVE, bias, windup);
+            //pwmStor.load_pwm(freq, scaleFactor, am->getAerPID(0)->PWM_CycleTime, am->getAerPID(0)->AUTO_TUNE_ACTIVE, bias, windup);
             // am->getAerPID(0)->setPwmFreq(freq);
             if (bias < 16384)
             {
-                am->getAerPID(0)->setOutputBias(bias);
+                // am->getAerPID(0)->setOutputBias(bias);
             }
             if (windup < 16384)
             {
-                am->getAerPID(0)->setWindupLimit(windup);
+                // am->getAerPID(0)->setWindupLimit(windup);
             }
 
             if (am->getAerPID(0)->PWM_ScaleFactor <= 0)
@@ -148,11 +150,11 @@ void save_task(void *pvParameters)
             // am->getAerPID(1)->setPwmFreq(freq);
             if (bias < 16384)
             {
-                am->getAerPID(1)->setOutputBias(bias);
+                // am->getAerPID(1)->setOutputBias(bias);
             }
             if (windup < 16384)
             {
-                am->getAerPID(1)->setWindupLimit(windup);
+                // am->getAerPID(1)->setWindupLimit(windup);
             }
 
             if (am->getAerPID(1)->PWM_ScaleFactor <= 0)
@@ -195,9 +197,9 @@ void save_task(void *pvParameters)
 #endif
 
         // Set initial PID tunings
-        am->getAerPID(0)->setTunings();
+        am->getAerPID(0)->setTunings(true);
 #if AERPID_COUNT == 2
-        am->getAerPID(1)->setTunings();
+        am->getAerPID(1)->setTunings(true);
 #endif
 
         // set thermal unit type
@@ -260,7 +262,7 @@ void save_task(void *pvParameters)
                 {
                     pidStor.save_pid(am->getAerPID(0)->kP, am->getAerPID(0)->kI, am->getAerPID(0)->kD);
                     // myPID.SetTunings(aerStor->kP, aerStor->kI, aerStor->kD);
-                    am->getAerPID(0)->setTunings();
+                    am->getAerPID(0)->setTunings(false);
                     am->getAerPID(0)->pid_saved = true;
                     Serial.print("Saved: ");
                     Serial.print(" kP ");
@@ -282,7 +284,7 @@ void save_task(void *pvParameters)
                 if (xSemaphoreTake(spi1_mutex, 50) == pdTRUE)
                 {
                     pidStor.save_pid_2(am->getAerPID(1)->kP, am->getAerPID(1)->kI, am->getAerPID(1)->kD);
-                    am->getAerPID(1)->setTunings();
+                    am->getAerPID(1)->setTunings(false);
                     am->getAerPID(1)->pid_saved = true;
                     Serial.print("Saved: ");
                     Serial.print(" kP ");

@@ -41,81 +41,76 @@
 // *************************************
 
 // Max element temperature (celsius)
-#define TEMPERATURE_MAX 454.444
+#define TEMPERATURE_MAX 510.0
 // Temperature offset adjustment
 #define TEMPERATURE_OFFSET -5.0
 
 // *************************************
 
 // PWM frequency and resolution
-#define FREQ_PWM_KHz 1
-#define PWM_RESOLUTION 14
+#define FREQ_PWM_Hz 240
+#define PWM_RESOLUTION 10
 
-/*
-8 bit - 256
-9 bit - 512
-10 bit - 1024
-11 bit - 2048
-12 bit - 4096
-13 bit - 8192
-14 bit - 16384
-*/
-
-// PWM output scaling factor
-#define PWM_SCALE_FACTOR 0.551
 // Output value range limit
-#define PID_OUTPUT_LIMIT 16383
+#define PID_OUTPUT_LIMIT 1023
 
-// Integral WindUp fix limit
-#define PID_WINDUP_LIMIT 500
+// 'PID_OUTPUT_LIMIT' based on 'PWM_RESOLUTION' bit
+/* 8 bit  - 256   - 255
+ * 9 bit  - 512   - 511
+ * 10 bit - 1024  - 1023
+ * 11 bit - 2048  - 2047
+ * 12 bit - 4096  - 4098
+ * 13 bit - 8192  - 8191
+ * 14 bit - 16384 - 16383
+ */
+
+// *************************************
+
+// PWM output scaling factor (hack)
+#define PWM_SCALE_FACTOR 0.995
+
+// Integral WindUp limit (fix for timing windup)
+#define PID_WINDUP_LIMIT 100
 // Output Bias for PID function
-#define PID_BIAS 13
+#define PID_BIAS 10
 
 // *************************************
 
 // Sample Time for PID compute in milliseconds
-#define PID_SAMPLE_TIME_MS 100
+#define PID_SAMPLE_TIME_MS 750
 // Sleep Time for PID thread in milliseconds
-#define PID_SLEEP_TIME_MS 50
+#define PID_SLEEP_TIME_MS 25
 // Tick time overshoot amount for PID compute
 #define PID_TIME_OVERSHOOT 7
 
 // Tick max for PID - sample time scaler
-#define PID_TICK_MAX (PID_SAMPLE_TIME_MS / PID_SLEEP_TIME_MS)
+#define PID_TICK_MAX (PID_SAMPLE_TIME_MS / PID_SLEEP_TIME_MS) / 2 + 1
 // Measure Freqeuncy counter max
-#define PID_MEAS_COUNTER 2
-// Measure tick max - internal to measure()
-#define MEAS_TICK_MAX 3
-
-#define MEAS_TICK_MAX_C ((1000 / PID_SLEEP_TIME_MS) * 3)
+#define PID_MEAS_COUNTER 15
 
 // *************************************
 
 // set sensor bit resolution
-#define MEASURE_BIT_PRECISION 11
+#define MEASURE_BIT_PRECISION 10
 
 // Measure sample array sizes
-#define MEASURES_SIZE 64
+#define MEASURES_SIZE 128
 #define MEASURES_AVG_TOTAL 64 // must be smaller than MEASURES_SIZE
 #define MES_TEMP_SIZE 3
 
-// *************************************
-// *************************************
-
-// Flags size for variable cache saves
-#define SAVE_VAR_SIZE 11
-
-// LED debug pin
-#ifdef PIN_LED_B
-#define PIN_LED_ACT PIN_LED_B
-#else
-#define PIN_LED_ACT 12
-#endif
+// Rolling average measure max size
+#define MEAS_TICK_MAX_C ((1000 / PID_SLEEP_TIME_MS) * 3)
 
 // *************************************
 // *************************************
 // Sensor Setup
 // *************************************
+
+// Sensor types...
+#define TYPE_DS18S20 0
+#define TYPE_DS18B20 1
+#define TYPE_DS18S22 2
+#define TYPE_MAX31850 3
 
 // Scratchpad Location
 #define SENSOR_CONFIGURATION_LOCATION 4
@@ -126,8 +121,7 @@
 #define TEMP_12_BIT 0x7F //!< 12 bit resolution
 
 // OneWire commands
-#define STARTCONVO \
-    0x44                     //!< Tells device to take a temperature reading and put it on the
+#define STARTCONVO 0x44      //!< Tells device to take a temperature reading and put it on the
                              //!< scratchpad
 #define COPYSCRATCH 0x48     //!< Copy EEPROM
 #define READSCRATCH 0xBE     //!< Read EEPROM
@@ -148,6 +142,19 @@
     6                    //!< DS18S20: COUNT_REMAIN, DS18B20 & DS1822: store for CRC
 #define COUNT_PER_C 7    //!< DS18S20: COUNT_PER_C. DS18B20 & DS1822: store for crc
 #define SCRATCHPAD_CRC 8 //!< Scratchpad CRC
+
+// *************************************
+// *************************************
+
+// Flags size for variable cache saves
+#define SAVE_VAR_SIZE 11
+
+// LED debug pin
+#ifdef PIN_LED_B
+#define PIN_LED_ACT PIN_LED_B
+#else
+#define PIN_LED_ACT 12
+#endif
 
 // *************************************
 // *************************************
@@ -243,7 +250,7 @@ public:
     double avgMeasuresLong();
 
     // Adjust PID tunings..
-    void setTunings();
+    void setTunings(bool reset);
 
     // Interal var accessors
     int getPwmFreq()
@@ -264,18 +271,26 @@ public:
     double getOutput();
     double getSigma();
 
+    bool hasFaultError();
+    bool hasFaultErrorAlerted();
+    void setFaultErrorAlert(bool alerted);
+
 private:
     // verbose debug output
     bool _verbose_d = VERBOSE_DEBUG == 1;
 
+    // 1Wire pin and object
     uint8_t ow_pin;
     OneWire *oneWire;
 
+    // SSR pin and channel
     uint8_t ssrPin;
     uint8_t ssrChan;
 
+    // Element number
     uint8_t index;
 
+    /* =========== */
     // PID library
     PID *aPID;
 
@@ -288,13 +303,16 @@ private:
 
     // PID compute output
     double output = 0;
+    double xOutput = 0;
 
+    // Bias power amount to apply to PID function
     double bias = 64;
 
+    // kI value wind up limitor
     double windUpLimit = 500;
 
     // Timing vars for ledcSetup
-    int _freq_PWN = FREQ_PWM_KHz * 1000;
+    int _freq_PWN = FREQ_PWM_Hz * 1;
     int _resolution_bits = PWM_RESOLUTION;
 
     // Array of most recent measurements
@@ -316,17 +334,23 @@ private:
     // Auto shutoff PID running activate
     bool auto_off_active = false;
 
+    /* ============================ */
     /* Counters */
 
     int16_t meas_counter = 0;
     int16_t meas_ticker = 8;
     int16_t meas_ticker_c = 0;
-    uint16_t meas_ticker_max = MEAS_TICK_MAX;
+    uint16_t meas_ticker_max = 3; // MEAS_TICK_MAX;
     uint16_t sys_temp_counter = 0;
 
+    // PID compute tick counter
     int16_t _tick = 0;
 
+    // Last PID compute timestamp
     long _last_time_ms = 0;
+
+    /* ============================ */
+    /* Function Ticks */
 
     // Compute function
     bool compute();
@@ -341,11 +365,45 @@ private:
     void addToMeasuresB(double toAdd);
     void addToMeasuresC(double toAdd);
 
-    // Measure Temperature
-    bool measureElementTemperature();
+    /* ============================ */
 
+    // Measure fault counters
+    uint _faultsTotal = 0;
+    uint _faultsRecent = 0;
+    long _faultLastTime = 0;
+    // Measure fault flags
+    uint8_t _faultCodeLast = 0;
+    bool _faultError = false;
+    bool _faultErrorAlerted = false;
+
+    // Sensor error fault state codes
+    typedef enum
+    {
+        MAX3185X_OK = 0,
+        MAX3185X_OPEN_CIRCUIT = 1,
+        MAX3185X_SHORT_TO_GND = 2,
+        MAX3185X_SHORT_TO_VCC = 3,
+        MAX3185X_NO_REPLY = 4,
+    } Max3185xState;
+
+    typedef enum
+    {
+        NACK = 0,
+        ACK = 1,
+        FAULT = 2,
+    } MeasureResult;
+
+    // Measure Temperature
+    MeasureResult measureElementTemperature();
+    MeasureResult measureElementTemperatureAsync();
+    MeasureResult measureElementTemperatureBlocking();
+
+    // Set sensor bit resolution for measurements
     bool setSensorResolution(uint8_t newResolution);
     void readScratchPad(uint8_t *deviceAddress, uint8_t *scratchPad);
+
+    // Error code lookup for measure
+    Max3185xState getMax31855ErrorCode(uint16_t egtPacket);
 };
 
 extern AerPID xAerPID1;

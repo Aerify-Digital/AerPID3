@@ -67,10 +67,20 @@ const createChart = (name) => {
           yAxisID: 'y1'
         },
         {
-          label: 'Sigma',
+          label: 'Sigma+',
           data: [],
-          borderColor: 'purple',
-          borderWidth: 1,
+          borderColor: 'blue',
+          borderWidth: 0.4,
+          fill: false,
+          pointRadius: 0,
+          hidden: true,
+          yAxisID: 'y'
+        },
+        {
+          label: 'Sigma-',
+          data: [],
+          borderColor: 'blue',
+          borderWidth: 0.4,
           fill: false,
           pointRadius: 0,
           hidden: true,
@@ -245,7 +255,8 @@ const updateChart = (state, t, ta, st, o, s) => {
   const set_temps = [];
   const avg_temps = [];
   const outputs = [];
-  const sigmas = [];
+  const sigmas1 = [];
+  const sigmas2 = [];
   let sTemps = [];
   for (let i = 0; i < state.TEMPS.length; i++) {
     sTemps.push(state.TEMPS[i]);
@@ -279,7 +290,8 @@ const updateChart = (state, t, ta, st, o, s) => {
     //outputs.push({ x: i, y: sOutput[i] });
     //sigmas.push({ x: i, y: sSigma[i] });
     outputs.push(sOutput[i]);
-    sigmas.push(sSigma[i]);
+    sigmas1.push(Number(sTempsAvg[i]) + Number(sSigma[i]));
+    sigmas2.push(sTempsAvg[i] - sSigma[i]);
     if (sTemps.length <= 32) {
       if (i % 2 == 0) {
         labels.push(`${i}`);
@@ -312,7 +324,8 @@ const updateChart = (state, t, ta, st, o, s) => {
   chart.data.datasets[2].data = set_temps;
   chart.data.datasets[3].data = calculateTrendLine(temps);
   chart.data.datasets[4].data = outputs;
-  chart.data.datasets[5].data = sigmas;
+  chart.data.datasets[5].data = sigmas1;
+  chart.data.datasets[6].data = sigmas2;
   chart.data.labels = labels;
   if (zoomRefreshTick <= 0) {
     updateZoom(state.ZOOM_LEVEL);

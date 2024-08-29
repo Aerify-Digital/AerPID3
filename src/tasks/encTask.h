@@ -71,6 +71,19 @@ void onBt1Clicked(EncoderButton &eb)
         return;
     }
 
+    if (enc_am->getAerPID(0)->hasFaultError() && !enc_am->getAerPID(0)->hasFaultErrorAlerted())
+    {
+        enc_am->getAerPID(0)->setFaultErrorAlert(true);
+        enc_aerGUI->updateMenu();
+        return;
+    }
+    if (enc_am->getAerPID(1)->hasFaultError() && !enc_am->getAerPID(1)->hasFaultErrorAlerted())
+    {
+        enc_am->getAerPID(1)->setFaultErrorAlert(true);
+        enc_aerGUI->updateMenu();
+        return;
+    }
+
     if (eb.clickCount() >= 3)
     {
         if (xSemaphoreTake(i2c1_mutex, 200) == pdTRUE)
@@ -192,6 +205,19 @@ void onBt2Clicked(EncoderButton &eb)
         return;
     }
 
+    if (enc_am->getAerPID(0)->hasFaultError() && !enc_am->getAerPID(0)->hasFaultErrorAlerted())
+    {
+        enc_am->getAerPID(0)->setFaultErrorAlert(true);
+        enc_aerGUI->updateMenu();
+        return;
+    }
+    if (enc_am->getAerPID(1)->hasFaultError() && !enc_am->getAerPID(1)->hasFaultErrorAlerted())
+    {
+        enc_am->getAerPID(1)->setFaultErrorAlert(true);
+        enc_aerGUI->updateMenu();
+        return;
+    }
+
     uint8_t elementIndex = enc_aerGUI->getElementIndex();
 
     if (enc_aerGUI->getMenuProps()->menuIndex == MENU_SYSTEM_LOCAL_TEMPERATURE)
@@ -287,6 +313,19 @@ void onEb1Clicked(EncoderButton &eb)
     }
     if (enc_am->getNetVars()->doscan || enc_am->getNetVars()->scanning)
     {
+        return;
+    }
+
+    if (enc_am->getAerPID(0)->hasFaultError() && !enc_am->getAerPID(0)->hasFaultErrorAlerted())
+    {
+        enc_am->getAerPID(0)->setFaultErrorAlert(true);
+        enc_aerGUI->updateMenu();
+        return;
+    }
+    if (enc_am->getAerPID(1)->hasFaultError() && !enc_am->getAerPID(1)->hasFaultErrorAlerted())
+    {
+        enc_am->getAerPID(1)->setFaultErrorAlert(true);
+        enc_aerGUI->updateMenu();
         return;
     }
 
