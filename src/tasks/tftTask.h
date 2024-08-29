@@ -37,10 +37,6 @@ void tft_task(void *pvParameters)
     // tft->pushImage(0, 0, 320, 67, image_data_aeri_top);
     // tft->pushImage(0, 0, 320, 240, image_data_bg01);
 
-    // TFT_eSprite *spr1 = _aerGUI->getSpriteBuffer(0);
-    // TFT_eSprite *spr2 = _aerGUI->getSpriteBuffer(1);
-    // TFT_eSprite *spr3 = _aerGUI->getSpriteBuffer(2);
-
     if (xSemaphoreTake(sys1_mutex, 50) == pdTRUE)
     {
         if (xSemaphoreTake(spi1_mutex, 50) == pdTRUE)
