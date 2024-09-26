@@ -648,6 +648,30 @@ double AerPID::getWindupLimit()
  */
 AerPID::MeasureResult AerPID::measureElementTemperature()
 {
+    if (_measMode > 0)
+    {
+        if (_measMode == 1)
+        {
+            return measureElementTemperatureAsync();
+        }
+        if (_measMode == 2)
+        {
+            if (PID_ON)
+            {
+                ledcWrite(ssrChan, 0); // output pin off
+                delayMicroseconds(60); // some time to settle...
+            }
+            MeasureResult result = measureElementTemperatureBlocking();
+            if (PID_ON && output > 0.09)
+            {
+                uint32_t xOutput = static_cast<uint32_t>(output);
+                ledcWrite(ssrChan, xOutput);
+            }
+            return result;
+        }
+        return MeasureResult::NACK;
+    }
+
     bool useAsync = !_faultError;
     bool measSuccess = false;
     bool recentFault = false;
@@ -847,15 +871,18 @@ AerPID::MeasureResult AerPID::measureElementTemperatureAsync()
         // Serial.println(raw, HEX);
         if (raw & 0x01)
         {
-            _faultCodeLast = getMax31855ErrorCode(raw);
-            Serial.print(F("(async) ERROR: "));
-            Serial.print(_faultCodeLast, HEX);
-            Serial.println(F(" **MEASURE FAULT!**"));
-            if (_faultsTotal < 0xFFFFFFFF)
+            if (PID_ON)
             {
-                _faultsTotal++;
-                _faultsRecent++;
-                _faultLastTime = millis();
+                _faultCodeLast = getMax31855ErrorCode(raw);
+                Serial.print(F("(async) ERROR: "));
+                Serial.print(_faultCodeLast, HEX);
+                Serial.println(F(" **MEASURE FAULT!**"));
+                if (_faultsTotal < 0xFFFFFFFF)
+                {
+                    _faultsTotal++;
+                    _faultsRecent++;
+                    _faultLastTime = millis();
+                }
             }
             return MeasureResult::FAULT;
         }
@@ -890,7 +917,7 @@ AerPID::MeasureResult AerPID::measureElementTemperatureAsync()
     Serial.print(" > ");
     Serial.println(AVG_TEMP - bSig * 3);*/
     double meas = (celsius + AVG_TEMP) / 2;
-    if ((celsius > meas + (bSig * 1) || celsius < meas - (bSig * 1)) && abs(celsius - AVG_TEMP) > 3)
+    if ((celsius > meas + (bSig * 1) || celsius < meas - (bSig * 1)) && abs(celsius - AVG_TEMP) > 3 && AVG_TEMP > 0)
     {
         Serial.print(F("SIGMA= "));
         Serial.print(AVG_TEMP + bSig * 1);
@@ -982,10 +1009,13 @@ AerPID::MeasureResult AerPID::measureElementTemperatureBlocking()
     // Serial.println(raw, HEX);
     if (raw & 0x01)
     {
-        _faultCodeLast = getMax31855ErrorCode(raw);
-        Serial.print(F("ERROR: "));
-        Serial.print(_faultCodeLast, HEX);
-        Serial.println(F(" **FAULT!**"));
+        if (PID_ON)
+        {
+            _faultCodeLast = getMax31855ErrorCode(raw);
+            Serial.print(F("ERROR: "));
+            Serial.print(_faultCodeLast, HEX);
+            Serial.println(F(" **FAULT!**"));
+        }
         return MeasureResult::FAULT;
     }
 

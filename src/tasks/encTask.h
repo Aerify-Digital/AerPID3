@@ -1434,6 +1434,31 @@ void onEb1Clicked(EncoderButton &eb)
                 return;
             }
         }
+        else if (enc_aerGUI->getMenuProps()->menuIndex == MENU_PID_MEASURE_MODE)
+        {
+            if (enc_aerGUI->getMenuProps()->menuLevelVal == MENU_PID_MEASURE_MODE_VAR)
+            {
+                if (enc_am->getMeasureMode() == 0)
+                {
+                    enc_am->setMeasureMode(1);
+                }
+                else if (enc_am->getMeasureMode() == 1)
+                {
+                    enc_am->setMeasureMode(2);
+                }
+                else if (enc_am->getMeasureMode() == 2)
+                {
+                    enc_am->setMeasureMode(0);
+                }
+                else
+                {
+                    enc_am->setMeasureMode(0);
+                }
+                enc_am->setPressTick(120);
+                enc_aerGUI->updateMenu();
+                return;
+            }
+        }
         else if (enc_aerGUI->getMenuProps()->menuIndex == MENU_PID_PWM_CYCLE)
         {
             if (enc_aerGUI->getMenuProps()->menuLevelVal == MENU_PID_PWM_CYCLE_VAR)

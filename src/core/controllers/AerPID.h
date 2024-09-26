@@ -165,7 +165,7 @@ class AerPID
 public:
     // Constructor
     AerPID(uint8_t owPin, uint8_t ssrPin, uint8_t ssrChan, uint8_t index = 0);
-    ~AerPID(){};
+    ~AerPID() {};
 
     // *********************************
     // AerPID Initialization
@@ -271,6 +271,11 @@ public:
     double getOutput();
     double getSigma();
 
+    void setMeasMode(uint8_t mode)
+    {
+        _measMode = mode;
+    }
+
     bool hasFaultError();
     bool hasFaultErrorAlerted();
     void setFaultErrorAlert(bool alerted);
@@ -366,6 +371,9 @@ private:
     void addToMeasuresC(double toAdd);
 
     /* ============================ */
+
+    // measurement mode
+    uint8_t _measMode = 0;
 
     // Measure fault counters
     uint _faultsTotal = 0;

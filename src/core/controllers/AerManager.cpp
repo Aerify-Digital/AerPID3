@@ -34,6 +34,21 @@ AerPID *AerManager::getAerPID(uint8_t ei) // getAerStorage()
     return AerManager::aerPID[ei];
 }
 
+void AerManager::setMeasureMode(uint8_t mode)
+{
+    AerManager::measMode = mode;
+    for (uint8_t i = 0; i < AERPID_COUNT; i++)
+    {
+        AerManager::aerPID[i]->setMeasMode(mode);
+    }
+    measModeStorage.setMode(mode);
+}
+
+uint8_t AerManager::getMeasureMode()
+{
+    return AerManager::measMode;
+}
+
 // Gets the Network Variable storage Object
 NetworkVars *AerManager::getNetVars()
 {

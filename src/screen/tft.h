@@ -95,6 +95,7 @@ namespace AerTftUI
     void showPIDMenuD(AerGUI *gui, float kD, bool indexupdate);
     void showPIDTuneMenu(AerManager *am, bool indexupdate, bool change);
     void showPIDAutoMenu(AerManager *am, bool indexupdate, bool change);
+    void showPIDMeasureModeMenu(AerManager *am, bool indexupdate, bool change);
     void showPIDOutputBiasMenu(AerManager *am, bool indexupdate, bool change);
     void showPIDWindupLimitMenu(AerManager *am, bool indexupdate, bool change);
     void showPIDpwmFactorMenu(AerManager *am, bool indexupdate, bool change);

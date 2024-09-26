@@ -246,6 +246,8 @@ void setup()
   pidStor.init(&flash);
   Serial.println(F("[BOOT] Initializing PWM Storage (pwmStor)  "));
   pwmStor.init(&flash);
+  Serial.println(F("[BOOT] Initializing Measure Mode Storage (measModeStorage)  "));
+  measModeStorage.init(&flash);
   Serial.println(F("[BOOT] Initializing Temperate Storage (tempStor)  "));
   tempStor.init(&flash);
   Serial.println(F("[BOOT] Initializing Bump Storage (bumpStor)  "));
@@ -343,7 +345,7 @@ void setup()
   // PID task
   xTaskCreatePinnedToCore(pid_task_1, "PID_Task_1", taskStackSize[5], NULL, 3, &pidTask1, 1);
 #if AERPID_COUNT == 2
-  //xTaskCreatePinnedToCore(pid_task_2, "PID_Task_2", taskStackSize[5], NULL, 3, &pidTask2, 1);
+  // xTaskCreatePinnedToCore(pid_task_2, "PID_Task_2", taskStackSize[5], NULL, 3, &pidTask2, 1);
 #endif
 
   xTaskCreatePinnedToCore(element_task, "Element_Task", taskStackSize[12], (void *)&aerManager, 8, &elementTask, 0);

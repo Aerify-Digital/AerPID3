@@ -181,6 +181,13 @@ void tft_task(void *pvParameters)
                     _menu->menuChange = false;
                     break;
                 }
+                case MENU_PID_MEASURE_MODE: /* PID Measure Mode */
+                {
+                    AerTftUI::showPIDMeasureModeMenu(_am, _menu->menuUpdate, _menu->menuChange);
+                    _menu->menuUpdate = false;
+                    _menu->menuChange = false;
+                    break;
+                }
                 case MENU_PID_PWM_BIAS: /* PID Output Bias */
                 {
                     AerTftUI::showPIDOutputBiasMenu(_am, _menu->menuUpdate, _menu->menuChange);

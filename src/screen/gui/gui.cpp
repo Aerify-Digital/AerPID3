@@ -26,6 +26,7 @@ bool AerGUI::buildMenuDefinitions()
         MENU_PID_I,
         MENU_PID_D,
         MENU_PID_TUNING,
+        MENU_PID_MEASURE_MODE,
         // MENU_PID_AUTO,
         // MENU_PID_PWM_FACTOR,
         // MENU_PID_PWM_CYCLE,
@@ -453,6 +454,8 @@ bool AerGUI::buildMenuDefinitions()
     menus.push_back(AerMenu(MENU_PID_WINDUP_LIMIT, MENU_PID_TUNING, {MENU_PID_WINDUP_LIMIT_VAR}));
     menus.push_back(AerMenu(MENU_PID_PWM_CYCLE, MENU_PID_TUNING, {MENU_PID_PWM_CYCLE_VAR}));
     menus.push_back(AerMenu(MENU_PID_PWM_FREQ, MENU_PID_TUNING, {MENU_PID_PWM_FREQ_VAR}));
+    // PID Measure Option
+    menus.push_back(AerMenu(MENU_PID_MEASURE_MODE, MENU_MAIN_PID, {MENU_PID_MEASURE_MODE_VAR}));
     // Favs
     menus.push_back(AerMenu(MENU_MAIN_FAVS, MENU_ROOT_MAIN, menus_favs));
     menus.push_back(AerMenu(MENU_FAV_1, MENU_MAIN_FAVS, menus_fav1));
@@ -602,6 +605,7 @@ bool AerGUI::buildMenuDefinitions()
     menuNames.insert(std::pair<int, String>(MENU_PID_D, "Derivative"));
     menuNames.insert(std::pair<int, String>(MENU_PID_TUNING, "PID Tuning"));
     menuNames.insert(std::pair<int, String>(MENU_PID_AUTO, "Auto Tune"));
+    menuNames.insert(std::pair<int, String>(MENU_PID_MEASURE_MODE, "Meas Mode"));
     menuNames.insert(std::pair<int, String>(MENU_PID_PWM_FACTOR, "PWM Factor"));
     menuNames.insert(std::pair<int, String>(MENU_PID_PWM_BIAS, "Output Bias"));
     menuNames.insert(std::pair<int, String>(MENU_PID_WINDUP_LIMIT, "WindUp Limit"));
@@ -2240,6 +2244,10 @@ void AerGUI::printIcon(TFT_eSprite *spr, uint x, uint y, uint16_t menuIndex, boo
         break;
     case MENU_LOCAL_FAN_CONTROL:
         spr->pushImage(x, y, 28, 28, image_data_fan_1);
+        break;
+    case MENU_PID_MEASURE_MODE:
+    case MENU_PID_MEASURE_MODE_VAR:
+        spr->pushImage(x, y, 28, 28, image_data_temp_mode);
         break;
 
     default:

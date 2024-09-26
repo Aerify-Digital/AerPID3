@@ -16,6 +16,7 @@
 #include "storage/bumpStor.h"
 #include "storage/eepromStor.h"
 #include "storage/tftSettingsStor.h"
+#include "storage/measureStor.h"
 
 #include "common/datatypes/mutex.h"
 #include "common/enum/ThermalUnitsType.h"
@@ -47,6 +48,12 @@ void save_task(void *pvParameters)
 
     if (xSemaphoreTake(spi1_mutex, 1000) == pdTRUE)
     {
+        measModeStorage.load();
+        if (measModeStorage.isLoaded())
+        {
+            am->setMeasureMode(measModeStorage.getMode());
+        }
+
         // Load the PID values from Flash
         pidStor.load_pid(am->getAerPID(0)->kP, am->getAerPID(0)->kI, am->getAerPID(0)->kD);
         if (am->getAerPID(0)->kP <= 0.01)
@@ -104,8 +111,8 @@ void save_task(void *pvParameters)
             double scaleFactor;
             // load PWM settings from flash
             pwmStor.load_pwm(freq, am->getAerPID(0)->PWM_ScaleFactor, am->getAerPID(0)->PWM_CycleTime, am->getAerPID(0)->AUTO_TUNE_ACTIVE, bias, windup);
-            //pwmStor.load_pwm(freq, scaleFactor, am->getAerPID(0)->PWM_CycleTime, am->getAerPID(0)->AUTO_TUNE_ACTIVE, bias, windup);
-            // am->getAerPID(0)->setPwmFreq(freq);
+            // pwmStor.load_pwm(freq, scaleFactor, am->getAerPID(0)->PWM_CycleTime, am->getAerPID(0)->AUTO_TUNE_ACTIVE, bias, windup);
+            //  am->getAerPID(0)->setPwmFreq(freq);
             if (bias < 16384)
             {
                 // am->getAerPID(0)->setOutputBias(bias);
@@ -524,6 +531,18 @@ void save_task(void *pvParameters)
             }
         }
 #endif
+        if (am->isPressTickReady() && measModeStorage.isNeedSave())
+        {
+            if (xSemaphoreTake(sys1_mutex, 500) == pdTRUE)
+            {
+                if (xSemaphoreTake(spi1_mutex, 50) == pdTRUE)
+                {
+                    measModeStorage.save();
+                    xSemaphoreGive(spi1_mutex);
+                }
+                xSemaphoreGive(sys1_mutex);
+            }
+        }
 
         // tick press tick...
         am->tickPressTick();

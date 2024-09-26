@@ -23,6 +23,7 @@
 #include "storage/tempStor.h"
 #include "storage/uiSettingsStor.h"
 #include "storage/networkStor.h"
+#include "storage/measureStor.h"
 
 #include "AerPID.h"
 
@@ -69,6 +70,8 @@ public:
     /// @brief Gets the AerPID class Object
     /// @return AerPID
     AerPID *getAerPID(uint8_t elementIndex);
+    void setMeasureMode(uint8_t mode);
+    uint8_t getMeasureMode();
 
     /// @brief Gets the Network Storage Object
     /// @return NetworkVars
@@ -274,6 +277,8 @@ private:
     AppVersion *versionWeb;
 
     AerPID *aerPID[AERPID_COUNT];
+    uint8_t measMode;
+
     NetworkVars *networkVars;
 
     FavsStor *favsObj;
