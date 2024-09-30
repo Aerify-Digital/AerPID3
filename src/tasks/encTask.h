@@ -77,12 +77,14 @@ void onBt1Clicked(EncoderButton &eb)
         enc_aerGUI->updateMenu();
         return;
     }
+#if AERPID_COUNT == 2
     if (enc_am->getAerPID(1)->hasFaultError() && !enc_am->getAerPID(1)->hasFaultErrorAlerted())
     {
         enc_am->getAerPID(1)->setFaultErrorAlert(true);
         enc_aerGUI->updateMenu();
         return;
     }
+#endif
 
     if (eb.clickCount() >= 3)
     {
@@ -211,12 +213,14 @@ void onBt2Clicked(EncoderButton &eb)
         enc_aerGUI->updateMenu();
         return;
     }
+#if AERPID_COUNT == 2
     if (enc_am->getAerPID(1)->hasFaultError() && !enc_am->getAerPID(1)->hasFaultErrorAlerted())
     {
         enc_am->getAerPID(1)->setFaultErrorAlert(true);
         enc_aerGUI->updateMenu();
         return;
     }
+#endif
 
     uint8_t elementIndex = enc_aerGUI->getElementIndex();
 
@@ -322,12 +326,14 @@ void onEb1Clicked(EncoderButton &eb)
         enc_aerGUI->updateMenu();
         return;
     }
+#if AERPID_COUNT == 2
     if (enc_am->getAerPID(1)->hasFaultError() && !enc_am->getAerPID(1)->hasFaultErrorAlerted())
     {
         enc_am->getAerPID(1)->setFaultErrorAlert(true);
         enc_aerGUI->updateMenu();
         return;
     }
+#endif
 
     if (eb.clickCount() == 1)
     {
@@ -1264,11 +1270,13 @@ void onEb1Clicked(EncoderButton &eb)
                         // ignore if pid on...
                         return;
                     }
+#if AERPID_COUNT == 2
                     if (enc_am->getAerPID(1)->PID_ON)
                     {
                         // ignore if pid on...
                         return;
                     }
+#endif
                     // trigger scan
                     enc_am->getNetVars()->scanned = false;
                     enc_am->getNetVars()->doscan = true;
