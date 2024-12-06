@@ -40,6 +40,7 @@
 
 #include "screen/img/icon/home.h"
 #include "screen/img/icon/home_sel.h"
+#include "screen/img/icon/inf.h"
 #include "screen/img/icon/pid.h"
 #include "screen/img/icon/favs.h"
 #include "screen/img/icon/favs_sel.h"

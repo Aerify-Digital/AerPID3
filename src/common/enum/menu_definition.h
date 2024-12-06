@@ -83,7 +83,8 @@ enum MENU_MAIN
     MENU_MAIN_USB = 10,      // 200
     MENU_MAIN_POWER = 11,    // 210
     MENU_MAIN_CLOCK = 12,    // 220
-    MENU_MAIN_GRAPH = 13     // 330
+    MENU_MAIN_GRAPH = 13,    // 330
+    MENU_MAIN_VERSION = 14
 };
 
 enum MENU_PID

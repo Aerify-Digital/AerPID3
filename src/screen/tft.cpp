@@ -1082,6 +1082,51 @@ namespace AerTftUI
         lastindex = mindex;
     }
 
+    void showVersionMenu(AerManager *am, bool update, bool change)
+    {
+        AerGUI *gui = am->getGUI();
+        PropsMenu *props = gui->getMenuProps();
+        uint16_t mindex = props->menuLevelVal;
+        if (lastindex == mindex && !update)
+        {
+            // Indexes match and update is false; return
+            return;
+        }
+        uint16_t mlvl = props->menuIndex;
+        AerMenu menu = gui->getSelectedMenu(mlvl);
+        TFT_eSPI *lcd = gui->getTFT();
+
+        if (update && change)
+        {
+            lcd->fillScreen(0x0841);
+            lcd->fillRoundRect(19, 19, 282, 202, 7, TFT_DARKGREY);
+            lcd->drawRoundRect(18, 18, 284, 204, 7, TFT_GREEN);
+        }
+
+        uint8_t elementIndex = gui->getElementIndex();
+
+        lcd->setTextWrap(false);
+        lcd->setTextColor(TFT_WHITE, TFT_DARKGREY);
+        lcd->setTextSize(4);
+        lcd->setCursor(76, 24);
+        lcd->print("Version");
+        lcd->setTextSize(3);
+        drawSelections(gui, menu, mindex, TFT_DARKGREY);
+        lastindex = mindex;
+
+        lcd->setTextColor(TFT_GREEN, TFT_DARKGREY);
+        lcd->setCursor(64, 108);
+        lcd->print("App: ");
+        String av = am->getVersion()->get();
+        lcd->print(av);
+
+        lcd->setTextColor(TFT_SKYBLUE, TFT_DARKGREY);
+        lcd->setCursor(64, 140);
+        lcd->print("Web: ");
+        String wv = am->getVersionWeb()->get();
+        lcd->print(wv);
+    }
+
     void showPIDMenu(AerGUI *gui, bool update, bool change)
     {
         PropsMenu *props = gui->getMenuProps();
