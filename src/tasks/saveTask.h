@@ -224,7 +224,15 @@ void save_task(void *pvParameters)
         }
         else
         {
-            am->getGUI()->getST7789()->setBacklight(255, true);
+            tftSettingsStorage.setBacklightDim(false);
+            tftSettingsStorage.setBacklightDimTimeout(300);
+            tftSettingsStorage.setBacklightLevel(255);
+            tftSettingsStorage.setBacklightLevelMin(200);
+            tftSettingsStorage.save();
+            am->getGUI()->getST7789()->setBacklightDim(tftSettingsStorage.getBacklightDim());
+            am->getGUI()->getST7789()->setBacklight(tftSettingsStorage.getBacklightLevel(), true);
+            am->getGUI()->getST7789()->setBacklightMin(tftSettingsStorage.getBacklightLevelMin());
+            am->getGUI()->getST7789()->setBacklightDimTimeout(tftSettingsStorage.getBacklightDimTimeout());
         }
         if (am->getGUI()->getST7789()->getBacklightLevel() < 32)
         {

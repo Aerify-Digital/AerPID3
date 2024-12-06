@@ -31,15 +31,21 @@ void tft_task(void *pvParameters)
     bool modalUpdate = false;
     ELM_PROT_OP_CODE op_state_last = ELM_PROT_OP_CODE::E_PROT_INIT_READY;
 
-    tft->setRotation(1);
-    tft->fillScreen(TFT_BLACK);
-
-    // tft->pushImage(0, 0, 320, 67, image_data_aeri_top);
-    // tft->pushImage(0, 0, 320, 240, image_data_bg01);
-
-    if (xSemaphoreTake(sys1_mutex, 50) == pdTRUE)
+    while (millis() < 3000)
     {
-        if (xSemaphoreTake(spi1_mutex, 50) == pdTRUE)
+        vTaskDelay(200 / portTICK_PERIOD_MS);
+    }
+
+    if (xSemaphoreTake(spi1_mutex, 500) == pdTRUE)
+    {
+        tft->setRotation(1);
+        tft->fillScreen(TFT_BLACK);
+        xSemaphoreGive(spi1_mutex);
+    }
+
+    if (xSemaphoreTake(sys1_mutex, 100) == pdTRUE)
+    {
+        if (xSemaphoreTake(spi1_mutex, 100) == pdTRUE)
         {
             AerTftUI::showHomeScreen(_am, true, false, false);
             xSemaphoreGive(spi1_mutex);
@@ -51,11 +57,6 @@ void tft_task(void *pvParameters)
     Serial.println(xPortGetCoreID());
     while (1)
     {
-        if (millis() < 2500)
-        {
-            vTaskDelay(200 / portTICK_PERIOD_MS);
-            continue;
-        }
         SettingsStorage *settings = _am->getSettings();
         if (_aerGUI->activity_counter < settings->getTimeTillScrnSaverOn() / TASK_WAIT && settings->getScreenSaverEnb())
         {
@@ -100,9 +101,9 @@ void tft_task(void *pvParameters)
 
         uint8_t elementIndex = _aerGUI->getElementIndex();
 
-        if (xSemaphoreTake(sys1_mutex, 50) == pdTRUE)
+        if (xSemaphoreTake(sys1_mutex, 10) == pdTRUE)
         {
-            if (xSemaphoreTake(spi1_mutex, 25) == pdTRUE)
+            if (xSemaphoreTake(spi1_mutex, 5) == pdTRUE)
             {
                 switch (_menu->menuIndex)
                 {
@@ -119,6 +120,13 @@ void tft_task(void *pvParameters)
                 {
                     AerTftUI::showHomeScreen(_am, _menu->menuUpdate || _menuUpdate, _modalOpen, modalUpdate);
                     _menu->menuUpdate = false;
+                    break;
+                }
+                case MENU_MAIN_VERSION: /* App Version */
+                {
+                    AerTftUI::showVersionMenu(_am, _menu->menuUpdate, _menu->menuChange);
+                    _menu->menuUpdate = false;
+                    _menu->menuChange = false;
                     break;
                 }
                 case MENU_MAIN_PID: /* PID Settings */
