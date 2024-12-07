@@ -8,7 +8,7 @@
 #include "esp_log.h"
 
 // check interval span lenth in milliseconds
-static const uint checkIntervalLength = 224;
+static const uint checkIntervalLength = 250;
 
 // current idle call count per interval
 static uint64_t idle0Calls = 0;
