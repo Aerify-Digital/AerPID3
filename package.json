@@ -8,7 +8,9 @@
     "package-electron": "npm run package --prefix ./app/electron",
     "make-electron": "npm run make --prefix ./app/electron",
     "publish-electron": "npm run publish --prefix ./app/electron",
-    "lint-electron": "npm run lint --prefix ./app/electron"
+    "lint-electron": "npm run lint --prefix ./app/electron",
+    "minify": "node ./scripts/minify.mjs ./",
+    "version": "bash ./scripts/version.sh ./"
   },
   "repository": {
     "type": "git",
@@ -26,5 +28,9 @@
       "name": "Boehmerang"
     }
   ],
-  "license": "GPL-3.0-only"
+  "license": "GPL-3.0-only",
+  "devDependencies": {
+    "html-minifier-terser": "^7.2.0",
+    "terser": "^5.37.0"
+  }
 }

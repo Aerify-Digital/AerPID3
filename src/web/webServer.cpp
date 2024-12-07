@@ -443,15 +443,15 @@ boolean WebServer::setup()
     // ======================================
     // Routes for New Web-UI
     server.on("/", HTTP_ANY, [](AsyncWebServerRequest *request)
-              { request->send(SPIFFS, "/index.html", "text/html"); });
+              { request->send(SPIFFS, "/index.min.html", "text/html"); });
     server.on("/index", HTTP_GET, [](AsyncWebServerRequest *request)
-              { request->send(SPIFFS, "/index.html", "text/html"); });
+              { request->send(SPIFFS, "/index.min.html", "text/html"); });
     server.on("/index.html", HTTP_GET, [](AsyncWebServerRequest *request)
-              { request->send(SPIFFS, "/index.html", "text/html"); });
+              { request->send(SPIFFS, "/index.min.html", "text/html"); });
     server.on("/home", HTTP_GET, [](AsyncWebServerRequest *request)
-              { request->send(SPIFFS, "/index.html", "text/html"); });
+              { request->send(SPIFFS, "/index.min.html", "text/html"); });
     server.on("/home.html", HTTP_GET, [](AsyncWebServerRequest *request)
-              { request->send(SPIFFS, "/index.html", "text/html"); });
+              { request->send(SPIFFS, "/index.min.html", "text/html"); });
 
     if (verbose_d)
     {
@@ -462,49 +462,59 @@ boolean WebServer::setup()
 
     // ======================================
     // Static routes for folders
-    server.on("/favicon.ico", HTTP_GET, [](AsyncWebServerRequest *request)
-              { request->send(SPIFFS, "/favicon.ico", "image/x-icon"); }); // Route to load favicon.ico file
-    server.on("/favicon.png", HTTP_GET, [](AsyncWebServerRequest *request)
-              { request->send(SPIFFS, "/favicon.png", "image/png"); });
+    /*server.on("/favicon.ico", HTTP_GET, [](AsyncWebServerRequest *request)
+              { request->send(SPIFFS, "/favicon.ico", "image/x-icon"); }); */
+    server.serveStatic("/favicon.ico", SPIFFS, "/favicon.ico", "max-age=1800");
+    /*server.on("/favicon.png", HTTP_GET, [](AsyncWebServerRequest *request)
+              { request->send(SPIFFS, "/favicon.png", "image/png"); });*/
+    server.serveStatic("/favicon.png", SPIFFS, "/favicon.png", "max-age=1800");
     if (verbose_d)
         Serial.println(F("Setup 'favicon' file routes"));
 
-    server.serveStatic("/js", SPIFFS, "/js");   // Route to javascript folder
-    server.serveStatic("/css", SPIFFS, "/css"); // Route to styles folder
+    server.serveStatic("/js", SPIFFS, "/js", "max-age=600");   // Route to javascript folder
+    server.serveStatic("/css", SPIFFS, "/css", "max-age=600"); // Route to styles folder
     if (verbose_d)
         Serial.println(F("Setup '/js' and '/css' directory routes"));
 
     // File: fa-brands-400.ttf
-    server.on("/webfonts/fa-brands-400.ttf", HTTP_GET, [](AsyncWebServerRequest *request)
-              { request->send(SPIFFS, "/wf/a9545819", "application/x-font-ttf"); });
+    /*server.on("/webfonts/fa-brands-400.ttf", HTTP_GET, [](AsyncWebServerRequest *request)
+              { request->send(SPIFFS, "/wf/a9545819", "application/x-font-ttf"); });*/
+    server.serveStatic("/webfonts/fa-brands-400.ttf", SPIFFS, "/wf/a9545819", "max-age=900");
     Serial.println("Setup SPIFFS File Mapping: '/webfonts/fa-brands-400.ttf' -> '/wf/a9545819'");
     // File: fa-brands-400.woff2
-    server.on("/webfonts/fa-brands-400.woff2", HTTP_GET, [](AsyncWebServerRequest *request)
-              { request->send(SPIFFS, "/wf/84a1fc9a", "application/x-font-woff2"); });
+    /*server.on("/webfonts/fa-brands-400.woff2", HTTP_GET, [](AsyncWebServerRequest *request)
+              { request->send(SPIFFS, "/wf/84a1fc9a", "application/x-font-woff2"); });*/
+    server.serveStatic("/webfonts/fa-brands-400.woff2", SPIFFS, "/wf/84a1fc9a", "max-age=900");
     Serial.println("Setup SPIFFS File Mapping: '/webfonts/fa-brands-400.woff2' -> '/wf/84a1fc9a'");
     // File: fa-regular-400.ttf
-    server.on("/webfonts/fa-regular-400.ttf", HTTP_GET, [](AsyncWebServerRequest *request)
-              { request->send(SPIFFS, "/wf/283fce66", "application/x-font-ttf"); });
+    /*server.on("/webfonts/fa-regular-400.ttf", HTTP_GET, [](AsyncWebServerRequest *request)
+              { request->send(SPIFFS, "/wf/283fce66", "application/x-font-ttf"); });*/
+    server.serveStatic("/webfonts/fa-regular-400.ttf", SPIFFS, "/wf/283fce66", "max-age=900");
     Serial.println("Setup SPIFFS File Mapping: '/webfonts/fa-regular-400.ttf' -> '/wf/283fce66'");
     // File: fa-regular-400.woff2
-    server.on("/webfonts/fa-regular-400.woff2", HTTP_GET, [](AsyncWebServerRequest *request)
-              { request->send(SPIFFS, "/wf/356a2eb9", "application/x-font-woff2"); });
+    /*server.on("/webfonts/fa-regular-400.woff2", HTTP_GET, [](AsyncWebServerRequest *request)
+              { request->send(SPIFFS, "/wf/356a2eb9", "application/x-font-woff2"); });*/
+    server.serveStatic("/webfonts/fa-regular-400.woff2", SPIFFS, "/wf/356a2eb9", "max-age=900");
     Serial.println("Setup SPIFFS File Mapping: '/webfonts/fa-regular-400.woff2' -> '/wf/356a2eb9'");
     // File: fa-solid-900.ttf
-    server.on("/webfonts/fa-solid-900.ttf", HTTP_GET, [](AsyncWebServerRequest *request)
-              { request->send(SPIFFS, "/wf/5f0a1e22", "application/x-font-ttf"); });
+    /*server.on("/webfonts/fa-solid-900.ttf", HTTP_GET, [](AsyncWebServerRequest *request)
+              { request->send(SPIFFS, "/wf/5f0a1e22", "application/x-font-ttf"); });*/
+    server.serveStatic("/webfonts/fa-solid-900.ttf", SPIFFS, "/wf/5f0a1e22", "max-age=900");
     Serial.println("Setup SPIFFS File Mapping: '/webfonts/fa-solid-900.ttf' -> '/wf/5f0a1e22'");
     // File: fa-solid-900.woff2
-    server.on("/webfonts/fa-solid-900.woff2", HTTP_GET, [](AsyncWebServerRequest *request)
-              { request->send(SPIFFS, "/wf/27ac0159", "application/x-font-woff2"); });
+    /*server.on("/webfonts/fa-solid-900.woff2", HTTP_GET, [](AsyncWebServerRequest *request)
+              { request->send(SPIFFS, "/wf/27ac0159", "application/x-font-woff2"); });*/
+    server.serveStatic("/webfonts/fa-solid-900.woff2", SPIFFS, "/wf/27ac0159", "max-age=900");
     Serial.println("Setup SPIFFS File Mapping: '/webfonts/fa-solid-900.woff2' -> '/wf/27ac0159'");
     // File: fa-v4compatibility.ttf
-    server.on("/webfonts/fa-v4compatibility.ttf", HTTP_GET, [](AsyncWebServerRequest *request)
-              { request->send(SPIFFS, "/wf/732ebf9a", "application/x-font-ttf"); });
+    /*server.on("/webfonts/fa-v4compatibility.ttf", HTTP_GET, [](AsyncWebServerRequest *request)
+              { request->send(SPIFFS, "/wf/732ebf9a", "application/x-font-ttf"); });*/
+    server.serveStatic("/webfonts/fa-v4compatibility.ttf", SPIFFS, "/wf/732ebf9a", "max-age=900");
     Serial.println("Setup SPIFFS File Mapping: '/webfonts/fa-v4compatibility.ttf' -> '/wf/732ebf9a'");
     // File: fa-v4compatibility.woff2
-    server.on("/webfonts/fa-v4compatibility.woff2", HTTP_GET, [](AsyncWebServerRequest *request)
-              { request->send(SPIFFS, "/wf/aa619ab3", "application/x-font-woff2"); });
+    /*server.on("/webfonts/fa-v4compatibility.woff2", HTTP_GET, [](AsyncWebServerRequest *request)
+              { request->send(SPIFFS, "/wf/aa619ab3", "application/x-font-woff2"); });*/
+    server.serveStatic("/webfonts/fa-v4compatibility.woff2", SPIFFS, "/wf/aa619ab3", "max-age=900");
     Serial.println("Setup SPIFFS File Mapping: '/webfonts/fa-v4compatibility.woff2' -> '/wf/aa619ab3'");
 
     // Heap Size
