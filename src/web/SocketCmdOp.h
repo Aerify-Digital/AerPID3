@@ -79,6 +79,7 @@ public:
     SocketCmdOp Val(uint16_t w);
     SocketCmdOp Val(uint32_t n);
     SocketCmdOp Val(double d);
+    SocketCmdOp Val(int n);
 
     uint Size();
 
