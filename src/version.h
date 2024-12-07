@@ -6,10 +6,10 @@
 // ======================
 #define VER_MAJOR 3
 #define VER_MINOR 3
-#define VER_BUILD 3
+#define VER_BUILD 7
 
 #define VER_WEB_MAJOR 0
 #define VER_WEB_MINOR 3
-#define VER_WEB_BUILD 80
+#define VER_WEB_BUILD 82
 
 #endif
