@@ -44,14 +44,14 @@ void led_task(void *pvParameters)
     printf("> Starting Fancy LED task on core %d\n", xPortGetCoreID());
     while (1)
     {
-        if (xSemaphoreTake(sys1_mutex, 5) == pdTRUE)
+        if (xSemaphoreTake(sys1_mutex, 25) == pdTRUE)
         {
             // tick the fancy leds!
             xled.tickFancyLED(_am, _lights);
 
             xSemaphoreGive(sys1_mutex);
         }
-        vTaskDelay(15 / portTICK_PERIOD_MS);
+        vTaskDelay(20 / portTICK_PERIOD_MS);
 
         if (xSemaphoreTake(sys1_mutex, 5) == pdTRUE)
         {

@@ -26,14 +26,18 @@ void tft_task(void *pvParameters)
     TFT_eSPI *tft = _aerGUI->getTFT();
     PropsMenu *_menu = _aerGUI->getMenuProps();
 
-    _aerGUI->getST7789()->initBacklight();
-
     bool modalUpdate = false;
     ELM_PROT_OP_CODE op_state_last = ELM_PROT_OP_CODE::E_PROT_INIT_READY;
 
-    while (millis() < 3000)
+    while (millis() < 5000)
     {
         vTaskDelay(200 / portTICK_PERIOD_MS);
+    }
+
+    if (xSemaphoreTake(sys1_mutex, 200) == pdTRUE)
+    {
+        _aerGUI->getST7789()->initBacklight();
+        xSemaphoreGive(sys1_mutex);
     }
 
     if (xSemaphoreTake(spi1_mutex, 500) == pdTRUE)
@@ -43,7 +47,7 @@ void tft_task(void *pvParameters)
         xSemaphoreGive(spi1_mutex);
     }
 
-    if (xSemaphoreTake(sys1_mutex, 100) == pdTRUE)
+    if (xSemaphoreTake(sys1_mutex, 200) == pdTRUE)
     {
         if (xSemaphoreTake(spi1_mutex, 100) == pdTRUE)
         {
