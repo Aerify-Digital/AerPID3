@@ -1585,7 +1585,6 @@ namespace AerTftUI
                 spr->setTextColor(items[i] == mindex ? gui->isCursorModify() ? TFT_RED : TFT_CYAN : TFT_WHITE);
                 spr->setCursor(0, 2);
                 spr->setTextSize(2);
-                // spr->print(am->getAerPID(0)->PWM_ScaleFactor);
                 char b[10];
                 for (int i = 0; i < 10; i++)
                 {
@@ -1699,7 +1698,6 @@ namespace AerTftUI
                 spr->setTextColor(items[i] == mindex ? gui->isCursorModify() ? TFT_RED : TFT_CYAN : TFT_WHITE);
                 spr->setCursor(0, 2);
                 spr->setTextSize(2);
-                // spr->print(am->getAerPID(0)->PWM_ScaleFactor);
                 char b[10];
                 for (int i = 0; i < 10; i++)
                 {
@@ -1813,13 +1811,12 @@ namespace AerTftUI
                 spr->setTextColor(items[i] == mindex ? gui->isCursorModify() ? TFT_RED : TFT_CYAN : TFT_WHITE);
                 spr->setCursor(0, 2);
                 spr->setTextSize(2);
-                // spr->print(am->getAerPID(0)->PWM_ScaleFactor);
                 char b[10];
                 for (int i = 0; i < 10; i++)
                 {
                     b[i] = '\0';
                 }
-                dtostrf((double)am->getAerPID(elementIndex)->PWM_ScaleFactor * 100, 5, 1, b);
+                dtostrf((double)am->getAerPID(elementIndex)->getPwmScaler() * 100, 5, 1, b);
                 spr->print(b);
                 spr->print("%");
                 spr->pushSprite(xt, yt + (offset * i) + 4);
@@ -1930,7 +1927,7 @@ namespace AerTftUI
                 spr->setTextColor(items[i] == mindex ? gui->isCursorModify() ? TFT_RED : TFT_CYAN : TFT_WHITE);
                 spr->setCursor(0, 2);
                 spr->setTextSize(2);
-                spr->print(am->getAerPID(elementIndex)->PWM_CycleTime);
+                spr->print(am->getAerPID(elementIndex)->getPidTime());
                 spr->print(" ms");
                 spr->pushSprite(xt, yt + (offset * i) + 4);
                 spr->deleteSprite();

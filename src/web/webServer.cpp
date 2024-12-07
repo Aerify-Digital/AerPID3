@@ -579,7 +579,8 @@ void WebServer::_onEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, A
     case WS_EVT_CONNECT:
         Serial.printf("[WebSocket] client #%u connected from %s\n", client->id(), client->remoteIP().toString().c_str());
         client->keepAlivePeriod(60); // keepalive setting
-        sendInitMessage(client->id());
+        sendInitPacket(client->id());
+        sendInitPacket2(client->id());
         break;
     case WS_EVT_DISCONNECT:
         Serial.printf("[WebSocket] client #%u disconnected\n", client->id());
@@ -659,7 +660,7 @@ void WebServer::enPackFill(MessagePack *messagePack)
  *
  * @param client
  */
-void WebServer::sendInitMessage(uint32_t client)
+void WebServer::sendInitPacket(uint32_t client)
 {
     const xVersion v = aerManager.getVersion()->getVer();
     const xVersion vw = aerManager.getVersionWeb()->getVer();
@@ -676,6 +677,30 @@ void WebServer::sendInitMessage(uint32_t client)
         delete cmd;
     }
     messagePack.dispose();
+}
+
+void WebServer::sendInitPacket2(uint32_t client)
+{
+    SocketCmdOp *cmd = new SocketCmdOp(SerialCommand::CMD_INIT_ADV);
+    cmd->AddClient(client);
+    cmd->Op(Operation::OP_GET);
+    cmd->Val(xAerPID1.getPwmScaler());
+    cmd->Val(xAerPID1.getPwmFreq());
+    cmd->Val(xAerPID1.getPwmResolution());
+    cmd->Val(xAerPID1.getOutputBias());
+    cmd->Val(xAerPID1.getPidTime());
+    cmd->Val(xAerPID1.getOutputLimit());
+#if AERPID_COUNT == 2
+    cmd->Val(xAerPID2.getPwmScaler());
+    cmd->Val(xAerPID2.getPwmFreq());
+    cmd->Val(xAerPID2.getPwmResolution());
+    cmd->Val(xAerPID2.getOutputBias());
+    cmd->Val(xAerPID2.getPidTime());
+    cmd->Val(xAerPID2.getOutputLimit());
+#endif
+    cmd->build();
+    cmd->emit(&ws);
+    delete cmd;
 }
 
 void WebServer::updateClients()
@@ -937,6 +962,11 @@ void WebServer::processSocketData(char *data, size_t len, AsyncWebSocketClient *
     {
         double value;
         char bytes[sizeof(double)];
+    };
+    union byteInt
+    {
+        int value;
+        char bytes[sizeof(int)];
     };
 
     switch (cmd)
@@ -1564,6 +1594,344 @@ void WebServer::processSocketData(char *data, size_t len, AsyncWebSocketClient *
         }
     }
     break;
+    case SerialCommand::CMD_ADV1_PWM:
+    {
+        uint8_t op = data[1];
+        uint8_t prm = data[2];
+        switch (prm)
+        {
+        case PARAM_ADV::PARAM_ADV_PWM_FACTOR:
+        {
+            if (op == OP_GET)
+            {
+                SocketCmdOp *reply = new SocketCmdOp(SerialCommand::CMD_ADV1_PWM);
+                reply->AddClient(client->id());
+                reply->Param(prm);
+                reply->Val((uint32_t)xAerPID1.getPwmScaler());
+                reply->build();
+                reply->emit(&ws);
+                delete reply;
+            }
+            else if (op == OP_SET)
+            {
+                byteDouble bd;
+                for (int i = 0; i < sizeof(double); i++)
+                {
+                    bd.bytes[i] = data[3 + i];
+                }
+                xAerPID1.setPwmScaler(bd.value);
+                aerManager.setPressTick(100);
+                xAerPID1.pwm_saved = false;
+            }
+        }
+        break;
+        case PARAM_ADV::PARAM_ADV_PWM_FREQ:
+        {
+            if (op == OP_GET)
+            {
+                SocketCmdOp *reply = new SocketCmdOp(SerialCommand::CMD_ADV1_PWM);
+                reply->AddClient(client->id());
+                reply->Param(prm);
+                reply->Val((uint32_t)xAerPID1.getPwmFreq());
+                reply->build();
+                reply->emit(&ws);
+                delete reply;
+            }
+            else if (op == OP_SET)
+            {
+                byteInt bi;
+                for (int i = 0; i < sizeof(int); i++)
+                {
+                    bi.bytes[i] = data[3 + i];
+                }
+                xAerPID1.setPwmFreq(bi.value);
+                aerManager.setPressTick(100);
+                xAerPID1.pwm_saved = false;
+            }
+        }
+        break;
+        case PARAM_ADV::PARAM_ADV_PWM_RES:
+        {
+            if (op == OP_GET)
+            {
+                SocketCmdOp *reply = new SocketCmdOp(SerialCommand::CMD_ADV1_PWM);
+                reply->AddClient(client->id());
+                reply->Param(prm);
+                reply->Val((uint32_t)xAerPID1.getPwmResolution());
+                reply->build();
+                reply->emit(&ws);
+                delete reply;
+            }
+            else if (op == OP_SET)
+            {
+                byteInt bi;
+                for (int i = 0; i < sizeof(int); i++)
+                {
+                    bi.bytes[i] = data[3 + i];
+                }
+                xAerPID1.setPWMResolution(bi.value);
+                aerManager.setPressTick(100);
+                xAerPID1.pwm_saved = false;
+            }
+        }
+        break;
+        }
+    }
+    break;
+    case SerialCommand::CMD_ADV1_PID:
+    {
+        uint8_t op = data[1];
+        uint8_t prm = data[2];
+        switch (prm)
+        {
+        case PARAM_ADV::PARAM_ADV_PID_BIAS:
+        {
+            if (op == OP_GET)
+            {
+                SocketCmdOp *reply = new SocketCmdOp(SerialCommand::CMD_ADV1_PID);
+                reply->AddClient(client->id());
+                reply->Param(prm);
+                reply->Val(xAerPID1.getOutputBias());
+                reply->build();
+                reply->emit(&ws);
+                delete reply;
+            }
+            else if (op == OP_SET)
+            {
+                byteDouble bd;
+                for (int i = 0; i < sizeof(double); i++)
+                {
+                    bd.bytes[i] = data[3 + i];
+                }
+                xAerPID1.setOutputBias(bd.value);
+                aerManager.setPressTick(100);
+                xAerPID1.pwm_saved = false;
+            }
+        }
+        break;
+        case PARAM_ADV::PARAM_ADV_PID_TIME:
+        {
+            if (op == OP_GET)
+            {
+                SocketCmdOp *reply = new SocketCmdOp(SerialCommand::CMD_ADV1_PID);
+                reply->AddClient(client->id());
+                reply->Param(prm);
+                reply->Val(xAerPID1.getPidTime());
+                reply->build();
+                reply->emit(&ws);
+                delete reply;
+            }
+            else if (op == OP_SET)
+            {
+                byteInt bi;
+                for (int i = 0; i < sizeof(int); i++)
+                {
+                    bi.bytes[i] = data[3 + i];
+                }
+                xAerPID1.setPidTime(bi.value);
+                aerManager.setPressTick(100);
+                xAerPID1.pwm_saved = false;
+            }
+        }
+        break;
+        case PARAM_ADV::PARAM_ADV_PID_RES:
+        {
+            if (op == OP_GET)
+            {
+                SocketCmdOp *reply = new SocketCmdOp(SerialCommand::CMD_ADV1_PID);
+                reply->AddClient(client->id());
+                reply->Param(prm);
+                reply->Val(xAerPID1.getOutputLimit());
+                reply->build();
+                reply->emit(&ws);
+                delete reply;
+            }
+            else if (op == OP_SET)
+            {
+                byteInt bi;
+                for (int i = 0; i < sizeof(int); i++)
+                {
+                    bi.bytes[i] = data[3 + i];
+                }
+                xAerPID1.setOutputLimit(bi.value);
+                aerManager.setPressTick(100);
+                xAerPID1.pwm_saved = false;
+            }
+        }
+        break;
+        }
+    }
+    break;
+#if AERPID_COUNT == 2
+    case SerialCommand::CMD_ADV2_PWM:
+    {
+        uint8_t op = data[1];
+        uint8_t prm = data[2];
+        switch (prm)
+        {
+        case PARAM_ADV::PARAM_ADV_PWM_FACTOR:
+        {
+            if (op == OP_GET)
+            {
+                SocketCmdOp *reply = new SocketCmdOp(SerialCommand::CMD_ADV2_PWM);
+                reply->AddClient(client->id());
+                reply->Param(prm);
+                reply->Val((uint32_t)xAerPID2.getPwmScaler());
+                reply->build();
+                reply->emit(&ws);
+                delete reply;
+            }
+            else if (op == OP_SET)
+            {
+                byteDouble bd;
+                for (int i = 0; i < sizeof(double); i++)
+                {
+                    bd.bytes[i] = data[3 + i];
+                }
+                xAerPID2.setPwmScaler(bd.value);
+                aerManager.setPressTick(100);
+                xAerPID2.pwm_saved = false;
+            }
+        }
+        break;
+        case PARAM_ADV::PARAM_ADV_PWM_FREQ:
+        {
+            if (op == OP_GET)
+            {
+                SocketCmdOp *reply = new SocketCmdOp(SerialCommand::CMD_ADV2_PWM);
+                reply->AddClient(client->id());
+                reply->Param(prm);
+                reply->Val((uint32_t)xAerPID2.getPwmFreq());
+                reply->build();
+                reply->emit(&ws);
+                delete reply;
+            }
+            else if (op == OP_SET)
+            {
+                byteInt bi;
+                for (int i = 0; i < sizeof(int); i++)
+                {
+                    bi.bytes[i] = data[3 + i];
+                }
+                xAerPID2.setPwmFreq(bi.value);
+                aerManager.setPressTick(100);
+                xAerPID2.pwm_saved = false;
+            }
+        }
+        break;
+        case PARAM_ADV::PARAM_ADV_PWM_RES:
+        {
+            if (op == OP_GET)
+            {
+                SocketCmdOp *reply = new SocketCmdOp(SerialCommand::CMD_ADV2_PWM);
+                reply->AddClient(client->id());
+                reply->Param(prm);
+                reply->Val((uint32_t)xAerPID2.getPwmResolution());
+                reply->build();
+                reply->emit(&ws);
+                delete reply;
+            }
+            else if (op == OP_SET)
+            {
+                byteInt bi;
+                for (int i = 0; i < sizeof(int); i++)
+                {
+                    bi.bytes[i] = data[3 + i];
+                }
+                xAerPID2.setPWMResolution(bi.value);
+                aerManager.setPressTick(100);
+                xAerPID2.pwm_saved = false;
+            }
+        }
+        break;
+        }
+    }
+    break;
+    case SerialCommand::CMD_ADV2_PID:
+    {
+        uint8_t op = data[1];
+        uint8_t prm = data[2];
+        switch (prm)
+        {
+        case PARAM_ADV::PARAM_ADV_PID_BIAS:
+        {
+            if (op == OP_GET)
+            {
+                SocketCmdOp *reply = new SocketCmdOp(SerialCommand::CMD_ADV2_PID);
+                reply->AddClient(client->id());
+                reply->Param(prm);
+                reply->Val((uint32_t)xAerPID2.getOutputBias());
+                reply->build();
+                reply->emit(&ws);
+                delete reply;
+            }
+            else if (op == OP_SET)
+            {
+                byteDouble bd;
+                for (int i = 0; i < sizeof(double); i++)
+                {
+                    bd.bytes[i] = data[3 + i];
+                }
+                xAerPID2.setOutputBias(bd.value);
+                aerManager.setPressTick(100);
+                xAerPID2.pwm_saved = false;
+            }
+        }
+        break;
+        case PARAM_ADV::PARAM_ADV_PID_TIME:
+        {
+            if (op == OP_GET)
+            {
+                SocketCmdOp *reply = new SocketCmdOp(SerialCommand::CMD_ADV2_PID);
+                reply->AddClient(client->id());
+                reply->Param(prm);
+                reply->Val((uint32_t)xAerPID2.getPidTime());
+                reply->build();
+                reply->emit(&ws);
+                delete reply;
+            }
+            else if (op == OP_SET)
+            {
+                byteInt bi;
+                for (int i = 0; i < sizeof(int); i++)
+                {
+                    bi.bytes[i] = data[3 + i];
+                }
+                xAerPID2.setPidTime(bi.value);
+                aerManager.setPressTick(100);
+                xAerPID2.pwm_saved = false;
+            }
+        }
+        break;
+        case PARAM_ADV::PARAM_ADV_PID_RES:
+        {
+            if (op == OP_GET)
+            {
+                SocketCmdOp *reply = new SocketCmdOp(SerialCommand::CMD_ADV2_PID);
+                reply->AddClient(client->id());
+                reply->Param(prm);
+                reply->Val((uint32_t)xAerPID2.getOutputLimit());
+                reply->build();
+                reply->emit(&ws);
+                delete reply;
+            }
+            else if (op == OP_SET)
+            {
+                byteInt bi;
+                for (int i = 0; i < sizeof(int); i++)
+                {
+                    bi.bytes[i] = data[3 + i];
+                }
+                xAerPID2.setOutputLimit(bi.value);
+                aerManager.setPressTick(100);
+                xAerPID2.pwm_saved = false;
+            }
+        }
+        break;
+        }
+    }
+    break;
+#endif
 #if AERPID_COUNT == 2
     case SerialCommand::CMD_PID2:
     {

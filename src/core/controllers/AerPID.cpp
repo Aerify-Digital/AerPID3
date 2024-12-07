@@ -50,75 +50,6 @@ bool AerPID::init()
         return false;
     }
 
-    // initialize 1wire bus
-    oneWire = new OneWire(ow_pin);
-
-    // set sensor bit resolution
-    setSensorResolution(MEASURE_BIT_PRECISION);
-
-    Serial.println(F(" ok!"));
-
-    // =======================
-    // Setup SSR Pin Control
-    double freq_PWN = ledcSetup(ssrChan, _freq_PWN, _resolution_bits);
-    ledcAttachPin(ssrPin, ssrChan);
-
-    if (_verbose_d)
-    {
-        Serial.print(F(">> "));
-        Serial.print(F("["));
-        Serial.print(index);
-        Serial.print(F("]"));
-        Serial.print(F(" "));
-        Serial.print(F("Attached PWM control to Pin "));
-        Serial.print(F("'"));
-        Serial.print(ssrPin);
-        Serial.print(F("'"));
-        Serial.print(F(" on Channel "));
-        Serial.print(F("'"));
-        Serial.print(ssrChan);
-        Serial.print(F("'"));
-        Serial.print(F(" at frequency of: "));
-        Serial.print(freq_PWN, 0);
-        Serial.print(F(" hz"));
-        Serial.print(F("  with: "));
-        Serial.print(_resolution_bits);
-        Serial.print(F(" resolution bits"));
-        Serial.println(F("!"));
-    }
-
-    // =======================
-    // Setup PID timing mode
-    int sampleTime = (PID_TIME_OVERSHOOT + PID_SLEEP_TIME_MS) * PID_TICK_MAX; // Default: 100
-    aPID->setSampleTime(sampleTime);
-
-    if (_verbose_d)
-    {
-        Serial.print(F(">> "));
-        Serial.print(F("["));
-        Serial.print(index);
-        Serial.print(F("]"));
-        Serial.print(F(" "));
-        Serial.print(F("PID sampling time: "));
-        Serial.print(sampleTime);
-        Serial.print(F(" ms"));
-        Serial.print(F(" "));
-        Serial.print(F("and tolerance of "));
-        Serial.print(PID_TIME_OVERSHOOT);
-        Serial.print(F(" ms"));
-        Serial.println(F("!"));
-    }
-
-    // =======================
-    // Set initial PID tunings
-    aPID->setCoefficients(kP, kI, kD);
-    aPID->setOutputLimits(0, PID_OUTPUT_LIMIT);
-    aPID->setBias(PID_BIAS);
-    aPID->setWindUpLimits(-PID_WINDUP_LIMIT, PID_WINDUP_LIMIT);
-
-    // start the PID function
-    aPID->start();
-
     // Setup storage arrays..
     for (int i = 0; i < MES_TEMP_SIZE; i++)
     {
@@ -132,10 +63,32 @@ bool AerPID::init()
     {
         cMeasuresArr[i] = 0;
     }
-    for (int i = 0; i < SAVE_VAR_SIZE; i++)
-    {
-        _needsSave[i] = false;
-    }
+
+    // =======================
+    // initialize 1wire bus
+    oneWire = new OneWire(ow_pin);
+    // set sensor bit resolution
+    setSensorResolution(MEASURE_BIT_PRECISION);
+    Serial.println(F(" ok!"));
+
+    // =======================
+    // Setup SSR Pin Control
+    updatePWM(ssrPin, ssrChan, _pwmFrequency, _pwmResolution);
+
+    // =======================
+    // Setup PID timing mode
+    updateSampleTime(_pidTickMax);
+
+    // =======================
+    // Set initial PID tunings and limits
+    aPID->setCoefficients(kP, kI, kD);
+    aPID->setOutputLimits(0, _pidOutputLimit);
+    aPID->setWindUpLimits(-PID_WINDUP_LIMIT, PID_WINDUP_LIMIT);
+    aPID->setBias(_pidBias);
+    aPID->reset();
+
+    // start the PID function
+    aPID->start();
 
     // Set loaded okay!
     _loaded = true;
@@ -167,68 +120,7 @@ bool AerPID::init()
 
 // -----------------------------------------------------------------------------
 // -----------------------------------------------------------------------------
-
-// Has updated!
-bool AerPID::hasUpdated()
-{
-    return _needsUpdate;
-}
-
-// Needs update vars check
-bool AerPID::needsUpdate(uint8_t i)
-{
-    if (i > SAVE_VAR_SIZE - 1)
-    {
-        return _needsUpdate;
-    }
-    return (_needsUpdate = true) && (_needsSave[i] = true);
-}
-
-// Do update for save
-void AerPID::doUpdate()
-{
-    _needsUpdate = false;
-}
-
-// Needs save!
-bool AerPID::needSave()
-{
-    bool ns = false;
-    for (uint8_t i = 0; i < SAVE_VAR_SIZE; i++)
-    {
-        if (i <= 1)
-        {
-            continue;
-        }
-        if (this->needSave(i))
-        {
-            ns = true;
-            break;
-        }
-    }
-    return ns;
-}
-
-// check if need save by index
-bool AerPID::needSave(uint8_t i)
-{
-    if (i > SAVE_VAR_SIZE - 1)
-    {
-        return false;
-    }
-    return _needsSave[i];
-}
-
-// do save by index
-void AerPID::doSave(uint8_t i)
-{
-    if (i > SAVE_VAR_SIZE - 1)
-    {
-        return;
-    }
-    _needsSave[i] = false;
-}
-
+// Function Work Ticks
 // -----------------------------------------------------------------------------
 
 void AerPID::handleFeatureSetTick()
@@ -292,7 +184,7 @@ void AerPID::tick()
         }
         else
         {
-            _tick = 2;
+            _tick = 0;
         }
     }
 
@@ -344,17 +236,21 @@ bool AerPID::compute()
         return false;
     }
     // sample time check
-    int sampleTime = PID_TIME_OVERSHOOT + (PID_TIME_OVERSHOOT + PID_SLEEP_TIME_MS - AERPID_COUNT) * PID_TICK_MAX;
+    int sampleTime = PID_TIME_OVERSHOOT + (PID_SLEEP_TIME_MS + 10) * _pidTickMax;
     if (millis() - timed_start > sampleTime)
     {
         digitalWrite(PIN_LED_ACT, LOW);
         ledcWrite(ssrChan, 0); // output pin off
     }
-    // perform PID calculation
-    // if (aPID->Compute())
-    aPID->compute();
+    else if (millis() - timed_start < sampleTime)
+    {
+        return false;
+    }
     if (true)
     {
+        // perform PID calculation
+        aPID->compute();
+
         Sigma sigma = Sigma();
 
         double aSig = sigma.calcDeviation(aMeasuresArr, MES_TEMP_SIZE);
@@ -363,13 +259,13 @@ bool AerPID::compute()
         bool aboveTarget = MES_TEMP > SET_TEMP;
         double delta = (SET_TEMP - MES_TEMP);
 
-        double _output = output;
+        // scale output using temperature delta for better stability at set point
+        double _output = deltaScaleOutput(delta, output);
 
-        // _output *= PWM_ScaleFactor;
+        _output *= _pwmScaleFactor;
 
-        // convert output double to uint32
-        uint32_t xOut = static_cast<uint32_t>(_output);
-        xOutput = xOut;
+        // convert output double to uint32 for ledcWrite
+        xOutput = static_cast<uint32_t>(_output);
 
         bool _on = false;
         if (_output > 0.09)
@@ -410,7 +306,7 @@ bool AerPID::compute()
             Serial.print(_output);
             Serial.print(F(" :: "));
             Serial.print(F("xOUT= "));
-            Serial.print(xOut);
+            Serial.print(xOutput);
 
             Serial.print(F(" :: "));
             Serial.print(F("T SIGMA= "));
@@ -426,6 +322,46 @@ bool AerPID::compute()
 }
 
 // -----------------------------------------------------------------------------
+
+double AerPID::deltaScaleOutput(double delta, double output)
+{
+    // PWM Resolution is half of output range
+    double _output = output * 0.5;
+
+    if (delta < -1.56)
+    {
+        // when over temp, set output power to 0
+        _output = 0;
+    }
+    else if (delta <= 1)
+    {
+        _output *= 0.005;
+    }
+    else if (delta <= 0)
+    {
+        _output *= 0.01;
+    }
+    else if (delta <= 1)
+    {
+        _output *= 0.02;
+    }
+    else if (delta <= 2)
+    {
+        _output *= 0.025;
+    }
+    else if (delta <= 10)
+    {
+        double d = (double)delta * 0.015;
+        _output *= d;
+    }
+    else if (delta <= 30)
+    {
+        double d = (double)delta * 0.025;
+        _output *= d;
+    }
+
+    return _output;
+}
 
 double AerPID::avgMES_TEMP()
 {
@@ -612,13 +548,17 @@ void AerPID::setTunings(bool reset)
 
 void AerPID::setOutputBias(double bias)
 {
-    this->bias = bias;
+    if (bias < 1)
+    {
+        return;
+    }
+    this->_pidBias = bias;
     aPID->setBias(bias);
 }
 
 double AerPID::getOutputBias()
 {
-    return bias;
+    return _pidBias;
 }
 
 void AerPID::setWindupLimit(double limit)
@@ -630,6 +570,148 @@ void AerPID::setWindupLimit(double limit)
 double AerPID::getWindupLimit()
 {
     return windUpLimit;
+}
+
+int AerPID::getPwmFreq()
+{
+    return _pwmFrequency;
+}
+
+void AerPID::setPwmFreq(int freq)
+{
+    _pwmFrequency = freq;
+    this->updatePWM(ssrPin, ssrChan, _pwmFrequency, _pwmResolution);
+}
+
+double AerPID::getPwmScaler()
+{
+    return _pwmScaleFactor;
+}
+
+void AerPID::setPwmScaler(double factor)
+{
+    _pwmScaleFactor = factor;
+}
+
+int AerPID::getPidTime()
+{
+    return _pidCycleTime;
+}
+
+int AerPID::getPidTick()
+{
+    return _pidTickMax;
+}
+
+void AerPID::setPidTime(int time)
+{
+    if (time < 50)
+    {
+        return;
+    }
+    _pidCycleTime = time;
+    _pidTickMax = ((double)_pidCycleTime / PID_SLEEP_TIME_MS) * 0.67;
+    this->updateSampleTime(_pidTickMax);
+}
+
+int AerPID::getPwmResolution()
+{
+    return _pwmResolution;
+}
+
+void AerPID::setPWMResolution(int res)
+{
+    if (res < 8)
+    {
+        return;
+    }
+    else if (res > 16)
+    {
+        return;
+    }
+    _pwmResolution = res;
+    this->updatePWM(ssrPin, ssrChan, _pwmFrequency, _pwmResolution);
+}
+
+int AerPID::getOutputLimit()
+{
+    return _pidOutputLimit;
+}
+
+void AerPID::setOutputLimit(int limit)
+{
+    if (limit < 1)
+    {
+        return;
+    }
+    _pidOutputLimit = limit;
+    aPID->setOutputLimits(0, _pidOutputLimit);
+}
+
+void AerPID::updatePWM(uint8_t pin, uint8_t channel, uint32_t freq, uint8_t resolution_bits)
+{
+    if (_ledAttached)
+    {
+        ledcDetachPin(pin);
+        _ledAttached = false;
+        Serial.print(F(">> SETUP"));
+        Serial.print(F("["));
+        Serial.print(index);
+        Serial.print(F("]"));
+        Serial.print(F(" "));
+        Serial.print(F("Detached PWM control of Pin "));
+        Serial.print(F("'"));
+        Serial.print(pin);
+        Serial.println(F("!"));
+    }
+    double freqSet = ledcSetup(channel, freq, resolution_bits);
+    ledcAttachPin(pin, channel);
+    _ledAttached = true;
+    if (_verbose_d)
+    {
+        Serial.print(F(">> SETUP"));
+        Serial.print(F("["));
+        Serial.print(index);
+        Serial.print(F("]"));
+        Serial.print(F(" "));
+        Serial.print(F("Attached PWM control to Pin "));
+        Serial.print(F("'"));
+        Serial.print(pin);
+        Serial.print(F("'"));
+        Serial.print(F(" on Channel "));
+        Serial.print(F("'"));
+        Serial.print(channel);
+        Serial.print(F("'"));
+        Serial.print(F(" at frequency of: "));
+        Serial.print(freqSet, 0);
+        Serial.print(F(" hz"));
+        Serial.print(F("  with: "));
+        Serial.print(resolution_bits);
+        Serial.print(F(" resolution bits"));
+        Serial.println(F("!"));
+    }
+}
+
+void AerPID::updateSampleTime(int pidTickMax)
+{
+    int sampleTime = PID_TIME_OVERSHOOT + (10 + PID_SLEEP_TIME_MS) * pidTickMax;
+    aPID->setSampleTime(sampleTime);
+    if (_verbose_d)
+    {
+        Serial.print(F(">> SETUP"));
+        Serial.print(F("["));
+        Serial.print(index);
+        Serial.print(F("]"));
+        Serial.print(F(" "));
+        Serial.print(F("PID sampling time: "));
+        Serial.print(sampleTime);
+        Serial.print(F(" ms"));
+        Serial.print(F(" "));
+        Serial.print(F("and tolerance of "));
+        Serial.print(PID_TIME_OVERSHOOT);
+        Serial.print(F(" ms"));
+        Serial.println(F("!"));
+    }
 }
 
 // =============================================================
@@ -917,14 +999,14 @@ AerPID::MeasureResult AerPID::measureElementTemperatureAsync()
     Serial.print(" > ");
     Serial.println(AVG_TEMP - bSig * 3);*/
     double meas = (celsius + AVG_TEMP) / 2;
-    if ((celsius > meas + (bSig * 1) || celsius < meas - (bSig * 1)) && abs(celsius - AVG_TEMP) > 3 && AVG_TEMP > 0)
+    if ((celsius > meas + (bSig * 2) || celsius < meas - (bSig * 2)) && abs(celsius - AVG_TEMP) > 3 && AVG_TEMP > 0)
     {
         Serial.print(F("SIGMA= "));
-        Serial.print(AVG_TEMP + bSig * 1);
+        Serial.print(AVG_TEMP + bSig * 2);
         Serial.print(" < ");
         Serial.print(celsius);
         Serial.print(" > ");
-        Serial.println(AVG_TEMP - bSig * 1);
+        Serial.println(AVG_TEMP - bSig * 2);
 
         _faultsRecent++;
         _faultLastTime = millis();
@@ -1204,7 +1286,7 @@ double AerPID::getOutput()
 double AerPID::getSigma()
 {
     Sigma sigma = Sigma();
-    return sigma.calcDeviation(cMeasuresArr, MEASURES_SIZE, 28);
+    return sigma.calcDeviation(bMeasuresArr, MEASURES_SIZE, 84) * 3;
 }
 
 bool AerPID::hasFaultError()

@@ -718,8 +718,19 @@ const ParamPid = {
   PARAM_PID: 3
 };
 
+const ParamAdv = {
+  PARAM_ADV_PWM_FACTOR: 0,
+  PARAM_ADV_PWM_FREQ: 1,
+  PARAM_ADV_PWM_RES: 2,
+  PARAM_ADV_PID_BIAS: 3,
+  PARAM_ADV_PID_TIME: 4,
+  PARAM_ADV_PID_RES: 5
+};
+
 const SerialCommand = {
   INIT: 0x20,
+  INIT_ADV: 0x2a,
+  INIT2: 0x22,
   STATUS: 0x21,
   STATUS2: 0x23,
   AUTO_OFF_LENGTH: 0x35,
@@ -740,6 +751,10 @@ const SerialCommand = {
   LED: 0x70,
   PID: 0x90,
   PID2: 0x91,
+  ADV1_PWM: 0x92,
+  ADV2_PWM: 0x93,
+  ADV1_PID: 0x94,
+  ADV2_PID: 0x95,
   TEMP: 0x10,
   TEMP2: 0x13,
   UNIT: 0x11,
@@ -804,17 +819,33 @@ let state = {
     length: 0,
     amount: 0
   },
-  COIL: {
+  COIL1: {
     enabled: false,
     P: 0.0,
     I: 0.0,
-    D: 0.0
+    D: 0.0,
+    adv: {
+      pwm_factor: 0,
+      pwm_freq: 0,
+      pwm_res: 0,
+      pid_bias: 0,
+      pid_time: 0,
+      pid_res: 0
+    }
   },
   COIL2: {
     enabled: false,
     P: 0.0,
     I: 0.0,
-    D: 0.0
+    D: 0.0,
+    adv: {
+      pwm_factor: 0,
+      pwm_freq: 0,
+      pwm_res: 0,
+      pid_bias: 0,
+      pid_time: 0,
+      pid_res: 0
+    }
   },
   LED: {
     enabled: true,
@@ -948,6 +979,18 @@ const bytesToDouble = (bytes) => {
   }
 
   return parseFloat(view.getFloat64(0, true).toFixed(3));
+};
+
+/**
+ * Convert a javascript number to a 32 bit integer
+ * @param {number} inputNumber a javascript number
+ * @returns a 4 byte (32bit) integer
+ */
+const numberToBytes = (inputNumber) => {
+  const buffer = new ArrayBuffer(4); // 4 bytes for a int
+  const view = new DataView(buffer);
+  view.setInt32(0, inputNumber, true); // 'true' for little-endian
+  return new Uint8Array(buffer);
 };
 
 // ==================================================
@@ -1122,6 +1165,41 @@ const parseInitMessage = (data) => {
   };
 };
 
+const parseInitMessage2 = (data) => {
+  if (state.MODEL == 1) {
+    let i = 0;
+    const pwmPower = bytesToDouble(Uint8Array.from(data.slice(i, (i += 8))));
+    const pwmFreq = getNumber(data.slice(i, (i += 4)));
+    const pwmRes = getNumber(data.slice(i, (i += 4)));
+    const pidBias = bytesToDouble(Uint8Array.from(data.slice(i, (i += 8))));
+    const pidTime = getNumber(data.slice(i, (i += 4)));
+    const pidRes = getNumber(data.slice(i, (i += 4)));
+    return [{ pwmPower, pwmFreq, pwmRes, pidBias, pidTime, pidRes }];
+  } else if (state.MODEL == 2) {
+    let i = 0;
+    let e1, e2;
+    {
+      const pwmPower = bytesToDouble(Uint8Array.from(data.slice(i, (i += 8))));
+      const pwmFreq = getNumber(data.slice(i, (i += 4)));
+      const pwmRes = getNumber(data.slice(i, (i += 4)));
+      const pidBias = bytesToDouble(Uint8Array.from(data.slice(i, (i += 8))));
+      const pidTime = getNumber(data.slice(i, (i += 4)));
+      const pidRes = getNumber(data.slice(i, (i += 4)));
+      e1 = { pwmPower, pwmFreq, pwmRes, pidBias, pidTime, pidRes };
+    }
+    {
+      const pwmPower = bytesToDouble(Uint8Array.from(data.slice(i, (i += 8))));
+      const pwmFreq = getNumber(data.slice(i, (i += 4)));
+      const pwmRes = getNumber(data.slice(i, (i += 4)));
+      const pidBias = bytesToDouble(Uint8Array.from(data.slice(i, (i += 8))));
+      const pidTime = getNumber(data.slice(i, (i += 4)));
+      const pidRes = getNumber(data.slice(i, (i += 4)));
+      e2 = { pwmPower, pwmFreq, pwmRes, pidBias, pidTime, pidRes };
+    }
+    return [e1, e2];
+  }
+};
+
 // ==================================================
 
 let connecting = false;
@@ -1232,40 +1310,40 @@ const initPageData = async (initData) => {
   if (document.getElementById('br_qset')) {
     document.getElementById('br_qset').value = `${state.LED.brightness}`;
   }
-  state.COIL.enabled = initData.COIL_ENABLED;
-  state.COIL.P = initData.P;
+  state.COIL1.enabled = initData.COIL_ENABLED;
+  state.COIL1.P = initData.P;
   if (document.getElementById('p_set')) {
-    document.getElementById('p_set').value = `${state.COIL.P}`;
+    document.getElementById('p_set').value = `${state.COIL1.P}`;
   }
   if (document.getElementById('p_qset')) {
-    document.getElementById('p_qset').value = `${state.COIL.P}`;
+    document.getElementById('p_qset').value = `${state.COIL1.P}`;
   }
   if (document.getElementById('p_qset2')) {
-    document.getElementById('p_qset2').value = `${state.COIL.P}`;
+    document.getElementById('p_qset2').value = `${state.COIL1.P}`;
   }
-  state.COIL.I = initData.I;
+  state.COIL1.I = initData.I;
   if (document.getElementById('i_set')) {
-    document.getElementById('i_set').value = `${state.COIL.I}`;
+    document.getElementById('i_set').value = `${state.COIL1.I}`;
   }
   if (document.getElementById('i_qset')) {
-    document.getElementById('i_qset').value = `${state.COIL.I}`;
+    document.getElementById('i_qset').value = `${state.COIL1.I}`;
   }
   if (document.getElementById('i_qset2')) {
-    document.getElementById('i_qset2').value = `${state.COIL.I}`;
+    document.getElementById('i_qset2').value = `${state.COIL1.I}`;
   }
-  state.COIL.D = initData.D;
+  state.COIL1.D = initData.D;
   if (document.getElementById('d_set')) {
-    document.getElementById('d_set').value = `${state.COIL.D}`;
+    document.getElementById('d_set').value = `${state.COIL1.D}`;
   }
   if (document.getElementById('d_qset')) {
-    document.getElementById('d_qset').value = `${state.COIL.D}`;
+    document.getElementById('d_qset').value = `${state.COIL1.D}`;
   }
   if (document.getElementById('d_qset2')) {
-    document.getElementById('d_qset2').value = `${state.COIL.D}`;
+    document.getElementById('d_qset2').value = `${state.COIL1.D}`;
   }
   if (document.getElementById('toggle_heat')) {
     const element = document.getElementById('toggle_heat');
-    if (state.COIL.enabled) {
+    if (state.COIL1.enabled) {
       element.style.setProperty('background-color', '#faa843', 'important');
       element.style.setProperty('color', 'whitesmoke', 'important');
     } else {
@@ -1422,6 +1500,63 @@ const initPageData = async (initData) => {
     document.getElementById('aoff_time').value = `${state.AUTO_OFF.length}`;
 
   emit_websocket([SerialCommand.PID2, Operation.GET, ParamPid.PARAM_PID]);
+};
+
+const initPageData2 = async (initData) => {
+  state.COIL1.adv.pwm_factor = initData[0].pwmPower;
+  if (document.getElementById('pwm1_set_fact')) {
+    document.getElementById('pwm1_set_fact').value = `${state.COIL1.adv.pwm_factor * 100}`;
+  }
+  state.COIL1.adv.pwm_freq = initData[0].pwmFreq;
+  if (document.getElementById('pwm1_set_freq')) {
+    document.getElementById('pwm1_set_freq').value = `${state.COIL1.adv.pwm_freq}`;
+  }
+  state.COIL1.adv.pwm_res = initData[0].pwmRes;
+  if (document.getElementById('pwm1_set_reso')) {
+    document.getElementById('pwm1_set_reso').value = `${state.COIL1.adv.pwm_res}`;
+  }
+  state.COIL1.adv.pid_bias = initData[0].pidBias;
+  if (document.getElementById('pid1_set_bias')) {
+    document.getElementById('pid1_set_bias').value = `${state.COIL1.adv.pid_bias}`;
+  }
+  state.COIL1.adv.pid_time = initData[0].pidTime;
+  if (document.getElementById('pid1_set_time')) {
+    document.getElementById('pid1_set_time').value = `${state.COIL1.adv.pid_time}`;
+  }
+  state.COIL1.adv.pid_res = initData[0].pidRes;
+  if (document.getElementById('pid1_set_reso')) {
+    document.getElementById('pid1_set_reso').value = `${state.COIL1.adv.pid_res}`;
+  }
+  document.getElementById('pwm_adv1_msg').style.display = 'none';
+  document.getElementById('pid_adv1_msg').style.display = 'none';
+  if (state.MODEL == 2) {
+    state.COIL2.adv.pwm_factor = initData[1].pwmPower;
+    if (document.getElementById('pwm2_set_fact')) {
+      document.getElementById('pwm2_set_fact').value = `${state.COIL2.adv.pwm_factor * 100}`;
+    }
+    state.COIL2.adv.pwm_freq = initData[1].pwmFreq;
+    if (document.getElementById('pwm2_set_freq')) {
+      document.getElementById('pwm2_set_freq').value = `${state.COIL2.adv.pwm_freq}`;
+    }
+    state.COIL2.adv.pwm_res = initData[1].pwmRes;
+    if (document.getElementById('pwm2_set_reso')) {
+      document.getElementById('pwm2_set_reso').value = `${state.COIL2.adv.pwm_res}`;
+    }
+    state.COIL2.adv.pid_bias = initData[1].pidBias;
+    if (document.getElementById('pid2_set_bias')) {
+      document.getElementById('pid2_set_bias').value = `${state.COIL2.adv.pid_bias}`;
+    }
+    state.COIL2.adv.pid_time = initData[1].pidTime;
+    if (document.getElementById('pid2_set_time')) {
+      document.getElementById('pid2_set_time').value = `${state.COIL2.adv.pid_time}`;
+    }
+    state.COIL2.adv.pid_res = initData[1].pidRes;
+    if (document.getElementById('pid2_set_reso')) {
+      document.getElementById('pid2_set_reso').value = `${state.COIL2.adv.pid_res}`;
+    }
+    document.getElementById('pwm_adv2_msg').style.display = 'none';
+    document.getElementById('pid_adv2_msg').style.display = 'none';
+  }
 };
 
 const updateTempMeter = () => {
@@ -1597,6 +1732,11 @@ const handleMessage = (dat) => {
       initPageData(initMsg);
       initPageMessage(initMsg);
       break;
+    case SerialCommand.INIT_ADV:
+      const initMsg2 = parseInitMessage2(dat.slice(2));
+      //console.log(initMsg2);
+      initPageData2(initMsg2);
+      break;
     case SerialCommand.STATUS:
       pid_enb = dat[2] > 0;
       var mes_temp = getNumber(dat.slice(3, 5));
@@ -1625,12 +1765,12 @@ const handleMessage = (dat) => {
         sigma / 10
       );
       //console.log('SerialCommand.STATUS: ', pid_enb, mes_temp, avg_temp, set_temp);
-      state.COIL.enabled = pid_enb;
+      state.COIL1.enabled = pid_enb;
       state.TEMP = mes_temp;
       state.SET_TEMP = set_temp;
       if (document.getElementById('toggle_heat')) {
         const element = document.getElementById('toggle_heat');
-        if (state.COIL.enabled) {
+        if (state.COIL1.enabled) {
           element.style.setProperty('background-color', '#faa843', 'important');
           element.style.setProperty('color', 'whitesmoke', 'important');
         } else {
@@ -1640,7 +1780,7 @@ const handleMessage = (dat) => {
       }
       if (document.getElementById('toggle_heat_1')) {
         const element = document.getElementById('toggle_heat_1');
-        if (state.COIL.enabled) {
+        if (state.COIL1.enabled) {
           element.style.setProperty('background-color', '#faa843', 'important');
           element.style.setProperty('color', 'whitesmoke', 'important');
         } else {
@@ -1794,10 +1934,10 @@ const handleMessage = (dat) => {
       break;
     case SerialCommand.COIL_TOGGLE:
       pid_enb = dat[1] > 0;
-      state.COIL.enabled = pid_enb;
+      state.COIL1.enabled = pid_enb;
       if (document.getElementById('toggle_heat')) {
         const element = document.getElementById('toggle_heat');
-        if (state.COIL.enabled) {
+        if (state.COIL1.enabled) {
           element.style.setProperty('background-color', '#faa843', 'important');
           element.style.setProperty('color', 'whitesmoke', 'important');
         } else {
@@ -1807,7 +1947,7 @@ const handleMessage = (dat) => {
       }
       if (document.getElementById('toggle_heat_1')) {
         const element = document.getElementById('toggle_heat_1');
-        if (state.COIL.enabled) {
+        if (state.COIL1.enabled) {
           element.style.setProperty('background-color', '#faa843', 'important');
           element.style.setProperty('color', 'whitesmoke', 'important');
         } else {
@@ -1838,35 +1978,35 @@ const handleMessage = (dat) => {
           const I = bytesToDouble(Uint8Array.from(dat.slice(10, 18)));
           const D = bytesToDouble(Uint8Array.from(dat.slice(18, 26)));
           //console.log(P, I, D);
-          state.COIL.P = P;
+          state.COIL1.P = P;
           if (document.getElementById('p_set')) {
-            document.getElementById('p_set').value = `${state.COIL.P}`;
+            document.getElementById('p_set').value = `${state.COIL1.P}`;
           }
           if (document.getElementById('p_qset')) {
-            document.getElementById('p_qset').value = `${state.COIL.P}`;
+            document.getElementById('p_qset').value = `${state.COIL1.P}`;
           }
           if (document.getElementById('p_qset2')) {
-            document.getElementById('p_qset2').value = `${state.COIL.P}`;
+            document.getElementById('p_qset2').value = `${state.COIL1.P}`;
           }
-          state.COIL.I = I;
+          state.COIL1.I = I;
           if (document.getElementById('i_set')) {
-            document.getElementById('i_set').value = `${state.COIL.I}`;
+            document.getElementById('i_set').value = `${state.COIL1.I}`;
           }
           if (document.getElementById('i_qset')) {
-            document.getElementById('i_qset').value = `${state.COIL.I}`;
+            document.getElementById('i_qset').value = `${state.COIL1.I}`;
           }
           if (document.getElementById('i_qset2')) {
-            document.getElementById('i_qset2').value = `${state.COIL.I}`;
+            document.getElementById('i_qset2').value = `${state.COIL1.I}`;
           }
-          state.COIL.D = D;
+          state.COIL1.D = D;
           if (document.getElementById('d_set')) {
-            document.getElementById('d_set').value = `${state.COIL.D}`;
+            document.getElementById('d_set').value = `${state.COIL1.D}`;
           }
           if (document.getElementById('d_qset')) {
-            document.getElementById('d_qset').value = `${state.COIL.D}`;
+            document.getElementById('d_qset').value = `${state.COIL1.D}`;
           }
           if (document.getElementById('d_qset2')) {
-            document.getElementById('d_qset2').value = `${state.COIL.D}`;
+            document.getElementById('d_qset2').value = `${state.COIL1.D}`;
           }
           break;
         default:
@@ -1894,6 +2034,122 @@ const handleMessage = (dat) => {
             document.getElementById('d_qset2b').value = `${state.COIL2.D}`;
           }
           break;
+        default:
+          break;
+      }
+      break;
+    case SerialCommand.ADV1_PWM:
+      param = dat[1];
+      switch (param) {
+        case ParamAdv.PARAM_ADV_PWM_FACTOR: {
+          const val = bytesToDouble(Uint8Array.from(dat.slice(2, 10)));
+          state.COIL1.adv.pwm_factor = val;
+          if (document.getElementById('pwm1_set_fact')) {
+            document.getElementById('pwm1_set_fact').value = `${val * 100}`;
+          }
+        }
+        case ParamAdv.PARAM_ADV_PWM_FREQ: {
+          const val = bytesToDouble(Uint8Array.from(dat.slice(2, 10)));
+          state.COIL1.adv.pwm_freq = val;
+          if (document.getElementById('pwm1_set_freq')) {
+            document.getElementById('pwm1_set_freq').value = `${val}`;
+          }
+        }
+        case ParamAdv.PARAM_ADV_PWM_RES: {
+          const val = bytesToDouble(Uint8Array.from(dat.slice(2, 10)));
+          state.COIL1.adv.pwm_res = val;
+          if (document.getElementById('pwm1_set_reso')) {
+            document.getElementById('pwm1_set_reso').value = `${val}`;
+          }
+          break;
+        }
+        default:
+          break;
+      }
+      break;
+    case SerialCommand.ADV1_PID:
+      param = dat[1];
+      switch (param) {
+        case ParamAdv.PARAM_ADV_PID_BIAS: {
+          const val = bytesToDouble(Uint8Array.from(dat.slice(2, 10)));
+          state.COIL1.adv.pid_bias = val;
+          if (document.getElementById('pid1_set_bias')) {
+            document.getElementById('pid1_set_bias').value = `${val}`;
+          }
+        }
+        case ParamAdv.PARAM_ADV_PID_TIME: {
+          const val = bytesToDouble(Uint8Array.from(dat.slice(2, 10)));
+          state.COIL1.adv.pid_time = val;
+          if (document.getElementById('pid1_set_time')) {
+            document.getElementById('pid1_set_time').value = `${val}`;
+          }
+        }
+        case ParamAdv.PARAM_ADV_PID_TIME: {
+          const val = bytesToDouble(Uint8Array.from(dat.slice(2, 10)));
+          state.COIL1.adv.pid_res = val;
+          if (document.getElementById('pid1_set_reso')) {
+            document.getElementById('pid1_set_reso').value = `${val}`;
+          }
+          break;
+        }
+        default:
+          break;
+      }
+      break;
+    case SerialCommand.ADV2_PWM:
+      param = dat[1];
+      switch (param) {
+        case ParamAdv.PARAM_ADV_PWM_FACTOR: {
+          const val = bytesToDouble(Uint8Array.from(dat.slice(2, 10)));
+          state.COIL2.adv.pwm_factor = val;
+          if (document.getElementById('pwm2_set_fact')) {
+            document.getElementById('pwm2_set_fact').value = `${val * 100}`;
+          }
+        }
+        case ParamAdv.PARAM_ADV_PWM_FREQ: {
+          const val = bytesToDouble(Uint8Array.from(dat.slice(2, 10)));
+          state.COIL2.adv.pwm_freq = val;
+          if (document.getElementById('pwm2_set_freq')) {
+            document.getElementById('pwm2_set_freq').value = `${val}`;
+          }
+        }
+        case ParamAdv.PARAM_ADV_PWM_RES: {
+          const val = bytesToDouble(Uint8Array.from(dat.slice(2, 10)));
+          state.COIL2.adv.pwm_res = val;
+          if (document.getElementById('pwm2_set_reso')) {
+            document.getElementById('pwm2_set_reso').value = `${val}`;
+          }
+          break;
+        }
+        default:
+          break;
+      }
+      break;
+    case SerialCommand.ADV2_PID:
+      param = dat[1];
+      switch (param) {
+        case ParamAdv.PARAM_ADV_PID_BIAS: {
+          const val = bytesToDouble(Uint8Array.from(dat.slice(2, 10)));
+          state.COIL2.adv.pid_bias = val;
+          if (document.getElementById('pid2_set_bias')) {
+            document.getElementById('pid2_set_bias').value = `${val}`;
+          }
+        }
+        case ParamAdv.PARAM_ADV_PID_TIME: {
+          const val = bytesToDouble(Uint8Array.from(dat.slice(2, 10)));
+          state.COIL2.adv.pid_time = val;
+          if (document.getElementById('pid2_set_time')) {
+            document.getElementById('pid2_set_time').value = `${val}`;
+          }
+        }
+        case ParamAdv.PARAM_ADV_PID_TIME: {
+          const val = bytesToDouble(Uint8Array.from(dat.slice(2, 10)));
+          state.COIL2.adv.pid_res = val;
+          if (document.getElementById('pid2_set_reso')) {
+            document.getElementById('pid2_set_reso').value = `${val}`;
+          }
+          break;
+        }
         default:
           break;
       }
@@ -2524,6 +2780,378 @@ function sendPid2Settings() {
   }
 }
 
+function advButtonInit() {
+  var pwm_adv1 = document.getElementById('pwm_adv1_submit');
+  var pwm_adv2 = document.getElementById('pwm_adv2_submit');
+  var pid_adv1 = document.getElementById('pid_adv1_submit');
+  var pid_adv2 = document.getElementById('pid_adv2_submit');
+  var pid_adv1a = document.getElementById('pid_adv1_auto');
+  var pid_adv2a = document.getElementById('pid_adv2_auto');
+  pwm_adv1.addEventListener('click', sendPwm1AdvSettings);
+  pid_adv1.addEventListener('click', sendPid1AdvSettings);
+  pwm_adv2.addEventListener('click', sendPwm2AdvSettings);
+  pid_adv2.addEventListener('click', sendPid2AdvSettings);
+  pid_adv1a.addEventListener('click', autoScaleResolution1);
+  pid_adv2a.addEventListener('click', autoScaleResolution2);
+}
+
+function autoScaleResolution1() {
+  const r = state.COIL1.adv.pwm_res;
+  const nr = Math.pow(2, r + 1) - 1;
+  state.COIL1.adv.pid_res = nr;
+  if (document.getElementById('pid1_set_reso')) {
+    document.getElementById('pid1_set_reso').value = `${nr}`;
+  }
+}
+function autoScaleResolution2() {
+  const r = state.COIL2.adv.pwm_res;
+  const nr = Math.pow(2, r + 1) - 1;
+  state.COIL2.adv.pid_res = nr;
+  if (document.getElementById('pid2_set_reso')) {
+    document.getElementById('pid2_set_reso').value = `${nr}`;
+  }
+}
+
+function sendPwm1AdvSettings() {
+  document.getElementById('pwm_adv1_msg').style.display = 'none';
+  console.log('PWM1 Adv changes submitted.');
+  if (true) {
+    let val = document.getElementById('pwm1_set_fact').value * 0.01;
+    if (val > 2.5) {
+      document.getElementById('pwm_adv1_txt').innerHTML =
+        'Power Factor must be less than or equal to 250%!';
+      document.getElementById('pwm_adv1_msg').style.display = 'block';
+      return;
+    } else if (val <= 0) {
+      document.getElementById('pwm_adv1_txt').innerHTML = 'Power Factor must be greater than 0%!';
+      document.getElementById('pwm_adv1_msg').style.display = 'block';
+      return;
+    }
+    state.COIL1.adv.pwm_factor = Number(val);
+    emit_websocket([
+      SerialCommand.ADV1_PWM,
+      Operation.SET,
+      ParamAdv.PARAM_ADV_PWM_FACTOR,
+      ...doubleToBytes(Number(val))
+    ]);
+  }
+  if (true) {
+    let val = document.getElementById('pwm1_set_freq').value;
+    if (val.includes('-')) {
+      document.getElementById('pwm_adv1_txt').innerHTML =
+        'Frequency must be a non negative whole number!';
+      document.getElementById('pwm_adv1_msg').style.display = 'block';
+      return;
+    } else if (val < 1) {
+      document.getElementById('pwm_adv1_txt').innerHTML = 'Frequency must be 1 hertz or greater!';
+      document.getElementById('pwm_adv1_msg').style.display = 'block';
+      return;
+    } else if (val > 1000000) {
+      document.getElementById('pwm_adv1_txt').innerHTML =
+        'Frequency must be less than 1 megahertz!';
+      document.getElementById('pwm_adv1_msg').style.display = 'block';
+      return;
+    } else if (val.includes('.')) {
+      document.getElementById('pwm_adv1_txt').innerHTML = 'Frequency must be a whole number!';
+      document.getElementById('pwm_adv1_msg').style.display = 'block';
+      return;
+    }
+    state.COIL1.adv.pwm_freq = Number(val);
+    emit_websocket([
+      SerialCommand.ADV1_PWM,
+      Operation.SET,
+      ParamAdv.PARAM_ADV_PWM_FREQ,
+      ...numberToBytes(Number(val))
+    ]);
+  }
+  if (true) {
+    let val = document.getElementById('pwm1_set_reso').value;
+    if (val.includes('-')) {
+      document.getElementById('pwm_adv1_txt').innerHTML =
+        'Bit Resolution must be a non negative whole number!';
+      document.getElementById('pwm_adv1_msg').style.display = 'block';
+      return;
+    } else if (val < 8) {
+      document.getElementById('pwm_adv1_txt').innerHTML = 'Bit Resolution must be 8 or greater!';
+      document.getElementById('pwm_adv1_msg').style.display = 'block';
+      return;
+    } else if (val > 16) {
+      document.getElementById('pwm_adv1_txt').innerHTML = 'Bit Resolution must be 16 or less!';
+      document.getElementById('pwm_adv1_msg').style.display = 'block';
+      return;
+    } else if (val.includes('.')) {
+      document.getElementById('pwm_adv1_txt').innerHTML = 'Bit Resolution must be a whole number!';
+      document.getElementById('pwm_adv1_msg').style.display = 'block';
+      return;
+    }
+    state.COIL1.adv.pwm_res = Number(val);
+    emit_websocket([
+      SerialCommand.ADV1_PWM,
+      Operation.SET,
+      ParamAdv.PARAM_ADV_PWM_RES,
+      ...numberToBytes(Number(val))
+    ]);
+  }
+}
+
+function sendPid1AdvSettings() {
+  document.getElementById('pid_adv1_msg').style.display = 'none';
+  console.log('PID1 Adv changes submitted.');
+  if (true) {
+    let val = document.getElementById('pid1_set_bias').value;
+    if (val.includes('.')) {
+      document.getElementById('pid_adv1_txt').innerHTML = 'PID Bias must be a whole number!';
+      document.getElementById('pid_adv1_msg').style.display = 'block';
+      return;
+    } else if (val > 1000) {
+      document.getElementById('pid_adv1_txt').innerHTML =
+        'PID Bias must be less than or equal to 1000!';
+      document.getElementById('pid_adv1_msg').style.display = 'block';
+      return;
+    } else if (val < 0) {
+      document.getElementById('pid_adv1_txt').innerHTML =
+        'PID Bias must be greater than or equal to 0!';
+      document.getElementById('pid_adv1_msg').style.display = 'block';
+      return;
+    }
+    state.COIL1.adv.pid_bias = Number(val);
+    emit_websocket([
+      SerialCommand.ADV1_PID,
+      Operation.SET,
+      ParamAdv.PARAM_ADV_PID_BIAS,
+      ...doubleToBytes(Number(val))
+    ]);
+  }
+  if (true) {
+    let val = document.getElementById('pid1_set_time').value;
+    if (val.includes('-')) {
+      document.getElementById('pid_adv1_txt').innerHTML =
+        'Time must be a non negative whole number!';
+      document.getElementById('pid_adv1_msg').style.display = 'block';
+      return;
+    } else if (val < 100) {
+      document.getElementById('pid_adv1_txt').innerHTML =
+        'Time must be 100 milliseconds or greater!';
+      document.getElementById('pid_adv1_msg').style.display = 'block';
+      return;
+    } else if (val > 10000) {
+      document.getElementById('pid_adv1_txt').innerHTML =
+        'Time must be less than 10000 milliseconds!';
+      document.getElementById('pid_adv1_msg').style.display = 'block';
+      return;
+    } else if (val.includes('.')) {
+      document.getElementById('pid_adv1_txt').innerHTML = 'Time must be a whole number!';
+      document.getElementById('pid_adv1_msg').style.display = 'block';
+      return;
+    }
+    state.COIL1.adv.pid_time = Number(val);
+    emit_websocket([
+      SerialCommand.ADV1_PID,
+      Operation.SET,
+      ParamAdv.PARAM_ADV_PID_TIME,
+      ...numberToBytes(Number(val))
+    ]);
+  }
+  if (true) {
+    let val = document.getElementById('pid1_set_reso').value;
+    if (val.includes('-')) {
+      document.getElementById('pid_adv1_txt').innerHTML =
+        'PID Resolution must be a non negative whole number!';
+      document.getElementById('pid_adv1_msg').style.display = 'block';
+      return;
+    } else if (val < 8) {
+      document.getElementById('pid_adv1_txt').innerHTML = 'PID Resolution must be 8 or greater!';
+      document.getElementById('pid_adv1_msg').style.display = 'block';
+      return;
+    } else if (val > 32768) {
+      document.getElementById('pid_adv1_txt').innerHTML = 'PID Resolution must be 32768 or less!';
+      document.getElementById('pid_adv1_msg').style.display = 'block';
+      return;
+    } else if (val.includes('.')) {
+      document.getElementById('pid_adv1_txt').innerHTML = 'PID Resolution must be a whole number!';
+      document.getElementById('pid_adv1_msg').style.display = 'block';
+      return;
+    }
+    state.COIL1.adv.pid_res = Number(val);
+    emit_websocket([
+      SerialCommand.ADV1_PID,
+      Operation.SET,
+      ParamAdv.PARAM_ADV_PID_RES,
+      ...numberToBytes(Number(val))
+    ]);
+  }
+}
+
+function sendPwm2AdvSettings() {
+  document.getElementById('pwm_adv2_msg').style.display = 'none';
+  console.log('PWM2 Adv changes submitted.');
+  if (true) {
+    let val = document.getElementById('pwm2_set_fact').value * 0.01;
+    if (val > 2) {
+      document.getElementById('pwm_adv2_txt').innerHTML =
+        'Power Factor must be less than or equal to 200%!';
+      document.getElementById('pwm_adv2_msg').style.display = 'block';
+      return;
+    } else if (val <= 0) {
+      document.getElementById('pwm_adv2_txt').innerHTML = 'Power Factor must be greater than 0%!';
+      document.getElementById('pwm_adv2_msg').style.display = 'block';
+      return;
+    }
+    state.COIL2.adv.pwm_factor = Number(val);
+    emit_websocket([
+      SerialCommand.ADV2_PWM,
+      Operation.SET,
+      ParamAdv.PARAM_ADV_PWM_FACTOR,
+      ...doubleToBytes(Number(val))
+    ]);
+  }
+  if (true) {
+    let val = document.getElementById('pwm2_set_freq').value;
+    if (val.includes('-')) {
+      document.getElementById('pwm_adv2_txt').innerHTML =
+        'Frequency must be a non negative whole number!';
+      document.getElementById('pwm_adv2_msg').style.display = 'block';
+      return;
+    } else if (val < 1) {
+      document.getElementById('pwm_adv2_txt').innerHTML = 'Frequency must be 1 hertz or greater!';
+      document.getElementById('pwm_adv2_msg').style.display = 'block';
+      return;
+    } else if (val > 1000000) {
+      document.getElementById('pwm_adv2_txt').innerHTML =
+        'Frequency must be less than 1 megahertz!';
+      document.getElementById('pwm_adv2_msg').style.display = 'block';
+      return;
+    } else if (val.includes('.')) {
+      document.getElementById('pwm_adv2_txt').innerHTML = 'Frequency must be a whole number!';
+      document.getElementById('pwm_adv2_msg').style.display = 'block';
+      return;
+    }
+    state.COIL2.adv.pwm_freq = Number(val);
+    emit_websocket([
+      SerialCommand.ADV2_PWM,
+      Operation.SET,
+      ParamAdv.PARAM_ADV_PWM_FREQ,
+      ...numberToBytes(Number(val))
+    ]);
+  }
+  if (true) {
+    let val = document.getElementById('pwm2_set_reso').value;
+    if (val.includes('-')) {
+      document.getElementById('pwm_adv2_txt').innerHTML =
+        'Bit Resolution must be a non negative whole number!';
+      document.getElementById('pwm_adv2_msg').style.display = 'block';
+      return;
+    } else if (val < 8) {
+      document.getElementById('pwm_adv2_txt').innerHTML = 'Bit Resolution must be 8 or greater!';
+      document.getElementById('pwm_adv2_msg').style.display = 'block';
+      return;
+    } else if (val > 16) {
+      document.getElementById('pwm_adv2_txt').innerHTML = 'Bit Resolution must be 16 or less!';
+      document.getElementById('pwm_adv2_msg').style.display = 'block';
+      return;
+    } else if (val.includes('.')) {
+      document.getElementById('pwm_adv2_txt').innerHTML = 'Bit Resolution must be a whole number!';
+      document.getElementById('pwm_adv2_msg').style.display = 'block';
+      return;
+    }
+    state.COIL2.adv.pwm_res = Number(val);
+    emit_websocket([
+      SerialCommand.ADV2_PWM,
+      Operation.SET,
+      ParamAdv.PARAM_ADV_PWM_RES,
+      ...numberToBytes(Number(val))
+    ]);
+  }
+}
+
+function sendPid2AdvSettings() {
+  document.getElementById('pid_adv2_msg').style.display = 'none';
+  console.log('PID2 Adv changes submitted.');
+  if (true) {
+    let val = document.getElementById('pid2_set_bias').value;
+    if (val.includes('.')) {
+      document.getElementById('pid_adv2_txt').innerHTML = 'PID Bias must be a whole number!';
+      document.getElementById('pid_adv2_msg').style.display = 'block';
+      return;
+    } else if (val > 1000) {
+      document.getElementById('pid_adv2_txt').innerHTML =
+        'PID Bias must be less than or equal to 1000!';
+      document.getElementById('pid_adv2_msg').style.display = 'block';
+      return;
+    } else if (val < 0) {
+      document.getElementById('pid_adv2_txt').innerHTML =
+        'PID Bias must be greater than or equal to 0!';
+      document.getElementById('pid_adv2_msg').style.display = 'block';
+      return;
+    }
+    state.COIL2.adv.pid_bias = Number(val);
+    emit_websocket([
+      SerialCommand.ADV2_PID,
+      Operation.SET,
+      ParamAdv.PARAM_ADV_PID_BIAS,
+      ...doubleToBytes(Number(val))
+    ]);
+  }
+  if (true) {
+    let val = document.getElementById('pid2_set_time').value;
+    if (val.includes('-')) {
+      document.getElementById('pid_adv2_txt').innerHTML =
+        'Time must be a non negative whole number!';
+      document.getElementById('pid_adv2_msg').style.display = 'block';
+      return;
+    } else if (val < 100) {
+      document.getElementById('pid_adv2_txt').innerHTML =
+        'Time must be 100 milliseconds or greater!';
+      document.getElementById('pid_adv2_msg').style.display = 'block';
+      return;
+    } else if (val > 10000) {
+      document.getElementById('pid_adv2_txt').innerHTML =
+        'Time must be less than 10000 milliseconds!';
+      document.getElementById('pid_adv2_msg').style.display = 'block';
+      return;
+    } else if (val.includes('.')) {
+      document.getElementById('pid_adv2_txt').innerHTML = 'Time must be a whole number!';
+      document.getElementById('pid_adv2_msg').style.display = 'block';
+      return;
+    }
+    state.COIL2.adv.pid_time = Number(val);
+    emit_websocket([
+      SerialCommand.ADV2_PID,
+      Operation.SET,
+      ParamAdv.PARAM_ADV_PID_TIME,
+      ...numberToBytes(Number(val))
+    ]);
+  }
+  if (true) {
+    let val = document.getElementById('pid2_set_reso').value;
+    if (val.includes('-')) {
+      document.getElementById('pid_adv2_txt').innerHTML =
+        'PID Resolution must be a non negative whole number!';
+      document.getElementById('pid_adv2_msg').style.display = 'block';
+      return;
+    } else if (val < 8) {
+      document.getElementById('pid_adv2_txt').innerHTML = 'PID Resolution must be 8 or greater!';
+      document.getElementById('pid_adv2_msg').style.display = 'block';
+      return;
+    } else if (val > 32768) {
+      document.getElementById('pid_adv2_txt').innerHTML = 'PID Resolution must be 32768 or less!';
+      document.getElementById('pid_adv2_msg').style.display = 'block';
+      return;
+    } else if (val.includes('.')) {
+      document.getElementById('pid_adv2_txt').innerHTML = 'PID Resolution must be a whole number!';
+      document.getElementById('pid_adv2_msg').style.display = 'block';
+      return;
+    }
+    state.COIL2.adv.pid_res = Number(val);
+    emit_websocket([
+      SerialCommand.ADV2_PID,
+      Operation.SET,
+      ParamAdv.PARAM_ADV_PID_RES,
+      ...numberToBytes(Number(val))
+    ]);
+  }
+}
+
 function favListenersInit() {
   document.getElementById('fav1_t').addEventListener('change', function () {
     changeFavName(1);
@@ -2943,6 +3571,13 @@ const updateBrightness = () => {
 };
 // End LED Functions
 
+const closeAdvMsg = (e, name) => {
+  const elm = document.getElementById(name);
+  if (elm) {
+    elm.style.display = 'none';
+  }
+};
+
 // Coil Toggle Funcs/Vars
 document.getElementById('toggle_heat').addEventListener('click', function () {
   toggleHeat();
@@ -2951,7 +3586,7 @@ document.getElementById('toggle_heat_1').addEventListener('click', function () {
   toggleHeat();
 });
 const toggleHeat = () => {
-  emit_websocket([SerialCommand.COIL_TOGGLE, Operation.SET, state.COIL.enabled ? 0 : 1]);
+  emit_websocket([SerialCommand.COIL_TOGGLE, Operation.SET, state.COIL1.enabled ? 0 : 1]);
 };
 document.getElementById('toggle_heat_2').addEventListener('click', function () {
   toggleHeat2();
@@ -3017,6 +3652,7 @@ function openChartTab(evt, tabName) {
 const init = () => {
   pidButtonInit();
   favListenersInit();
+  advButtonInit();
   window.addEventListener('load', onLoad);
   function onLoad(event) {
     initWebSocket();

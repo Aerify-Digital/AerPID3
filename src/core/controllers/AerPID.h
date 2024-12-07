@@ -43,23 +43,23 @@
 // Max element temperature (celsius)
 #define TEMPERATURE_MAX 510.0
 // Temperature offset adjustment
-#define TEMPERATURE_OFFSET -5.0
+#define TEMPERATURE_OFFSET -0.1
 
 // *************************************
 
 // PWM frequency and resolution
-#define FREQ_PWM_Hz 240
-#define PWM_RESOLUTION 10
+#define FREQ_PWM_Hz 200 // 150hz
+#define PWM_RESOLUTION 11
 
 // Output value range limit
-#define PID_OUTPUT_LIMIT 1023
+#define PID_OUTPUT_LIMIT 4095
 
 // 'PID_OUTPUT_LIMIT' based on 'PWM_RESOLUTION' bit
 /* 8 bit  - 256   - 255
  * 9 bit  - 512   - 511
  * 10 bit - 1024  - 1023
  * 11 bit - 2048  - 2047
- * 12 bit - 4096  - 4098
+ * 12 bit - 4096  - 4095
  * 13 bit - 8192  - 8191
  * 14 bit - 16384 - 16383
  */
@@ -70,21 +70,21 @@
 #define PWM_SCALE_FACTOR 0.995
 
 // Integral WindUp limit (fix for timing windup)
-#define PID_WINDUP_LIMIT 100
+#define PID_WINDUP_LIMIT 1000
 // Output Bias for PID function
-#define PID_BIAS 10
+#define PID_BIAS 0
 
 // *************************************
 
 // Sample Time for PID compute in milliseconds
-#define PID_SAMPLE_TIME_MS 750
+#define PID_SAMPLE_TIME_MS 700
 // Sleep Time for PID thread in milliseconds
 #define PID_SLEEP_TIME_MS 25
 // Tick time overshoot amount for PID compute
-#define PID_TIME_OVERSHOOT 7
+#define PID_TIME_OVERSHOOT 70
 
 // Tick max for PID - sample time scaler
-#define PID_TICK_MAX (PID_SAMPLE_TIME_MS / PID_SLEEP_TIME_MS) / 2 + 1
+#define PID_TICK_MAX (PID_SAMPLE_TIME_MS / PID_SLEEP_TIME_MS) * 0.67
 // Measure Freqeuncy counter max
 #define PID_MEAS_COUNTER 15
 
@@ -95,7 +95,7 @@
 
 // Measure sample array sizes
 #define MEASURES_SIZE 128
-#define MEASURES_AVG_TOTAL 64 // must be smaller than MEASURES_SIZE
+#define MEASURES_AVG_TOTAL 108 // must be smaller than MEASURES_SIZE
 #define MES_TEMP_SIZE 3
 
 // Rolling average measure max size
@@ -110,7 +110,7 @@
 #define TYPE_DS18S20 0
 #define TYPE_DS18B20 1
 #define TYPE_DS18S22 2
-#define TYPE_MAX31850 3
+#define TYPE_MAX31850 3 // Chip used
 
 // Scratchpad Location
 #define SENSOR_CONFIGURATION_LOCATION 4
@@ -172,17 +172,6 @@ public:
     bool init();
 
     // *************************
-    // Update triggers..
-    void doUpdate();
-    bool hasUpdated();
-    bool needsUpdate(uint8_t i);
-
-    // Saving
-    void doSave(uint8_t i);
-    bool needSave();
-    bool needSave(uint8_t i);
-
-    // *************************
     // Measure temperature var  (in celsius)
     double MES_TEMP = 0.0;
     double AVG_TEMP = 0.0;
@@ -224,13 +213,6 @@ public:
     boolean AUTO_TUNE_ACTIVE = false;
 
     // *************************
-
-    // PWM scaler value
-    double PWM_ScaleFactor = PWM_SCALE_FACTOR;
-    // PWM cycle time (vTaskDelay)
-    int PWM_CycleTime = PID_SAMPLE_TIME_MS;
-
-    // *************************
     // Do work tick
     void tick();
 
@@ -253,14 +235,21 @@ public:
     void setTunings(bool reset);
 
     // Interal var accessors
-    int getPwmFreq()
-    {
-        return _freq_PWN;
-    }
-    void setPwmFreq(int freq)
-    {
-        _freq_PWN = freq;
-    }
+    int getPwmFreq();
+    void setPwmFreq(int freq);
+
+    double getPwmScaler();
+    void setPwmScaler(double factor);
+
+    int getPidTime();
+    int getPidTick();
+    void setPidTime(int time);
+
+    int getPwmResolution();
+    void setPWMResolution(int res);
+
+    int getOutputLimit();
+    void setOutputLimit(int limit);
 
     void setOutputBias(double bias);
     double getOutputBias();
@@ -283,6 +272,8 @@ public:
 private:
     // verbose debug output
     bool _verbose_d = VERBOSE_DEBUG == 1;
+    // Loaded flag
+    bool _loaded = false;
 
     // 1Wire pin and object
     uint8_t ow_pin;
@@ -291,34 +282,37 @@ private:
     // SSR pin and channel
     uint8_t ssrPin;
     uint8_t ssrChan;
+    bool _ledAttached = false;
 
     // Element number
     uint8_t index;
 
     /* =========== */
-    // PID library
+    // PID library Reference
     PID *aPID;
-
-    // Loaded flag
-    bool _loaded = false;
-    // has updated
-    bool _needsUpdate = false;
-    // needs save
-    bool _needsSave[SAVE_VAR_SIZE];
 
     // PID compute output
     double output = 0;
     double xOutput = 0;
 
+    // PWM power scaler value
+    double _pwmScaleFactor = PWM_SCALE_FACTOR;
+    // Timing variable used for ledcSetup
+    int _pwmFrequency = FREQ_PWM_Hz * 1; // PWM Frequency as hertz
+    // bit resolution for PWM output
+    int _pwmResolution = PWM_RESOLUTION;
+
+    // PWM cycle time (vTaskDelay)
+    int _pidCycleTime = PID_SAMPLE_TIME_MS;
+    int _pidTickMax = ((double)_pidCycleTime / PID_SLEEP_TIME_MS) * 0.67;
+    // pid output range limit for input to pwm
+    int _pidOutputLimit = PID_OUTPUT_LIMIT;
+
     // Bias power amount to apply to PID function
-    double bias = 64;
+    double _pidBias = PID_BIAS;
 
     // kI value wind up limitor
     double windUpLimit = 500;
-
-    // Timing vars for ledcSetup
-    int _freq_PWN = FREQ_PWM_Hz * 1;
-    int _resolution_bits = PWM_RESOLUTION;
 
     // Array of most recent measurements
     double aMeasuresArr[MES_TEMP_SIZE];
@@ -369,6 +363,11 @@ private:
     // External Measures
     void addToMeasuresB(double toAdd);
     void addToMeasuresC(double toAdd);
+
+    double deltaScaleOutput(double delta, double output);
+
+    void updatePWM(uint8_t pin, uint8_t channel, uint32_t freq, uint8_t resolution_bits);
+    void updateSampleTime(int pidTickMax);
 
     /* ============================ */
 

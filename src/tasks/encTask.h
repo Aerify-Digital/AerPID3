@@ -2822,7 +2822,8 @@ void onEb1Encoder(EncoderButton &eb)
             {
                 chng += 0.001 * dir;
             }
-            enc_am->getAerPID(elementIndex)->PWM_ScaleFactor += chng;
+            int sc = enc_am->getAerPID(elementIndex)->getPwmScaler() + chng;
+            enc_am->getAerPID(elementIndex)->setPwmScaler(sc);
             enc_aerGUI->updateMenu();
             enc_am->webUpdatePID(true);
             break;
@@ -2872,7 +2873,8 @@ void onEb1Encoder(EncoderButton &eb)
             {
                 chng += 1 * dir;
             }
-            enc_am->getAerPID(elementIndex)->PWM_CycleTime += chng;
+            int ct = enc_am->getAerPID(elementIndex)->getPidTime() + chng;
+            enc_am->getAerPID(elementIndex)->setPidTime(ct);
             enc_aerGUI->updateMenu();
             enc_am->webUpdatePID(true);
             break;

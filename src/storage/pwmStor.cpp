@@ -9,10 +9,10 @@ void PwmStor::init(Flash *flash)
 // ==========================================================================
 // PID PWM File
 
-void PwmStor::save_pwm(int frequency, double scaleFactor, int cycleTime, boolean autoTune, double bias, double windup)
+void PwmStor::save_pwm(int frequency, double scaleFactor, int cycleTime, boolean autoTune, double bias, double windup, int pwmRes, int pidRes)
 {
-    const char *filename = "pwm.dat";
-    int leng = 40;
+    const char *filename = "pwm1.dat";
+    int leng = 45;
     char storageData[leng];
 
     union ByteInt
@@ -36,6 +36,10 @@ void PwmStor::save_pwm(int frequency, double scaleFactor, int cycleTime, boolean
     bi.Num = bias;
     ByteDouble wu;
     wu.Num = windup;
+    ByteInt pwm;
+    pwm.Num = pwmRes;
+    ByteInt pid;
+    pid.Num = pidRes;
 
     storageData[0] = f.array[0];
     storageData[1] = f.array[1];
@@ -76,15 +80,25 @@ void PwmStor::save_pwm(int frequency, double scaleFactor, int cycleTime, boolean
     storageData[34] = wu.array[6];
     storageData[35] = wu.array[7];
 
+    storageData[36] = pwm.array[0];
+    storageData[37] = pwm.array[1];
+    storageData[38] = pwm.array[2];
+    storageData[39] = pwm.array[3];
+
+    storageData[40] = pid.array[0];
+    storageData[41] = pid.array[1];
+    storageData[42] = pid.array[2];
+    storageData[43] = pid.array[3];
+
     flash->saveFile(filename, storageData, leng);
 
     this->_saved = true;
 }
 
-void PwmStor::load_pwm(int &frequency, double &scaleFactor, int &cycleTime, boolean &autoTune, double &bias, double &windup)
+void PwmStor::load_pwm(int &frequency, double &scaleFactor, int &cycleTime, boolean &autoTune, double &bias, double &windup, int &pwmRes, int &pidRes)
 {
-    const char *filename = "pwm.dat";
-    int leng = 40;
+    const char *filename = "pwm1.dat";
+    int leng = 45;
     char storageData[leng];
 
     flash->openFile(filename, storageData, leng);
@@ -105,6 +119,8 @@ void PwmStor::load_pwm(int &frequency, double &scaleFactor, int &cycleTime, bool
     ByteInt ct;
     ByteDouble bi;
     ByteDouble wu;
+    ByteInt pwm;
+    ByteInt pid;
 
     f.array[0] = storageData[0];
     f.array[1] = storageData[1];
@@ -149,12 +165,24 @@ void PwmStor::load_pwm(int &frequency, double &scaleFactor, int &cycleTime, bool
     wu.array[6] = storageData[34];
     wu.array[7] = storageData[35];
     windup = wu.Num;
+
+    pwm.array[0] = storageData[36];
+    pwm.array[1] = storageData[37];
+    pwm.array[2] = storageData[38];
+    pwm.array[3] = storageData[39];
+    pwmRes = pwm.Num;
+
+    pid.array[0] = storageData[40];
+    pid.array[1] = storageData[41];
+    pid.array[2] = storageData[42];
+    pid.array[3] = storageData[43];
+    pidRes = pid.Num;
 }
 
-void PwmStor::save_pwm_2(int frequency, double scaleFactor, int cycleTime, boolean autoTune, double bias, double windup)
+void PwmStor::save_pwm_2(int frequency, double scaleFactor, int cycleTime, boolean autoTune, double bias, double windup, int pwmRes, int pidRes)
 {
     const char *filename = "pwm2.dat";
-    int leng = 40;
+    int leng = 45;
     char storageData[leng];
 
     union ByteInt
@@ -178,6 +206,10 @@ void PwmStor::save_pwm_2(int frequency, double scaleFactor, int cycleTime, boole
     bi.Num = bias;
     ByteDouble wu;
     wu.Num = windup;
+    ByteInt pwm;
+    pwm.Num = pwmRes;
+    ByteInt pid;
+    pid.Num = pidRes;
 
     storageData[0] = f.array[0];
     storageData[1] = f.array[1];
@@ -218,15 +250,25 @@ void PwmStor::save_pwm_2(int frequency, double scaleFactor, int cycleTime, boole
     storageData[34] = wu.array[6];
     storageData[35] = wu.array[7];
 
+    storageData[36] = pwm.array[0];
+    storageData[37] = pwm.array[1];
+    storageData[38] = pwm.array[2];
+    storageData[39] = pwm.array[3];
+
+    storageData[40] = pid.array[0];
+    storageData[41] = pid.array[1];
+    storageData[42] = pid.array[2];
+    storageData[43] = pid.array[3];
+
     flash->saveFile(filename, storageData, leng);
 
     this->_saved = true;
 }
 
-void PwmStor::load_pwm_2(int &frequency, double &scaleFactor, int &cycleTime, boolean &autoTune, double &bias, double &windup)
+void PwmStor::load_pwm_2(int &frequency, double &scaleFactor, int &cycleTime, boolean &autoTune, double &bias, double &windup, int &pwmRes, int &pidRes)
 {
     const char *filename = "pwm2.dat";
-    int leng = 40;
+    int leng = 45;
     char storageData[leng];
 
     flash->openFile(filename, storageData, leng);
@@ -247,6 +289,8 @@ void PwmStor::load_pwm_2(int &frequency, double &scaleFactor, int &cycleTime, bo
     ByteInt ct;
     ByteDouble bi;
     ByteDouble wu;
+    ByteInt pwm;
+    ByteInt pid;
 
     f.array[0] = storageData[0];
     f.array[1] = storageData[1];
@@ -291,11 +335,23 @@ void PwmStor::load_pwm_2(int &frequency, double &scaleFactor, int &cycleTime, bo
     wu.array[6] = storageData[34];
     wu.array[7] = storageData[35];
     windup = wu.Num;
+
+    pwm.array[0] = storageData[36];
+    pwm.array[1] = storageData[37];
+    pwm.array[2] = storageData[38];
+    pwm.array[3] = storageData[39];
+    pwmRes = pwm.Num;
+
+    pid.array[0] = storageData[40];
+    pid.array[1] = storageData[41];
+    pid.array[2] = storageData[42];
+    pid.array[3] = storageData[43];
+    pidRes = pid.Num;
 }
 
 bool PwmStor::pwm_exists()
 {
-    const char *filename = "pwm.dat";
+    const char *filename = "pwm1.dat";
     return flash->fileExists(filename);
 }
 
@@ -307,7 +363,7 @@ bool PwmStor::pwm_2_exists()
 
 void PwmStor::destroy()
 {
-    const char *filename1 = "pwm.dat";
+    const char *filename1 = "pwm1.dat";
     if (flash->fileExists(filename1))
     {
         flash->deleteFile(filename1);
