@@ -51,7 +51,7 @@ void save_task(void *pvParameters)
         measModeStorage.load();
         if (measModeStorage.isLoaded())
         {
-            am->setMeasureMode(measModeStorage.getMode());
+            am->setMeasureMode(measModeStorage.getMode(), false);
         }
 
         // Load the PID values from Flash

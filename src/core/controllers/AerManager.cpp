@@ -34,14 +34,16 @@ AerPID *AerManager::getAerPID(uint8_t ei) // getAerStorage()
     return AerManager::aerPID[ei];
 }
 
-void AerManager::setMeasureMode(uint8_t mode)
+void AerManager::setMeasureMode(uint8_t mode, bool save)
 {
     AerManager::measMode = mode;
     for (uint8_t i = 0; i < AERPID_COUNT; i++)
     {
         AerManager::aerPID[i]->setMeasMode(mode);
     }
+    if (save) {
     measModeStorage.setMode(mode);
+    }
 }
 
 uint8_t AerManager::getMeasureMode()

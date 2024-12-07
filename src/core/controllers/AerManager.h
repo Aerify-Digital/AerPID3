@@ -70,7 +70,7 @@ public:
     /// @brief Gets the AerPID class Object
     /// @return AerPID
     AerPID *getAerPID(uint8_t elementIndex);
-    void setMeasureMode(uint8_t mode);
+    void setMeasureMode(uint8_t mode, bool save);
     uint8_t getMeasureMode();
 
     /// @brief Gets the Network Storage Object

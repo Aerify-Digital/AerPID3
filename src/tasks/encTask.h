@@ -1448,19 +1448,19 @@ void onEb1Clicked(EncoderButton &eb)
             {
                 if (enc_am->getMeasureMode() == 0)
                 {
-                    enc_am->setMeasureMode(1);
+                    enc_am->setMeasureMode(1, true);
                 }
                 else if (enc_am->getMeasureMode() == 1)
                 {
-                    enc_am->setMeasureMode(2);
+                    enc_am->setMeasureMode(2, true);
                 }
                 else if (enc_am->getMeasureMode() == 2)
                 {
-                    enc_am->setMeasureMode(0);
+                    enc_am->setMeasureMode(0, true);
                 }
                 else
                 {
-                    enc_am->setMeasureMode(0);
+                    enc_am->setMeasureMode(0, true);
                 }
                 enc_am->setPressTick(120);
                 enc_aerGUI->updateMenu();
