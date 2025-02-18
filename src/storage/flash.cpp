@@ -48,15 +48,17 @@ void Flash::saveFile(const char *filename, char *dat, int len)
   {
     SerialFlash.remove(filename);
     Serial.println("Deleted Old File!");
-    delayMicroseconds(50);
+    delayMicroseconds(500);
+    // Serial.println("File Exists!");
   }
 
   if (!SerialFlash.exists(filename))
   {
     Serial.print("Creating File...  ");
-    SerialFlash.createErasable(filename, len);
+    // SerialFlash.createErasable(filename, len);
+    SerialFlash.create(filename, len);
     // Serial.println("File Saved!");
-    delayMicroseconds(20);
+    delayMicroseconds(200);
   }
 
   SerialFlashFile keyFile = SerialFlash.open(filename);
@@ -344,235 +346,6 @@ bool Flash::openDeviceFavoritesFile(const char *filename, char *storageData)
   return openFile(filename, storageData, leng);
 }
 
-void Flash::save_favorites(double fava, double favb, double favc, double favd)
-{
-  const char *filename = "favorites.dat";
-  char storageData[37];
-  int leng = 36;
-
-  union DoubleByte
-  {
-    byte array[8];
-    double Num;
-  } d;
-
-  // Serial.print("Saving.. ");
-  d.Num = fava;
-  // Serial.print(d.Num);
-  int j = 0;
-  for (int i = 0; i < 9; i++)
-  {
-    if (i < 8)
-    {
-      storageData[j++] = d.array[i];
-    }
-    else
-    {
-      storageData[j++] = 0x7c;
-    }
-  }
-  // Serial.print(" ");
-  d.Num = favb;
-  // Serial.print(d.Num);
-  j = 9;
-  for (int i = 0; i < 9; i++)
-  {
-    if (i < 8)
-    {
-      storageData[j++] = d.array[i];
-    }
-    else
-    {
-      storageData[j++] = 0x7c;
-    }
-  }
-  // Serial.print(" ");
-  d.Num = favc;
-  // Serial.print(d.Num);
-  j = 18;
-  for (int i = 0; i < 9; i++)
-  {
-    if (i < 8)
-    {
-      storageData[j++] = d.array[i];
-    }
-    else
-    {
-      storageData[j++] = 0x7c;
-    }
-  }
-  d.Num = favd;
-  // Serial.print(d.Num);
-  j = 27;
-  for (int i = 0; i < 9; i++)
-  {
-    if (i < 8)
-    {
-      storageData[j++] = d.array[i];
-    }
-    else
-    {
-      storageData[j++] = 0x7c;
-    }
-  }
-  storageData[36] = '\0';
-
-  // Serial.println("");
-
-  // Serial.print("Saving Flash File: ");
-  // Serial.println(filename);
-
-  if (SerialFlash.exists(filename))
-  {
-    SerialFlash.remove(filename);
-    // Serial.println("Deleted Old File!");
-    delay(130);
-  }
-
-  if (!SerialFlash.exists(filename))
-  {
-    // Serial.print("Creating File...  ");
-    SerialFlash.createErasable(filename, leng);
-    // Serial.println("File Saved!");
-  }
-
-  SerialFlashFile keyFile = SerialFlash.open(filename);
-
-  // Serial.print("Opened File.. ");
-  // Serial.println(filename);
-
-  char keys[leng];
-  int p = 0;
-  for (int k = 0; k < leng; k++)
-  {
-    if (p < leng - 1)
-    {
-      keys[k] = storageData[p++];
-    }
-    else if (p < leng)
-    {
-      keys[k] = 0x7c;
-    }
-    else
-    {
-      keys[k] = '\0';
-    }
-  }
-
-  /*Serial.println("Saving File.. ");
-  Serial.print("FILE:  ");
-  for (int k = 0; k < leng; k++) {
-    if (k > 0 && k % 9 == 0) {
-      Serial.print(" ");
-    }
-    if (keys[k] <= 9) {
-      Serial.print("0");
-    }
-    Serial.print(keys[k], HEX);
-  }
-  Serial.print(" :: ");
-  Serial.print(leng);*/
-
-  keyFile.write(keys, leng);
-  keyFile.close();
-
-  // Serial.print(" ... ");
-  // Serial.println("File Saved!");
-}
-
-// load
-void Flash::load_favorites(double &fava, double &favb, double &favc, double &favd)
-{
-  const char *filename = "favorites.dat";
-  int leng = 36;
-
-  union DoubleByte
-  {
-    byte array[8];
-    double Num;
-  } d;
-
-  if (!SerialFlash.exists(filename))
-  {
-    return;
-  }
-
-  // Serial.println(" ");
-  // Serial.print("Opening File.. ");
-  // Serial.println(filename);
-
-  SerialFlashFile keyFile = SerialFlash.open(filename);
-
-  // Serial.print("Reading File..  ");
-
-  char buf[leng];
-  keyFile.read(buf, leng);
-
-  /*Serial.print("FILE:  ");
-  for (int k = 0; k < leng; k++) {
-    if (k > 0 && k % 9 == 0) {
-      Serial.print(" ");
-    }
-    if (buf[k] <= 9) {
-      Serial.print("0");
-    }
-    Serial.print(buf[k], HEX);
-  }
-  Serial.print(" :: ");
-  Serial.println(leng);*/
-
-  keyFile.close();
-
-  d.Num = 0;
-  // Serial.print("Read Values: ");
-  int j = 0;
-  for (int i = 0; i < 9; i++)
-  {
-    if (i < 8)
-    {
-      d.array[i] = buf[j++];
-    }
-  }
-  fava = d.Num;
-  // Serial.print(" ");
-  // Serial.print(fava);
-  j = 9;
-  for (int i = 0; i < 9; i++)
-  {
-    if (i < 8)
-    {
-      d.array[i] = buf[j++];
-    }
-  }
-  favb = d.Num;
-  // Serial.print(" ");
-  // Serial.print(favb);
-  j = 18;
-  for (int i = 0; i < 9; i++)
-  {
-    if (i < 8)
-    {
-      d.array[i] = buf[j++];
-    }
-  }
-  favc = d.Num;
-  // Serial.print(" ");
-  // Serial.print(favc);
-  j = 27;
-  for (int i = 0; i < 9; i++)
-  {
-    if (i < 8)
-    {
-      d.array[i] = buf[j++];
-    }
-  }
-  favd = d.Num;
-  // Serial.print(" ");
-  // Serial.print(favd);
-
-  // Serial.println("");
-}
-
 // ==========================================================================
 // ==========================================================================
 // Settings File
@@ -690,9 +463,9 @@ void Flash::save_setup(bool usage_det, bool auto_off, long off_time)
 
   if (SerialFlash.exists(filename))
   {
-    SerialFlash.remove(filename);
-    // Serial.println("Deleted Old File!");
-    delay(130);
+    // SerialFlash.remove(filename);
+    //  Serial.println("Deleted Old File!");
+    // delay(130);
   }
 
   if (!SerialFlash.exists(filename))
@@ -865,14 +638,6 @@ void Flash::load_setup(bool &usage_det, bool &auto_off, long &off_time)
   //  Serial.print(" ");
   //  Serial.print(bump_time);
   //  Serial.println("");
-}
-
-void Flash::save_settings_lights(bool LIGHT_STAT_EN, bool LIGHT_AMBI_EN, uint8_t LIGHT_STYLE_CYCLE, String LIGHT_COLOR_EN, String LIGHT_COLOR_DIS)
-{
-}
-
-void Flash::load_settings_lights(bool &LIGHT_STAT_EN, bool &LIGHT_AMBI_EN, uint8_t &LIGHT_STYLE_CYCLE, String &LIGHT_COLOR_EN, String &LIGHT_COLOR_DIS)
-{
 }
 
 // ================================================================================

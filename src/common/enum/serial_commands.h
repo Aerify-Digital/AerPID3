@@ -13,6 +13,7 @@
 enum SerialCommand
 {
     CMD_INIT = 0x20,
+    CMD_INIT_ADV = 0x2A,
     CMD_STATUS = 0x21,
     CMD_INIT2 = 0x22,
     CMD_STATUS2 = 0x23,
@@ -34,6 +35,10 @@ enum SerialCommand
     CMD_LED = 0x70,
     CMD_PID = 0x90,
     CMD_PID2 = 0x91,
+    CMD_ADV1_PWM = 0x92,
+    CMD_ADV2_PWM = 0x93,
+    CMD_ADV1_PID = 0x94,
+    CMD_ADV2_PID = 0x95,
     CMD_TEMP = 0x10,
     CMD_UNIT = 0x11,
     CMD_TEMP2 = 0x13,
@@ -62,6 +67,16 @@ enum PARAM_PID
     PARAM_PID_I,
     PARAM_PID_D,
     PARAM_PID,
+};
+
+enum PARAM_ADV
+{
+    PARAM_ADV_PWM_FACTOR,
+    PARAM_ADV_PWM_FREQ,
+    PARAM_ADV_PWM_RES,
+    PARAM_ADV_PID_BIAS,
+    PARAM_ADV_PID_TIME,
+    PARAM_ADV_PID_RES,
 };
 
 enum LEDMode

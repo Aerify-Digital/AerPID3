@@ -443,15 +443,15 @@ boolean WebServer::setup()
     // ======================================
     // Routes for New Web-UI
     server.on("/", HTTP_ANY, [](AsyncWebServerRequest *request)
-              { request->send(SPIFFS, "/index.html", "text/html"); });
+              { request->send(SPIFFS, "/index.min.html", "text/html"); });
     server.on("/index", HTTP_GET, [](AsyncWebServerRequest *request)
-              { request->send(SPIFFS, "/index.html", "text/html"); });
+              { request->send(SPIFFS, "/index.min.html", "text/html"); });
     server.on("/index.html", HTTP_GET, [](AsyncWebServerRequest *request)
-              { request->send(SPIFFS, "/index.html", "text/html"); });
+              { request->send(SPIFFS, "/index.min.html", "text/html"); });
     server.on("/home", HTTP_GET, [](AsyncWebServerRequest *request)
-              { request->send(SPIFFS, "/index.html", "text/html"); });
+              { request->send(SPIFFS, "/index.min.html", "text/html"); });
     server.on("/home.html", HTTP_GET, [](AsyncWebServerRequest *request)
-              { request->send(SPIFFS, "/index.html", "text/html"); });
+              { request->send(SPIFFS, "/index.min.html", "text/html"); });
 
     if (verbose_d)
     {
@@ -462,49 +462,59 @@ boolean WebServer::setup()
 
     // ======================================
     // Static routes for folders
-    server.on("/favicon.ico", HTTP_GET, [](AsyncWebServerRequest *request)
-              { request->send(SPIFFS, "/favicon.ico", "image/x-icon"); }); // Route to load favicon.ico file
-    server.on("/favicon.png", HTTP_GET, [](AsyncWebServerRequest *request)
-              { request->send(SPIFFS, "/favicon.png", "image/png"); });
+    /*server.on("/favicon.ico", HTTP_GET, [](AsyncWebServerRequest *request)
+              { request->send(SPIFFS, "/favicon.ico", "image/x-icon"); }); */
+    server.serveStatic("/favicon.ico", SPIFFS, "/favicon.ico", "max-age=1800");
+    /*server.on("/favicon.png", HTTP_GET, [](AsyncWebServerRequest *request)
+              { request->send(SPIFFS, "/favicon.png", "image/png"); });*/
+    server.serveStatic("/favicon.png", SPIFFS, "/favicon.png", "max-age=1800");
     if (verbose_d)
         Serial.println(F("Setup 'favicon' file routes"));
 
-    server.serveStatic("/js", SPIFFS, "/js");   // Route to javascript folder
-    server.serveStatic("/css", SPIFFS, "/css"); // Route to styles folder
+    server.serveStatic("/js", SPIFFS, "/js", "max-age=600");   // Route to javascript folder
+    server.serveStatic("/css", SPIFFS, "/css", "max-age=600"); // Route to styles folder
     if (verbose_d)
         Serial.println(F("Setup '/js' and '/css' directory routes"));
 
     // File: fa-brands-400.ttf
-    server.on("/webfonts/fa-brands-400.ttf", HTTP_GET, [](AsyncWebServerRequest *request)
-              { request->send(SPIFFS, "/wf/a9545819", "application/x-font-ttf"); });
+    /*server.on("/webfonts/fa-brands-400.ttf", HTTP_GET, [](AsyncWebServerRequest *request)
+              { request->send(SPIFFS, "/wf/a9545819", "application/x-font-ttf"); });*/
+    server.serveStatic("/webfonts/fa-brands-400.ttf", SPIFFS, "/wf/a9545819", "max-age=900");
     Serial.println("Setup SPIFFS File Mapping: '/webfonts/fa-brands-400.ttf' -> '/wf/a9545819'");
     // File: fa-brands-400.woff2
-    server.on("/webfonts/fa-brands-400.woff2", HTTP_GET, [](AsyncWebServerRequest *request)
-              { request->send(SPIFFS, "/wf/84a1fc9a", "application/x-font-woff2"); });
+    /*server.on("/webfonts/fa-brands-400.woff2", HTTP_GET, [](AsyncWebServerRequest *request)
+              { request->send(SPIFFS, "/wf/84a1fc9a", "application/x-font-woff2"); });*/
+    server.serveStatic("/webfonts/fa-brands-400.woff2", SPIFFS, "/wf/84a1fc9a", "max-age=900");
     Serial.println("Setup SPIFFS File Mapping: '/webfonts/fa-brands-400.woff2' -> '/wf/84a1fc9a'");
     // File: fa-regular-400.ttf
-    server.on("/webfonts/fa-regular-400.ttf", HTTP_GET, [](AsyncWebServerRequest *request)
-              { request->send(SPIFFS, "/wf/283fce66", "application/x-font-ttf"); });
+    /*server.on("/webfonts/fa-regular-400.ttf", HTTP_GET, [](AsyncWebServerRequest *request)
+              { request->send(SPIFFS, "/wf/283fce66", "application/x-font-ttf"); });*/
+    server.serveStatic("/webfonts/fa-regular-400.ttf", SPIFFS, "/wf/283fce66", "max-age=900");
     Serial.println("Setup SPIFFS File Mapping: '/webfonts/fa-regular-400.ttf' -> '/wf/283fce66'");
     // File: fa-regular-400.woff2
-    server.on("/webfonts/fa-regular-400.woff2", HTTP_GET, [](AsyncWebServerRequest *request)
-              { request->send(SPIFFS, "/wf/356a2eb9", "application/x-font-woff2"); });
+    /*server.on("/webfonts/fa-regular-400.woff2", HTTP_GET, [](AsyncWebServerRequest *request)
+              { request->send(SPIFFS, "/wf/356a2eb9", "application/x-font-woff2"); });*/
+    server.serveStatic("/webfonts/fa-regular-400.woff2", SPIFFS, "/wf/356a2eb9", "max-age=900");
     Serial.println("Setup SPIFFS File Mapping: '/webfonts/fa-regular-400.woff2' -> '/wf/356a2eb9'");
     // File: fa-solid-900.ttf
-    server.on("/webfonts/fa-solid-900.ttf", HTTP_GET, [](AsyncWebServerRequest *request)
-              { request->send(SPIFFS, "/wf/5f0a1e22", "application/x-font-ttf"); });
+    /*server.on("/webfonts/fa-solid-900.ttf", HTTP_GET, [](AsyncWebServerRequest *request)
+              { request->send(SPIFFS, "/wf/5f0a1e22", "application/x-font-ttf"); });*/
+    server.serveStatic("/webfonts/fa-solid-900.ttf", SPIFFS, "/wf/5f0a1e22", "max-age=900");
     Serial.println("Setup SPIFFS File Mapping: '/webfonts/fa-solid-900.ttf' -> '/wf/5f0a1e22'");
     // File: fa-solid-900.woff2
-    server.on("/webfonts/fa-solid-900.woff2", HTTP_GET, [](AsyncWebServerRequest *request)
-              { request->send(SPIFFS, "/wf/27ac0159", "application/x-font-woff2"); });
+    /*server.on("/webfonts/fa-solid-900.woff2", HTTP_GET, [](AsyncWebServerRequest *request)
+              { request->send(SPIFFS, "/wf/27ac0159", "application/x-font-woff2"); });*/
+    server.serveStatic("/webfonts/fa-solid-900.woff2", SPIFFS, "/wf/27ac0159", "max-age=900");
     Serial.println("Setup SPIFFS File Mapping: '/webfonts/fa-solid-900.woff2' -> '/wf/27ac0159'");
     // File: fa-v4compatibility.ttf
-    server.on("/webfonts/fa-v4compatibility.ttf", HTTP_GET, [](AsyncWebServerRequest *request)
-              { request->send(SPIFFS, "/wf/732ebf9a", "application/x-font-ttf"); });
+    /*server.on("/webfonts/fa-v4compatibility.ttf", HTTP_GET, [](AsyncWebServerRequest *request)
+              { request->send(SPIFFS, "/wf/732ebf9a", "application/x-font-ttf"); });*/
+    server.serveStatic("/webfonts/fa-v4compatibility.ttf", SPIFFS, "/wf/732ebf9a", "max-age=900");
     Serial.println("Setup SPIFFS File Mapping: '/webfonts/fa-v4compatibility.ttf' -> '/wf/732ebf9a'");
     // File: fa-v4compatibility.woff2
-    server.on("/webfonts/fa-v4compatibility.woff2", HTTP_GET, [](AsyncWebServerRequest *request)
-              { request->send(SPIFFS, "/wf/aa619ab3", "application/x-font-woff2"); });
+    /*server.on("/webfonts/fa-v4compatibility.woff2", HTTP_GET, [](AsyncWebServerRequest *request)
+              { request->send(SPIFFS, "/wf/aa619ab3", "application/x-font-woff2"); });*/
+    server.serveStatic("/webfonts/fa-v4compatibility.woff2", SPIFFS, "/wf/aa619ab3", "max-age=900");
     Serial.println("Setup SPIFFS File Mapping: '/webfonts/fa-v4compatibility.woff2' -> '/wf/aa619ab3'");
 
     // Heap Size
@@ -579,7 +589,8 @@ void WebServer::_onEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, A
     case WS_EVT_CONNECT:
         Serial.printf("[WebSocket] client #%u connected from %s\n", client->id(), client->remoteIP().toString().c_str());
         client->keepAlivePeriod(60); // keepalive setting
-        sendInitMessage(client->id());
+        sendInitPacket(client->id());
+        sendInitPacket2(client->id());
         break;
     case WS_EVT_DISCONNECT:
         Serial.printf("[WebSocket] client #%u disconnected\n", client->id());
@@ -659,7 +670,7 @@ void WebServer::enPackFill(MessagePack *messagePack)
  *
  * @param client
  */
-void WebServer::sendInitMessage(uint32_t client)
+void WebServer::sendInitPacket(uint32_t client)
 {
     const xVersion v = aerManager.getVersion()->getVer();
     const xVersion vw = aerManager.getVersionWeb()->getVer();
@@ -676,6 +687,30 @@ void WebServer::sendInitMessage(uint32_t client)
         delete cmd;
     }
     messagePack.dispose();
+}
+
+void WebServer::sendInitPacket2(uint32_t client)
+{
+    SocketCmdOp *cmd = new SocketCmdOp(SerialCommand::CMD_INIT_ADV);
+    cmd->AddClient(client);
+    cmd->Op(Operation::OP_GET);
+    cmd->Val(xAerPID1.getPwmScaler());
+    cmd->Val(xAerPID1.getPwmFreq());
+    cmd->Val(xAerPID1.getPwmResolution());
+    cmd->Val(xAerPID1.getOutputBias());
+    cmd->Val(xAerPID1.getPidTime());
+    cmd->Val(xAerPID1.getOutputLimit());
+#if AERPID_COUNT == 2
+    cmd->Val(xAerPID2.getPwmScaler());
+    cmd->Val(xAerPID2.getPwmFreq());
+    cmd->Val(xAerPID2.getPwmResolution());
+    cmd->Val(xAerPID2.getOutputBias());
+    cmd->Val(xAerPID2.getPidTime());
+    cmd->Val(xAerPID2.getOutputLimit());
+#endif
+    cmd->build();
+    cmd->emit(&ws);
+    delete cmd;
 }
 
 void WebServer::updateClients()
@@ -937,6 +972,11 @@ void WebServer::processSocketData(char *data, size_t len, AsyncWebSocketClient *
     {
         double value;
         char bytes[sizeof(double)];
+    };
+    union byteInt
+    {
+        int value;
+        char bytes[sizeof(int)];
     };
 
     switch (cmd)
@@ -1489,7 +1529,7 @@ void WebServer::processSocketData(char *data, size_t len, AsyncWebSocketClient *
                 }
                 val = xAerPID1.kP = bd.value;
                 Serial.println(">>> P Val >> " + String(val));
-                xAerPID1.setTunings();
+                xAerPID1.setTunings(true);
                 aerManager.setPressTick(600);
                 xAerPID1.pid_saved = false;
             }
@@ -1519,7 +1559,7 @@ void WebServer::processSocketData(char *data, size_t len, AsyncWebSocketClient *
                 }
                 val = xAerPID1.kI = bd.value;
                 Serial.println(">>> I Val >> " + String(val, 4));
-                xAerPID1.setTunings();
+                xAerPID1.setTunings(true);
                 aerManager.setPressTick(600);
                 xAerPID1.pid_saved = false;
             }
@@ -1548,7 +1588,7 @@ void WebServer::processSocketData(char *data, size_t len, AsyncWebSocketClient *
                 }
                 val = xAerPID1.kD = bd.value;
                 Serial.println(">>> D Val >> " + String(val));
-                xAerPID1.setTunings();
+                xAerPID1.setTunings(true);
                 aerManager.setPressTick(600);
                 xAerPID1.pid_saved = false;
             }
@@ -1564,6 +1604,344 @@ void WebServer::processSocketData(char *data, size_t len, AsyncWebSocketClient *
         }
     }
     break;
+    case SerialCommand::CMD_ADV1_PWM:
+    {
+        uint8_t op = data[1];
+        uint8_t prm = data[2];
+        switch (prm)
+        {
+        case PARAM_ADV::PARAM_ADV_PWM_FACTOR:
+        {
+            if (op == OP_GET)
+            {
+                SocketCmdOp *reply = new SocketCmdOp(SerialCommand::CMD_ADV1_PWM);
+                reply->AddClient(client->id());
+                reply->Param(prm);
+                reply->Val((uint32_t)xAerPID1.getPwmScaler());
+                reply->build();
+                reply->emit(&ws);
+                delete reply;
+            }
+            else if (op == OP_SET)
+            {
+                byteDouble bd;
+                for (int i = 0; i < sizeof(double); i++)
+                {
+                    bd.bytes[i] = data[3 + i];
+                }
+                xAerPID1.setPwmScaler(bd.value);
+                aerManager.setPressTick(100);
+                xAerPID1.pwm_saved = false;
+            }
+        }
+        break;
+        case PARAM_ADV::PARAM_ADV_PWM_FREQ:
+        {
+            if (op == OP_GET)
+            {
+                SocketCmdOp *reply = new SocketCmdOp(SerialCommand::CMD_ADV1_PWM);
+                reply->AddClient(client->id());
+                reply->Param(prm);
+                reply->Val((uint32_t)xAerPID1.getPwmFreq());
+                reply->build();
+                reply->emit(&ws);
+                delete reply;
+            }
+            else if (op == OP_SET)
+            {
+                byteInt bi;
+                for (int i = 0; i < sizeof(int); i++)
+                {
+                    bi.bytes[i] = data[3 + i];
+                }
+                xAerPID1.setPwmFreq(bi.value);
+                aerManager.setPressTick(100);
+                xAerPID1.pwm_saved = false;
+            }
+        }
+        break;
+        case PARAM_ADV::PARAM_ADV_PWM_RES:
+        {
+            if (op == OP_GET)
+            {
+                SocketCmdOp *reply = new SocketCmdOp(SerialCommand::CMD_ADV1_PWM);
+                reply->AddClient(client->id());
+                reply->Param(prm);
+                reply->Val((uint32_t)xAerPID1.getPwmResolution());
+                reply->build();
+                reply->emit(&ws);
+                delete reply;
+            }
+            else if (op == OP_SET)
+            {
+                byteInt bi;
+                for (int i = 0; i < sizeof(int); i++)
+                {
+                    bi.bytes[i] = data[3 + i];
+                }
+                xAerPID1.setPWMResolution(bi.value);
+                aerManager.setPressTick(100);
+                xAerPID1.pwm_saved = false;
+            }
+        }
+        break;
+        }
+    }
+    break;
+    case SerialCommand::CMD_ADV1_PID:
+    {
+        uint8_t op = data[1];
+        uint8_t prm = data[2];
+        switch (prm)
+        {
+        case PARAM_ADV::PARAM_ADV_PID_BIAS:
+        {
+            if (op == OP_GET)
+            {
+                SocketCmdOp *reply = new SocketCmdOp(SerialCommand::CMD_ADV1_PID);
+                reply->AddClient(client->id());
+                reply->Param(prm);
+                reply->Val(xAerPID1.getOutputBias());
+                reply->build();
+                reply->emit(&ws);
+                delete reply;
+            }
+            else if (op == OP_SET)
+            {
+                byteDouble bd;
+                for (int i = 0; i < sizeof(double); i++)
+                {
+                    bd.bytes[i] = data[3 + i];
+                }
+                xAerPID1.setOutputBias(bd.value);
+                aerManager.setPressTick(100);
+                xAerPID1.pwm_saved = false;
+            }
+        }
+        break;
+        case PARAM_ADV::PARAM_ADV_PID_TIME:
+        {
+            if (op == OP_GET)
+            {
+                SocketCmdOp *reply = new SocketCmdOp(SerialCommand::CMD_ADV1_PID);
+                reply->AddClient(client->id());
+                reply->Param(prm);
+                reply->Val(xAerPID1.getPidTime());
+                reply->build();
+                reply->emit(&ws);
+                delete reply;
+            }
+            else if (op == OP_SET)
+            {
+                byteInt bi;
+                for (int i = 0; i < sizeof(int); i++)
+                {
+                    bi.bytes[i] = data[3 + i];
+                }
+                xAerPID1.setPidTime(bi.value);
+                aerManager.setPressTick(100);
+                xAerPID1.pwm_saved = false;
+            }
+        }
+        break;
+        case PARAM_ADV::PARAM_ADV_PID_RES:
+        {
+            if (op == OP_GET)
+            {
+                SocketCmdOp *reply = new SocketCmdOp(SerialCommand::CMD_ADV1_PID);
+                reply->AddClient(client->id());
+                reply->Param(prm);
+                reply->Val(xAerPID1.getOutputLimit());
+                reply->build();
+                reply->emit(&ws);
+                delete reply;
+            }
+            else if (op == OP_SET)
+            {
+                byteInt bi;
+                for (int i = 0; i < sizeof(int); i++)
+                {
+                    bi.bytes[i] = data[3 + i];
+                }
+                xAerPID1.setOutputLimit(bi.value);
+                aerManager.setPressTick(100);
+                xAerPID1.pwm_saved = false;
+            }
+        }
+        break;
+        }
+    }
+    break;
+#if AERPID_COUNT == 2
+    case SerialCommand::CMD_ADV2_PWM:
+    {
+        uint8_t op = data[1];
+        uint8_t prm = data[2];
+        switch (prm)
+        {
+        case PARAM_ADV::PARAM_ADV_PWM_FACTOR:
+        {
+            if (op == OP_GET)
+            {
+                SocketCmdOp *reply = new SocketCmdOp(SerialCommand::CMD_ADV2_PWM);
+                reply->AddClient(client->id());
+                reply->Param(prm);
+                reply->Val((uint32_t)xAerPID2.getPwmScaler());
+                reply->build();
+                reply->emit(&ws);
+                delete reply;
+            }
+            else if (op == OP_SET)
+            {
+                byteDouble bd;
+                for (int i = 0; i < sizeof(double); i++)
+                {
+                    bd.bytes[i] = data[3 + i];
+                }
+                xAerPID2.setPwmScaler(bd.value);
+                aerManager.setPressTick(100);
+                xAerPID2.pwm_saved = false;
+            }
+        }
+        break;
+        case PARAM_ADV::PARAM_ADV_PWM_FREQ:
+        {
+            if (op == OP_GET)
+            {
+                SocketCmdOp *reply = new SocketCmdOp(SerialCommand::CMD_ADV2_PWM);
+                reply->AddClient(client->id());
+                reply->Param(prm);
+                reply->Val((uint32_t)xAerPID2.getPwmFreq());
+                reply->build();
+                reply->emit(&ws);
+                delete reply;
+            }
+            else if (op == OP_SET)
+            {
+                byteInt bi;
+                for (int i = 0; i < sizeof(int); i++)
+                {
+                    bi.bytes[i] = data[3 + i];
+                }
+                xAerPID2.setPwmFreq(bi.value);
+                aerManager.setPressTick(100);
+                xAerPID2.pwm_saved = false;
+            }
+        }
+        break;
+        case PARAM_ADV::PARAM_ADV_PWM_RES:
+        {
+            if (op == OP_GET)
+            {
+                SocketCmdOp *reply = new SocketCmdOp(SerialCommand::CMD_ADV2_PWM);
+                reply->AddClient(client->id());
+                reply->Param(prm);
+                reply->Val((uint32_t)xAerPID2.getPwmResolution());
+                reply->build();
+                reply->emit(&ws);
+                delete reply;
+            }
+            else if (op == OP_SET)
+            {
+                byteInt bi;
+                for (int i = 0; i < sizeof(int); i++)
+                {
+                    bi.bytes[i] = data[3 + i];
+                }
+                xAerPID2.setPWMResolution(bi.value);
+                aerManager.setPressTick(100);
+                xAerPID2.pwm_saved = false;
+            }
+        }
+        break;
+        }
+    }
+    break;
+    case SerialCommand::CMD_ADV2_PID:
+    {
+        uint8_t op = data[1];
+        uint8_t prm = data[2];
+        switch (prm)
+        {
+        case PARAM_ADV::PARAM_ADV_PID_BIAS:
+        {
+            if (op == OP_GET)
+            {
+                SocketCmdOp *reply = new SocketCmdOp(SerialCommand::CMD_ADV2_PID);
+                reply->AddClient(client->id());
+                reply->Param(prm);
+                reply->Val((uint32_t)xAerPID2.getOutputBias());
+                reply->build();
+                reply->emit(&ws);
+                delete reply;
+            }
+            else if (op == OP_SET)
+            {
+                byteDouble bd;
+                for (int i = 0; i < sizeof(double); i++)
+                {
+                    bd.bytes[i] = data[3 + i];
+                }
+                xAerPID2.setOutputBias(bd.value);
+                aerManager.setPressTick(100);
+                xAerPID2.pwm_saved = false;
+            }
+        }
+        break;
+        case PARAM_ADV::PARAM_ADV_PID_TIME:
+        {
+            if (op == OP_GET)
+            {
+                SocketCmdOp *reply = new SocketCmdOp(SerialCommand::CMD_ADV2_PID);
+                reply->AddClient(client->id());
+                reply->Param(prm);
+                reply->Val((uint32_t)xAerPID2.getPidTime());
+                reply->build();
+                reply->emit(&ws);
+                delete reply;
+            }
+            else if (op == OP_SET)
+            {
+                byteInt bi;
+                for (int i = 0; i < sizeof(int); i++)
+                {
+                    bi.bytes[i] = data[3 + i];
+                }
+                xAerPID2.setPidTime(bi.value);
+                aerManager.setPressTick(100);
+                xAerPID2.pwm_saved = false;
+            }
+        }
+        break;
+        case PARAM_ADV::PARAM_ADV_PID_RES:
+        {
+            if (op == OP_GET)
+            {
+                SocketCmdOp *reply = new SocketCmdOp(SerialCommand::CMD_ADV2_PID);
+                reply->AddClient(client->id());
+                reply->Param(prm);
+                reply->Val((uint32_t)xAerPID2.getOutputLimit());
+                reply->build();
+                reply->emit(&ws);
+                delete reply;
+            }
+            else if (op == OP_SET)
+            {
+                byteInt bi;
+                for (int i = 0; i < sizeof(int); i++)
+                {
+                    bi.bytes[i] = data[3 + i];
+                }
+                xAerPID2.setOutputLimit(bi.value);
+                aerManager.setPressTick(100);
+                xAerPID2.pwm_saved = false;
+            }
+        }
+        break;
+        }
+    }
+    break;
+#endif
 #if AERPID_COUNT == 2
     case SerialCommand::CMD_PID2:
     {
@@ -1600,7 +1978,7 @@ void WebServer::processSocketData(char *data, size_t len, AsyncWebSocketClient *
                 }
                 val = xAerPID2.kP = bd.value;
                 Serial.println(">>> P Val >> " + String(val));
-                xAerPID2.setTunings();
+                xAerPID2.setTunings(true);
                 aerManager.setPressTick(600);
                 xAerPID2.pid_saved = false;
             }
@@ -1630,7 +2008,7 @@ void WebServer::processSocketData(char *data, size_t len, AsyncWebSocketClient *
                 }
                 val = xAerPID2.kI = bd.value;
                 Serial.println(">>> I Val >> " + String(val, 4));
-                xAerPID2.setTunings();
+                xAerPID2.setTunings(true);
                 aerManager.setPressTick(600);
                 xAerPID2.pid_saved = false;
             }
@@ -1659,7 +2037,7 @@ void WebServer::processSocketData(char *data, size_t len, AsyncWebSocketClient *
                 }
                 val = xAerPID2.kD = bd.value;
                 Serial.println(">>> D Val >> " + String(val));
-                xAerPID2.setTunings();
+                xAerPID2.setTunings(true);
                 aerManager.setPressTick(600);
                 xAerPID2.pid_saved = false;
             }

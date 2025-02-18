@@ -71,6 +71,21 @@ void onBt1Clicked(EncoderButton &eb)
         return;
     }
 
+    if (enc_am->getAerPID(0)->hasFaultError() && !enc_am->getAerPID(0)->hasFaultErrorAlerted())
+    {
+        enc_am->getAerPID(0)->setFaultErrorAlert(true);
+        enc_aerGUI->updateMenu();
+        return;
+    }
+#if AERPID_COUNT == 2
+    if (enc_am->getAerPID(1)->hasFaultError() && !enc_am->getAerPID(1)->hasFaultErrorAlerted())
+    {
+        enc_am->getAerPID(1)->setFaultErrorAlert(true);
+        enc_aerGUI->updateMenu();
+        return;
+    }
+#endif
+
     if (eb.clickCount() >= 3)
     {
         if (xSemaphoreTake(i2c1_mutex, 200) == pdTRUE)
@@ -192,6 +207,21 @@ void onBt2Clicked(EncoderButton &eb)
         return;
     }
 
+    if (enc_am->getAerPID(0)->hasFaultError() && !enc_am->getAerPID(0)->hasFaultErrorAlerted())
+    {
+        enc_am->getAerPID(0)->setFaultErrorAlert(true);
+        enc_aerGUI->updateMenu();
+        return;
+    }
+#if AERPID_COUNT == 2
+    if (enc_am->getAerPID(1)->hasFaultError() && !enc_am->getAerPID(1)->hasFaultErrorAlerted())
+    {
+        enc_am->getAerPID(1)->setFaultErrorAlert(true);
+        enc_aerGUI->updateMenu();
+        return;
+    }
+#endif
+
     uint8_t elementIndex = enc_aerGUI->getElementIndex();
 
     if (enc_aerGUI->getMenuProps()->menuIndex == MENU_SYSTEM_LOCAL_TEMPERATURE)
@@ -289,6 +319,21 @@ void onEb1Clicked(EncoderButton &eb)
     {
         return;
     }
+
+    if (enc_am->getAerPID(0)->hasFaultError() && !enc_am->getAerPID(0)->hasFaultErrorAlerted())
+    {
+        enc_am->getAerPID(0)->setFaultErrorAlert(true);
+        enc_aerGUI->updateMenu();
+        return;
+    }
+#if AERPID_COUNT == 2
+    if (enc_am->getAerPID(1)->hasFaultError() && !enc_am->getAerPID(1)->hasFaultErrorAlerted())
+    {
+        enc_am->getAerPID(1)->setFaultErrorAlert(true);
+        enc_aerGUI->updateMenu();
+        return;
+    }
+#endif
 
     if (eb.clickCount() == 1)
     {
@@ -1225,11 +1270,13 @@ void onEb1Clicked(EncoderButton &eb)
                         // ignore if pid on...
                         return;
                     }
+#if AERPID_COUNT == 2
                     if (enc_am->getAerPID(1)->PID_ON)
                     {
                         // ignore if pid on...
                         return;
                     }
+#endif
                     // trigger scan
                     enc_am->getNetVars()->scanned = false;
                     enc_am->getNetVars()->doscan = true;
@@ -1391,6 +1438,31 @@ void onEb1Clicked(EncoderButton &eb)
                 enc_am->getAerPID(elementIndex)->pwm_saved = false;
                 enc_am->webUpdatePID(true);
                 enc_am->setPressTick(100);
+                enc_aerGUI->updateMenu();
+                return;
+            }
+        }
+        else if (enc_aerGUI->getMenuProps()->menuIndex == MENU_PID_MEASURE_MODE)
+        {
+            if (enc_aerGUI->getMenuProps()->menuLevelVal == MENU_PID_MEASURE_MODE_VAR)
+            {
+                if (enc_am->getMeasureMode() == 0)
+                {
+                    enc_am->setMeasureMode(1, true);
+                }
+                else if (enc_am->getMeasureMode() == 1)
+                {
+                    enc_am->setMeasureMode(2, true);
+                }
+                else if (enc_am->getMeasureMode() == 2)
+                {
+                    enc_am->setMeasureMode(0, true);
+                }
+                else
+                {
+                    enc_am->setMeasureMode(0, true);
+                }
+                enc_am->setPressTick(120);
                 enc_aerGUI->updateMenu();
                 return;
             }
@@ -2750,7 +2822,8 @@ void onEb1Encoder(EncoderButton &eb)
             {
                 chng += 0.001 * dir;
             }
-            enc_am->getAerPID(elementIndex)->PWM_ScaleFactor += chng;
+            int sc = enc_am->getAerPID(elementIndex)->getPwmScaler() + chng;
+            enc_am->getAerPID(elementIndex)->setPwmScaler(sc);
             enc_aerGUI->updateMenu();
             enc_am->webUpdatePID(true);
             break;
@@ -2800,7 +2873,8 @@ void onEb1Encoder(EncoderButton &eb)
             {
                 chng += 1 * dir;
             }
-            enc_am->getAerPID(elementIndex)->PWM_CycleTime += chng;
+            int ct = enc_am->getAerPID(elementIndex)->getPidTime() + chng;
+            enc_am->getAerPID(elementIndex)->setPidTime(ct);
             enc_aerGUI->updateMenu();
             enc_am->webUpdatePID(true);
             break;

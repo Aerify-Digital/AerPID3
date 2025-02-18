@@ -49,16 +49,8 @@ public:
   void saveLedFile(char *storageData);
   bool openLedFile(char *storageData);
 
-  void save_favorites(double fava, double favb, double favc, double favd);
-  void load_favorites(double &fava, double &favb, double &favc, double &favd);
-
   void save_setup(bool usage_det, bool auto_off, long off_time);
   void load_setup(bool &usage_det, bool &auto_off, long &off_time);
-
-  void save_settings_lights(bool LIGHT_STAT_EN, bool LIGHT_AMBI_EN, uint8_t LIGHT_STYLE_CYCLE, String LIGHT_COLOR_EN, String LIGHT_COLOR_DIS);
-  void load_settings_lights(bool &LIGHT_STAT_EN, bool &LIGHT_AMBI_EN, uint8_t &LIGHT_STYLE_CYCLE, String &LIGHT_COLOR_EN, String &LIGHT_COLOR_DIS);
-  void save_settings_lights_cus(String LIGHT_COLOR_DIS);
-  void load_settings_lights_cus(String &LIGHT_COLOR_DIS);
 
 private:
   uint8_t cs_pin;

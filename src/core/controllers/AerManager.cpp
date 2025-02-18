@@ -34,6 +34,23 @@ AerPID *AerManager::getAerPID(uint8_t ei) // getAerStorage()
     return AerManager::aerPID[ei];
 }
 
+void AerManager::setMeasureMode(uint8_t mode, bool save)
+{
+    AerManager::measMode = mode;
+    for (uint8_t i = 0; i < AERPID_COUNT; i++)
+    {
+        AerManager::aerPID[i]->setMeasMode(mode);
+    }
+    if (save) {
+    measModeStorage.setMode(mode);
+    }
+}
+
+uint8_t AerManager::getMeasureMode()
+{
+    return AerManager::measMode;
+}
+
 // Gets the Network Variable storage Object
 NetworkVars *AerManager::getNetVars()
 {
@@ -338,6 +355,16 @@ int AerManager::getWebFtempVal(int f)
 void AerManager::clearWebFTemps()
 {
     std::fill(this->webftemps, this->webftemps + 4, 0);
+}
+
+bool AerManager::lastSensorFault(uint8_t ei)
+{
+    return lastFault[ei];
+}
+
+void AerManager::lastSensorFault(uint8_t ei, bool faulted)
+{
+    lastFault[ei] = faulted;
 }
 
 // ===========================================================

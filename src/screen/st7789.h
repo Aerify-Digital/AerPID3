@@ -40,7 +40,7 @@
 static TFT_eSPI __tft = TFT_eSPI();
 
 // lets pre-define five sprites for now.
-static TFT_eSprite __screenbuffer[5] = {TFT_eSprite(&__tft), TFT_eSprite(&__tft), TFT_eSprite(&__tft), TFT_eSprite(&__tft), TFT_eSprite(&__tft)};
+static TFT_eSprite __screenbuffer[1] = {TFT_eSprite(&__tft)};
 
 class AerST7789
 {
@@ -59,6 +59,10 @@ public:
     TFT_eSPI *getTFT()
     {
         return tft;
+    }
+    TFT_eSprite *getSpriteBuffer()
+    {
+        return &screenbuffer[0];
     }
     TFT_eSprite *getSpriteBuffer(uint i)
     {

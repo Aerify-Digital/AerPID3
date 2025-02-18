@@ -92,7 +92,7 @@ void worker_task(void *pvParameters)
             tick = 3;
             if (xSemaphoreTake(sys1_mutex, 50) == pdTRUE)
             {
-                if (xSemaphoreTake(i2c1_mutex, 100) == pdTRUE)
+                if (xSemaphoreTake(i2c1_mutex, 200) == pdTRUE)
                 {
                     tempA = sensorA.temp(); // cel
                     tempB = sensorB.temp(); // cel
@@ -163,6 +163,8 @@ void print2digits(int number)
 #if AERPID_COUNT == 2
 void tickFan(double tempA, double tempB, double tempC)
 {
+    delayMicroseconds(500);
+
     uint8_t e = fanControlStorage.getFanEnabled();
     uint8_t m = fanControlStorage.getFanMode();
     uint8_t s = fanControlStorage.getFanSpeed();
@@ -171,6 +173,7 @@ void tickFan(double tempA, double tempB, double tempC)
     {
         if (_fanSpeed > 0)
         {
+            Serial.println(F(">> Disabled Fan!"));
             _fanSpeed = 0;
             Wire.beginTransmission(PID_MONITOR_ADDR);
             const uint8_t data[2] = {50, _fanSpeed};
@@ -201,6 +204,7 @@ void tickFan(double tempA, double tempB, double tempC)
         {
             if (_fanSpeed > 0)
             {
+                Serial.println(F(">> Disabled Fan!"));
                 _fanSpeed = 0;
                 Wire.beginTransmission(PID_MONITOR_ADDR);
                 const uint8_t data[2] = {50, _fanSpeed};
@@ -225,7 +229,7 @@ void tickFan(double tempA, double tempB, double tempC)
         Wire.write(data, 2);
         Wire.endTransmission();
     }
-    else if (tempB > 40 && _fanSpeed < 192)
+    else if (tempB > 40 && _fanSpeed != 192)
     {
         Serial.println(F(">> Enabled Fan 75% !"));
         _fanSpeed = 192;
@@ -234,7 +238,7 @@ void tickFan(double tempA, double tempB, double tempC)
         Wire.write(data, 2);
         Wire.endTransmission();
     }
-    else if (tempB > 34 && _fanSpeed < 128)
+    else if (tempB > 37 && _fanSpeed != 128)
     {
         Serial.println(F(">> Enabled Fan 50% !"));
         _fanSpeed = 128;
@@ -243,7 +247,7 @@ void tickFan(double tempA, double tempB, double tempC)
         Wire.write(data, 2);
         Wire.endTransmission();
     }
-    else if (tempB > 30 && _fanSpeed < 64)
+    else if (tempB > 35 && _fanSpeed != 96)
     {
         Serial.println(F(">> Enabled Fan 37% !"));
         _fanSpeed = 96;
@@ -252,7 +256,7 @@ void tickFan(double tempA, double tempB, double tempC)
         Wire.write(data, 2);
         Wire.endTransmission();
     }
-    else if (tempB <= 28 && _fanSpeed > 0)
+    else if (tempB <= 34 && _fanSpeed > 0)
     {
         Serial.println(F(">> Disabled Fan!"));
         _fanSpeed = 0;

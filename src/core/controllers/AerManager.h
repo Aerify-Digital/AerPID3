@@ -23,6 +23,7 @@
 #include "storage/tempStor.h"
 #include "storage/uiSettingsStor.h"
 #include "storage/networkStor.h"
+#include "storage/measureStor.h"
 
 #include "AerPID.h"
 
@@ -69,6 +70,8 @@ public:
     /// @brief Gets the AerPID class Object
     /// @return AerPID
     AerPID *getAerPID(uint8_t elementIndex);
+    void setMeasureMode(uint8_t mode, bool save);
+    uint8_t getMeasureMode();
 
     /// @brief Gets the Network Storage Object
     /// @return NetworkVars
@@ -256,6 +259,9 @@ public:
     int getWebFtempVal(int f);
     void clearWebFTemps();
 
+    bool lastSensorFault(uint8_t ei);
+    void lastSensorFault(uint8_t ei, bool faulted);
+
 protected:
     void init();
 
@@ -271,6 +277,8 @@ private:
     AppVersion *versionWeb;
 
     AerPID *aerPID[AERPID_COUNT];
+    uint8_t measMode;
+
     NetworkVars *networkVars;
 
     FavsStor *favsObj;
@@ -331,6 +339,8 @@ private:
     bool enabled_dtr = false;
 
     uint64_t btn_press_tick = 100;
+
+    bool lastFault[2] = {false, false};
 
     // task health monitor vars
     int cpu0_usage = 0;
