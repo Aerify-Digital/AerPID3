@@ -265,13 +265,13 @@ bool AerPID::compute()
         _output *= _pwmScaleFactor;
 
         // convert output double to uint32 for ledcWrite
-        xOutput = static_cast<uint32_t>(xOutput);
+        xOutput = static_cast<uint32_t>(_output);
 
         bool _on = false;
         if (_output > 0.09)
         {
             // output at scaled % value
-            ledcWrite(ssrChan, _output);
+            ledcWrite(ssrChan, xOutput);
             _on = true;
         }
         else
