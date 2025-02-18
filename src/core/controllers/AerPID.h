@@ -77,7 +77,7 @@
 // *************************************
 
 // Sample Time for PID compute in milliseconds
-#define PID_SAMPLE_TIME_MS 700
+#define PID_SAMPLE_TIME_MS 500
 // Sleep Time for PID thread in milliseconds
 #define PID_SLEEP_TIME_MS 25
 // Tick time overshoot amount for PID compute
@@ -95,7 +95,7 @@
 
 // Measure sample array sizes
 #define MEASURES_SIZE 128
-#define MEASURES_AVG_TOTAL 108 // must be smaller than MEASURES_SIZE
+#define MEASURES_AVG_TOTAL 120 // must be smaller than MEASURES_SIZE
 #define MES_TEMP_SIZE 3
 
 // Rolling average measure max size
@@ -364,7 +364,7 @@ private:
     void addToMeasuresB(double toAdd);
     void addToMeasuresC(double toAdd);
 
-    double deltaScaleOutput(double delta, double output);
+    double deltaScaleOutput(const double delta, const double output);
 
     void updatePWM(uint8_t pin, uint8_t channel, uint32_t freq, uint8_t resolution_bits);
     void updateSampleTime(int pidTickMax);

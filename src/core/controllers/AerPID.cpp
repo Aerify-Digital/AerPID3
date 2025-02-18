@@ -236,7 +236,7 @@ bool AerPID::compute()
         return false;
     }
     // sample time check
-    int sampleTime = PID_TIME_OVERSHOOT + (PID_SLEEP_TIME_MS + 10) * _pidTickMax;
+    int sampleTime = PID_TIME_OVERSHOOT + (PID_SLEEP_TIME_MS + 10) * getPidTick();
     if (millis() - timed_start > sampleTime)
     {
         digitalWrite(PIN_LED_ACT, LOW);
@@ -265,13 +265,13 @@ bool AerPID::compute()
         _output *= _pwmScaleFactor;
 
         // convert output double to uint32 for ledcWrite
-        xOutput = static_cast<uint32_t>(_output);
+        xOutput = static_cast<uint32_t>(xOutput);
 
         bool _on = false;
         if (_output > 0.09)
         {
             // output at scaled % value
-            ledcWrite(ssrChan, xOutput);
+            ledcWrite(ssrChan, _output);
             _on = true;
         }
         else
@@ -323,44 +323,36 @@ bool AerPID::compute()
 
 // -----------------------------------------------------------------------------
 
-double AerPID::deltaScaleOutput(double delta, double output)
+double AerPID::deltaScaleOutput(const double delta, const double output)
 {
-    // PWM Resolution is half of output range
-    double _output = output * 0.5;
+    // PWM Resolution is half of the output range
+    const double resolution = 0.5;
 
-    if (delta < -1.56)
+    if (delta < -2.7)
     {
-        // when over temp, set output power to 0
-        _output = 0;
+        // When over temp, set output power to 0
+        return 0;
     }
-    else if (delta <= 1)
+    else if (delta <= -1.2)
     {
-        _output *= 0.005;
+        return output * resolution * 0.2;
     }
     else if (delta <= 0)
     {
-        _output *= 0.01;
+        return output * resolution * 0.6;
     }
-    else if (delta <= 1)
+    else if (delta <= 1.6)
     {
-        _output *= 0.02;
+        return output * resolution * 0.75;
     }
-    else if (delta <= 2)
+    else if (delta <= 3.3)
     {
-        _output *= 0.025;
+        return output * resolution * 0.9; 
     }
-    else if (delta <= 10)
+    else // Assuming max value is controlled by the PID settings or bounds
     {
-        double d = (double)delta * 0.015;
-        _output *= d;
+        return output * resolution * 1.0; // Full output if delta exceeds predefined limits
     }
-    else if (delta <= 30)
-    {
-        double d = (double)delta * 0.025;
-        _output *= d;
-    }
-
-    return _output;
 }
 
 double AerPID::avgMES_TEMP()
@@ -610,7 +602,7 @@ void AerPID::setPidTime(int time)
         return;
     }
     _pidCycleTime = time;
-    _pidTickMax = ((double)_pidCycleTime / PID_SLEEP_TIME_MS) * 0.67;
+    _pidTickMax = static_cast<int>(((double)time / PID_SLEEP_TIME_MS) * 0.67);
     this->updateSampleTime(_pidTickMax);
 }
 
@@ -696,6 +688,8 @@ void AerPID::updateSampleTime(int pidTickMax)
 {
     int sampleTime = PID_TIME_OVERSHOOT + (10 + PID_SLEEP_TIME_MS) * pidTickMax;
     aPID->setSampleTime(sampleTime);
+	aPID->reset();
+	aPID->start();
     if (_verbose_d)
     {
         Serial.print(F(">> SETUP"));
