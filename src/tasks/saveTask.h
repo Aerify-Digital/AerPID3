@@ -147,6 +147,13 @@ void save_task(void *pvParameters)
                 am->getAerPID(0)->pwm_saved = false;
                 am->setPressTick(100);
             }
+            if (am->getAerPID(0)->getPwmFreq() <= 0)
+            {
+                Serial.println(F("Invalid PWM 1 Frequency! "));
+                am->getAerPID(0)->setPwmFreq(200);
+                am->getAerPID(0)->pwm_saved = false;
+                am->setPressTick(100);
+            }
 
             Serial.print(F("Loaded PWM1: "));
             Serial.print(F(" Frequency "));
@@ -203,6 +210,13 @@ void save_task(void *pvParameters)
             {
                 Serial.println(F("Invalid PWM 2 Cycle Time: "));
                 am->getAerPID(1)->setPidTime(250);
+                am->getAerPID(1)->pwm_saved = false;
+                am->setPressTick(100);
+            }
+            if (am->getAerPID(1)->getPwmFreq() <= 0)
+            {
+                Serial.println(F("Invalid PWM 2 Frequency! "));
+                am->getAerPID(1)->setPwmFreq(200);
                 am->getAerPID(1)->pwm_saved = false;
                 am->setPressTick(100);
             }
