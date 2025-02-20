@@ -15,31 +15,20 @@ void PwmStor::save_pwm(int frequency, double scaleFactor, int cycleTime, boolean
     int leng = 45;
     char storageData[leng];
 
-    union ByteInt
-    {
-        byte array[sizeof(int)];
-        double Num;
-    };
-    union ByteDouble
-    {
-        byte array[sizeof(double)];
-        double Num;
-    };
-
     ByteInt f;
-    f.Num = frequency;
+    f.number = frequency;
     ByteDouble sf;
-    sf.Num = scaleFactor;
+    sf.number = scaleFactor;
     ByteInt ct;
-    ct.Num = cycleTime;
+    ct.number = cycleTime;
     ByteDouble bi;
-    bi.Num = bias;
+    bi.number = bias;
     ByteDouble wu;
-    wu.Num = windup;
+    wu.number = windup;
     ByteInt pwm;
-    pwm.Num = pwmRes;
+    pwm.number = pwmRes;
     ByteInt pid;
-    pid.Num = pidRes;
+    pid.number = pidRes;
 
     storageData[0] = f.array[0];
     storageData[1] = f.array[1];
@@ -103,17 +92,6 @@ void PwmStor::load_pwm(int &frequency, double &scaleFactor, int &cycleTime, bool
 
     flash->openFile(filename, storageData, leng);
 
-    union ByteInt
-    {
-        byte array[sizeof(int)];
-        double Num;
-    };
-    union ByteDouble
-    {
-        byte array[sizeof(double)];
-        double Num;
-    };
-
     ByteInt f;
     ByteDouble sf;
     ByteInt ct;
@@ -126,7 +104,7 @@ void PwmStor::load_pwm(int &frequency, double &scaleFactor, int &cycleTime, bool
     f.array[1] = storageData[1];
     f.array[2] = storageData[2];
     f.array[3] = storageData[3];
-    frequency = f.Num;
+    frequency = f.number;
 
     sf.array[0] = storageData[4];
     sf.array[1] = storageData[5];
@@ -136,13 +114,13 @@ void PwmStor::load_pwm(int &frequency, double &scaleFactor, int &cycleTime, bool
     sf.array[5] = storageData[9];
     sf.array[6] = storageData[10];
     sf.array[7] = storageData[11];
-    scaleFactor = sf.Num;
+    scaleFactor = sf.number;
 
     ct.array[0] = storageData[12];
     ct.array[1] = storageData[13];
     ct.array[2] = storageData[14];
     ct.array[3] = storageData[15];
-    cycleTime = ct.Num;
+    cycleTime = ct.number;
 
     autoTune = storageData[18];
 
@@ -154,7 +132,7 @@ void PwmStor::load_pwm(int &frequency, double &scaleFactor, int &cycleTime, bool
     bi.array[5] = storageData[25];
     bi.array[6] = storageData[26];
     bi.array[7] = storageData[27];
-    bias = bi.Num;
+    bias = bi.number;
 
     wu.array[0] = storageData[28];
     wu.array[1] = storageData[29];
@@ -164,19 +142,19 @@ void PwmStor::load_pwm(int &frequency, double &scaleFactor, int &cycleTime, bool
     wu.array[5] = storageData[33];
     wu.array[6] = storageData[34];
     wu.array[7] = storageData[35];
-    windup = wu.Num;
+    windup = wu.number;
 
     pwm.array[0] = storageData[36];
     pwm.array[1] = storageData[37];
     pwm.array[2] = storageData[38];
     pwm.array[3] = storageData[39];
-    pwmRes = pwm.Num;
+    pwmRes = pwm.number;
 
     pid.array[0] = storageData[40];
     pid.array[1] = storageData[41];
     pid.array[2] = storageData[42];
     pid.array[3] = storageData[43];
-    pidRes = pid.Num;
+    pidRes = pid.number;
 }
 
 void PwmStor::save_pwm_2(int frequency, double scaleFactor, int cycleTime, boolean autoTune, double bias, double windup, int pwmRes, int pidRes)
@@ -185,31 +163,20 @@ void PwmStor::save_pwm_2(int frequency, double scaleFactor, int cycleTime, boole
     int leng = 45;
     char storageData[leng];
 
-    union ByteInt
-    {
-        byte array[sizeof(int)];
-        double Num;
-    };
-    union ByteDouble
-    {
-        byte array[sizeof(double)];
-        double Num;
-    };
-
     ByteInt f;
-    f.Num = frequency;
+    f.number = frequency;
     ByteDouble sf;
-    sf.Num = scaleFactor;
+    sf.number = scaleFactor;
     ByteInt ct;
-    ct.Num = cycleTime;
+    ct.number = cycleTime;
     ByteDouble bi;
-    bi.Num = bias;
+    bi.number = bias;
     ByteDouble wu;
-    wu.Num = windup;
+    wu.number = windup;
     ByteInt pwm;
-    pwm.Num = pwmRes;
+    pwm.number = pwmRes;
     ByteInt pid;
-    pid.Num = pidRes;
+    pid.number = pidRes;
 
     storageData[0] = f.array[0];
     storageData[1] = f.array[1];
@@ -273,17 +240,6 @@ void PwmStor::load_pwm_2(int &frequency, double &scaleFactor, int &cycleTime, bo
 
     flash->openFile(filename, storageData, leng);
 
-    union ByteInt
-    {
-        byte array[sizeof(int)];
-        double Num;
-    };
-    union ByteDouble
-    {
-        byte array[sizeof(double)];
-        double Num;
-    };
-
     ByteInt f;
     ByteDouble sf;
     ByteInt ct;
@@ -296,7 +252,7 @@ void PwmStor::load_pwm_2(int &frequency, double &scaleFactor, int &cycleTime, bo
     f.array[1] = storageData[1];
     f.array[2] = storageData[2];
     f.array[3] = storageData[3];
-    frequency = f.Num;
+    frequency = f.number;
 
     sf.array[0] = storageData[4];
     sf.array[1] = storageData[5];
@@ -306,13 +262,13 @@ void PwmStor::load_pwm_2(int &frequency, double &scaleFactor, int &cycleTime, bo
     sf.array[5] = storageData[9];
     sf.array[6] = storageData[10];
     sf.array[7] = storageData[11];
-    scaleFactor = sf.Num;
+    scaleFactor = sf.number;
 
     ct.array[0] = storageData[12];
     ct.array[1] = storageData[13];
     ct.array[2] = storageData[14];
     ct.array[3] = storageData[15];
-    cycleTime = ct.Num;
+    cycleTime = ct.number;
 
     autoTune = storageData[18];
 
@@ -324,7 +280,7 @@ void PwmStor::load_pwm_2(int &frequency, double &scaleFactor, int &cycleTime, bo
     bi.array[5] = storageData[25];
     bi.array[6] = storageData[26];
     bi.array[7] = storageData[27];
-    bias = bi.Num;
+    bias = bi.number;
 
     wu.array[0] = storageData[28];
     wu.array[1] = storageData[29];
@@ -334,19 +290,19 @@ void PwmStor::load_pwm_2(int &frequency, double &scaleFactor, int &cycleTime, bo
     wu.array[5] = storageData[33];
     wu.array[6] = storageData[34];
     wu.array[7] = storageData[35];
-    windup = wu.Num;
+    windup = wu.number;
 
     pwm.array[0] = storageData[36];
     pwm.array[1] = storageData[37];
     pwm.array[2] = storageData[38];
     pwm.array[3] = storageData[39];
-    pwmRes = pwm.Num;
+    pwmRes = pwm.number;
 
     pid.array[0] = storageData[40];
     pid.array[1] = storageData[41];
     pid.array[2] = storageData[42];
     pid.array[3] = storageData[43];
-    pidRes = pid.Num;
+    pidRes = pid.number;
 }
 
 bool PwmStor::pwm_exists()

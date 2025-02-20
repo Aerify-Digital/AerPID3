@@ -27,6 +27,18 @@ private:
     Flash *flash;
 
     bool _saved = false;
+
+    union ByteInt
+    {
+        byte array[sizeof(int)];
+        int number;
+    };
+    union ByteDouble
+    {
+        byte array[sizeof(double)];
+        double number;
+    };
+
 };
 
 extern PwmStor pwmStor;
