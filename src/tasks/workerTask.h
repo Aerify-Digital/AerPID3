@@ -84,8 +84,8 @@ void worker_task(void *pvParameters)
     }*/
 
     vTaskDelay(400);
-    printf("> Starting Real Time Clock task on core %d..\n", xPortGetCoreID());
-    while (1 && fInit)
+    printf("> Starting General Worker task on core %d..\n", xPortGetCoreID());
+    while (1)
     {
         if (tick-- <= 0)
         {
@@ -110,7 +110,7 @@ void worker_task(void *pvParameters)
             }
         }
 
-        if (xSemaphoreTake(sys1_mutex, 50) == pdTRUE)
+        if (fInit && xSemaphoreTake(sys1_mutex, 50) == pdTRUE)
         {
             if (xSemaphoreTake(i2c1_mutex, 150) == pdTRUE)
             {
