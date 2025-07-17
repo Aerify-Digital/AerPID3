@@ -17,6 +17,9 @@ typedef enum ELM_PROT_OP_CODE : uint8_t
     E_PROT_ACK = 8,
     E_PROT_ERROR_NONE = 9,
     E_PROT_INIT_READY = 10,
+    E_PROT_DTR_CONTROL_READ = 99,
+    E_PROT_DTR_CONTROL_ON = 100,
+    E_PROT_DTR_CONTROL_OFF = 200,
     E_PROT_ERROR_NULL = 255,
 } _elm_prot_op_code_t;
 
