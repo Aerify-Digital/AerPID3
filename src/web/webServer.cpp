@@ -361,7 +361,8 @@ boolean WebServer::setup()
         WiFi.mode(WIFI_MODE_STA);
         Serial.println(F("[WiFi] -> Connecting to WiFi network..."));
         char *set_ssid = commstor.getSSID();
-        WiFi.begin(set_ssid, commstor.getPSK());
+        char *set_pass = commstor.getPSK();
+        WiFi.begin(set_ssid, set_pass);
         Serial.print("[WiFi]");
         while (WiFi.status() != WL_CONNECTED)
         {
