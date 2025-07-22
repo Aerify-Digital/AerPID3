@@ -73,6 +73,7 @@ public:
     SerialCmdOp Val(uint16_t w);
     SerialCmdOp Val(uint32_t n);
     SerialCmdOp Val(double d);
+    SerialCmdOp Val(int n);
 
     uint Size();
 

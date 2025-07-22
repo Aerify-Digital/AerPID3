@@ -20,12 +20,14 @@ bool AerGUI::buildMenuDefinitions()
         MENU_MAIN_USB,
         MENU_MAIN_POWER,
         MENU_MAIN_CLOCK,
+        MENU_MAIN_VERSION,
     };
     std::vector<uint16_t> menus_pid = {
         MENU_PID_P,
         MENU_PID_I,
         MENU_PID_D,
         MENU_PID_TUNING,
+        MENU_PID_MEASURE_MODE,
         // MENU_PID_AUTO,
         // MENU_PID_PWM_FACTOR,
         // MENU_PID_PWM_CYCLE,
@@ -33,9 +35,9 @@ bool AerGUI::buildMenuDefinitions()
     };
     std::vector<uint16_t> menus_pid_tuning = {
         // MENU_PID_AUTO,
-        MENU_PID_PWM_BIAS,
-        MENU_PID_PWM_FACTOR,
-        MENU_PID_WINDUP_LIMIT,
+        // MENU_PID_PWM_BIAS,
+        // MENU_PID_PWM_FACTOR,
+        // MENU_PID_WINDUP_LIMIT,
         MENU_PID_PWM_CYCLE,
         MENU_PID_PWM_FREQ,
     };
@@ -378,8 +380,8 @@ bool AerGUI::buildMenuDefinitions()
         MENU_RTC_CURRENT,
         MENU_RTC_DATE_SET,
         MENU_RTC_TIME_SET,
-        MENU_RTC_ALARM,
-        MENU_RTC_TIMER,
+        // MENU_RTC_ALARM,
+        // MENU_RTC_TIMER,
     };
     std::vector<uint16_t> menus_rtc_date = {
         MENU_RTC_SET_DATE_YEAR,
@@ -440,6 +442,7 @@ bool AerGUI::buildMenuDefinitions()
     // Root
     menus.push_back(AerMenu(MENU_ROOT_HOME, 0, menus_root));
     menus.push_back(AerMenu(MENU_ROOT_MAIN, MENU_ROOT_HOME, menus_main));
+    menus.push_back(AerMenu(MENU_MAIN_VERSION, MENU_ROOT_MAIN, {}));
     // PID
     menus.push_back(AerMenu(MENU_MAIN_PID, MENU_ROOT_MAIN, menus_pid));
     menus.push_back(AerMenu(MENU_PID_P, MENU_MAIN_PID, {}));
@@ -453,6 +456,8 @@ bool AerGUI::buildMenuDefinitions()
     menus.push_back(AerMenu(MENU_PID_WINDUP_LIMIT, MENU_PID_TUNING, {MENU_PID_WINDUP_LIMIT_VAR}));
     menus.push_back(AerMenu(MENU_PID_PWM_CYCLE, MENU_PID_TUNING, {MENU_PID_PWM_CYCLE_VAR}));
     menus.push_back(AerMenu(MENU_PID_PWM_FREQ, MENU_PID_TUNING, {MENU_PID_PWM_FREQ_VAR}));
+    // PID Measure Option
+    menus.push_back(AerMenu(MENU_PID_MEASURE_MODE, MENU_MAIN_PID, {MENU_PID_MEASURE_MODE_VAR}));
     // Favs
     menus.push_back(AerMenu(MENU_MAIN_FAVS, MENU_ROOT_MAIN, menus_favs));
     menus.push_back(AerMenu(MENU_FAV_1, MENU_MAIN_FAVS, menus_fav1));
@@ -586,6 +591,7 @@ bool AerGUI::buildMenuDefinitions()
     menuNames.insert(std::pair<int, String>(MENU_ROOT, "Root"));
     menuNames.insert(std::pair<int, String>(MENU_ROOT_HOME, "Home Screen"));
     menuNames.insert(std::pair<int, String>(MENU_ROOT_MAIN, "Main Menu"));
+    menuNames.insert(std::pair<int, String>(MENU_MAIN_VERSION, "Sys Version"));
     menuNames.insert(std::pair<int, String>(MENU_MAIN_PID, "PID Setup"));
     menuNames.insert(std::pair<int, String>(MENU_MAIN_FAVS, "Favorites"));
     menuNames.insert(std::pair<int, String>(MENU_MAIN_BUMP, "Bump Setup"));
@@ -602,6 +608,7 @@ bool AerGUI::buildMenuDefinitions()
     menuNames.insert(std::pair<int, String>(MENU_PID_D, "Derivative"));
     menuNames.insert(std::pair<int, String>(MENU_PID_TUNING, "PID Tuning"));
     menuNames.insert(std::pair<int, String>(MENU_PID_AUTO, "Auto Tune"));
+    menuNames.insert(std::pair<int, String>(MENU_PID_MEASURE_MODE, "Meas Mode"));
     menuNames.insert(std::pair<int, String>(MENU_PID_PWM_FACTOR, "PWM Factor"));
     menuNames.insert(std::pair<int, String>(MENU_PID_PWM_BIAS, "Output Bias"));
     menuNames.insert(std::pair<int, String>(MENU_PID_WINDUP_LIMIT, "WindUp Limit"));
@@ -1216,6 +1223,9 @@ void AerGUI::printIcon(uint x, uint y, uint16_t menuIndex, bool selected)
         break;
     case MENU_ROOT_MAIN:
         tft->pushImage(x, y, 28, 28, image_data_home_sel, 0xffff);
+        break;
+    case MENU_MAIN_VERSION:
+        tft->pushImage(x, y, 28, 28, image_data_inf, 0xffff);
         break;
     case MENU_MAIN_PID:
     case MENU_PID_TUNING:
@@ -2022,6 +2032,9 @@ void AerGUI::printIcon(TFT_eSprite *spr, uint x, uint y, uint16_t menuIndex, boo
     case MENU_ROOT_MAIN:
         spr->pushImage(x, y, 28, 28, image_data_home_sel);
         break;
+    case MENU_MAIN_VERSION:
+        spr->pushImage(x, y, 28, 28, image_data_inf);
+        break;
     case MENU_MAIN_PID:
     case MENU_PID_TUNING:
         spr->pushImage(x, y, 28, 28, image_data_pid);
@@ -2240,6 +2253,10 @@ void AerGUI::printIcon(TFT_eSprite *spr, uint x, uint y, uint16_t menuIndex, boo
         break;
     case MENU_LOCAL_FAN_CONTROL:
         spr->pushImage(x, y, 28, 28, image_data_fan_1);
+        break;
+    case MENU_PID_MEASURE_MODE:
+    case MENU_PID_MEASURE_MODE_VAR:
+        spr->pushImage(x, y, 28, 28, image_data_temp_mode);
         break;
 
     default:

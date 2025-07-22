@@ -40,6 +40,7 @@
 
 #include "screen/img/icon/home.h"
 #include "screen/img/icon/home_sel.h"
+#include "screen/img/icon/inf.h"
 #include "screen/img/icon/pid.h"
 #include "screen/img/icon/favs.h"
 #include "screen/img/icon/favs_sel.h"
@@ -104,6 +105,7 @@
 #include "screen/img/icon/pwm_cycle.h"
 #include "screen/img/icon/pwm_freq.h"
 #include "screen/img/icon/fan_1.h"
+#include "screen/img/icon/temp_mode.h"
 
 /// @brief Storage accesor class for cross thread graphics
 class AerGUI

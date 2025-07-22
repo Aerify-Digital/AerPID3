@@ -14,9 +14,6 @@
 
 #include <Wire.h>
 
-#define I2C_SDA 21
-#define I2C_SCL 22
-#define I2C_FREQ 104000
 #ifndef PID_MONITOR_ADDR
 #define PID_MONITOR_ADDR 0x2D
 #endif
@@ -129,11 +126,11 @@ void link_task(void *pvParameters)
                     Wire.beginTransmission(PID_MONITOR_ADDR);
                     if (!_am->isEnabledDTR())
                     {
-                        Wire.write(200);
+                        Wire.write(E_PROT_DTR_CONTROL_OFF);
                     }
                     else
                     {
-                        Wire.write(100);
+                        Wire.write(E_PROT_DTR_CONTROL_ON);
                     }
                     Wire.endTransmission();
                     _am->hasUpdateDTR(false);
@@ -145,7 +142,7 @@ void link_task(void *pvParameters)
                     tick = 0;
                     delayMicroseconds(8000);
                     Wire.beginTransmission(PID_MONITOR_ADDR);
-                    Wire.write(99);
+                    Wire.write(E_PROT_DTR_CONTROL_READ);
                     ret = Wire.endTransmission();
                     delayMicroseconds(5000);
                     if (ret == 0)

@@ -109,6 +109,17 @@ SerialCmdOp SerialCmdOp::Val(double d)
     return *this;
 }
 
+SerialCmdOp SerialCmdOp::Val(int n)
+{
+    this->val.push_back((n >> 24) & 0xff);
+    this->val.push_back((n >> 16) & 0xff);
+    this->val.push_back((n >> 8) & 0xff);
+    this->val.push_back((n >> 0) & 0xff);
+    this->hasVal = true;
+    this->size += 4;
+    return *this;
+}
+
 uint SerialCmdOp::Size()
 {
     return this->size;

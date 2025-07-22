@@ -1,7 +1,15 @@
 #!/bin/bash
 
-header_file="../src/version.h"
-output_file="../version.json"
+origin=${1}
+header_file="${origin}src/version.h"
+output_file="${origin}version.json"
+
+
+if [ -f $header_file ]; then
+    echo 'Updating Version'
+else
+    exit 1
+fi
 
 # Start JSON output
 echo "{" > "$output_file"

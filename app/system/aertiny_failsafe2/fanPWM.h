@@ -27,7 +27,7 @@
 
 #include <Arduino.h>
 
-#define Period  10000
+#define Period  40000 // 40 millisecond
 
 unsigned long usecLst;
 unsigned long period;
@@ -47,9 +47,11 @@ void softPWM (
   if (dutyCycle >= 254 && (usec - *pUsecLst) >= *pPeriod) {
     *pUsecLst = usec;
     digitalWrite (pin, LOW);
+    digitalWrite (20, HIGH);
   } else if (dutyCycle <= 1 && (usec - *pUsecLst) >= *pPeriod) {
     *pUsecLst = usec;
     digitalWrite (pin, HIGH);
+    digitalWrite (20, LOW);
   } else if ((usec - *pUsecLst) >= *pPeriod)  {
     *pUsecLst = usec;
     if (HIGH == *pState) {
@@ -59,6 +61,7 @@ void softPWM (
     }
     *pState = ! *pState;
     digitalWrite (pin, fstate);
+    digitalWrite (20, !fstate);
   }
 }
 

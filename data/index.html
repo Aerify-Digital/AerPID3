@@ -5,8 +5,8 @@
   <link rel="icon" href="./favicon.ico" id="favicon" />
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <link rel="stylesheet" type="text/css" href="./css/w3.minz.css" />
   <link rel="stylesheet" type="text/css" href="./css/fa.minz.css" />
+  <link rel="stylesheet" type="text/css" href="./css/w3.minz.css" />
   <link rel="stylesheet" type="text/css" href="./css/aertiny.css" />
 
   <script>
@@ -637,6 +637,124 @@
          <!-- End Current Temp Panel -->
         </div>
         <!-- End Quick-Settings tables -->
+
+        <!-- Expert Settings -->
+        <script>
+         function openPidAdvTab1(evt, tabName) {
+          var i, tabcontent, tablinks, bActive
+          tabcontent = document.getElementsByClassName('tabcontent1_adv')
+          for (i = 0; i < tabcontent.length; i++) {
+           tabcontent[i].style.display = 'none'
+          }
+          tablinks = document.getElementsByClassName('tablinks1_adv active')
+          for (i = 0; i < tablinks.length; i++) {
+           tablinks[i].className = tablinks[i].className.replace('tablinks1_adv active', 'tablinks1_adv')
+           bActive = true
+          }
+          if (!bActive && evt.currentTarget.checked) {
+           document.getElementById(tabName).style.display = 'block'
+           evt.currentTarget.className += ' active'
+          }
+         }
+        </script>
+
+        <input type="checkbox" class="tablinks1_adv" id="pid_adv_chk1" name="pid_adv_chk1" value="Adv" onclick="openPidAdvTab1(event, 'pid_adv1')" />
+        <label for="pid_adv_chk1">Show Advanced Settings</label>
+
+        <div id="pid_adv1" class="tabcontent1_adv" style="display: none">
+         <div style="height: 1px; width: 100%; background: linear-gradient(90deg, rgba(238, 238, 238, 0.6) 0%, rgba(238, 238, 238, 0.7) 60%, rgba(170, 170, 170, 0) 100%); margin-left: -12px"></div>
+         <h3 class="w3-padding-16 w3-text-light-grey">
+          Expert Settings
+          <div class="w3-text-grey" style="font-size: 0.55em !important">
+           Advanced control options for setup of Pulse-Width-Modulation (PWM) and PID function outputs.
+           <br />
+           <div style="color: maroon; margin-top: 5px">
+            <span style="color: orangered">WARNING!!</span>
+            The variables below can drastically change how the device operates and functions.
+            <br />
+            Please use caution when making adjustments!
+           </div>
+          </div>
+         </h3>
+         <div class="w3-row-padding" style="margin: 0 -16px">
+          <div class="w3-half w3-margin-bottom">
+           <ul class="w3-ul w3-white w3-center" style="overflow: hidden !important">
+            <div id="pwm_adv1_msg" class="adv-msg-txt">
+             <button onclick="closeAdvMsg(event, 'pwm_adv1_msg')">x</button>
+             <h4>ERROR</h4>
+             <div id="pwm_adv1_txt">Something went very wrong...</div>
+            </div>
+            <li class="w3-dark-grey w3-large w3-padding-8" style="font-size: 30px !important; height: 68px; padding-top: 10px !important">PWM 1 - Setup</li>
+            <li class="w3-padding-16">
+             <div class="adv-width">
+              Power Factor
+              <span title="Percent of output power applied to element" style="cursor: help">(%)</span>
+              :
+              <input type="number" id="pwm1_set_fact" name="pwm1_set_fact" class="pid-sets" min="0.01" max="200" step="1" value="0" />
+             </div>
+            </li>
+            <li class="w3-padding-16">
+             <div class="adv-width">
+              Frequency
+              <span title="Frequency, in Hertz, of the PWM signal" style="cursor: help">(hz)</span>
+              :
+              <input type="number" id="pwm1_set_freq" name="pwm1_set_freq" class="pid-sets" min="2" max="1000000" step="1" value="0" />
+             </div>
+            </li>
+            <li class="w3-padding-16">
+             <div class="adv-width">
+              Resolution
+              <span title="Bit resolution of the PWM. (RANGE: 8-15)" style="cursor: help">(bits)</span>
+              :
+              <input type="number" id="pwm1_set_reso" name="pwm1_set_reso" class="pid-sets" min="8" max="15" step="1" value="0" />
+             </div>
+            </li>
+            <li class="w3-light-grey w3-padding-24">
+             <button id="pwm_adv1_submit" class="w3-button w3-white w3-padding-large w3-hover-black" style="border: 1px solid grey">Submit</button>
+            </li>
+           </ul>
+          </div>
+          <div class="w3-half w3-margin-bottom">
+           <ul class="w3-ul w3-white w3-center" style="overflow: hidden !important">
+            <div id="pid_adv1_msg" class="adv-msg-txt">
+             <button onclick="closeAdvMsg(event, 'pid_adv1_msg')">x</button>
+             <h4>ERROR</h4>
+             <div id="pid_adv1_txt">Something went very wrong...</div>
+            </div>
+            <li class="w3-dark-grey w3-large w3-padding-8" style="font-size: 30px !important; height: 68px; padding-top: 10px !important">PID 1 - Setup</li>
+            <li class="w3-padding-16">
+             <div class="adv-width">
+              Output Bias
+              <span title="Bias power applied to the PID function" style="cursor: help">(p)</span>
+              :
+              <input type="number" id="pid1_set_bias" name="pid1_set_bias" class="pid-sets" min="0" max="100" step="0.1" value="0" />
+             </div>
+            </li>
+            <li class="w3-padding-16">
+             <div class="adv-width">
+              Run Time
+              <span title="How often the PID function calculates the output, in milliseconds" style="cursor: help">(ms)</span>
+              :
+              <input type="number" id="pid1_set_time" name="pid1_set_time" class="pid-sets" min="0" max="10000" step="1" value="0" />
+             </div>
+            </li>
+            <li class="w3-padding-16">
+             <div class="adv-width">
+              Resolution
+              <span title="Resolution range of output power. (RANGE: 127-16384)" style="cursor: help">(max)</span>
+              :
+              <input type="number" id="pid1_set_reso" name="pid1_set_reso" class="pid-sets" min="8" max="32768" step="1" value="0" />
+             </div>
+            </li>
+            <li class="w3-light-grey w3-padding-24">
+             <button id="pid_adv1_auto" class="w3-button w3-white w3-padding-large w3-hover-black" style="border: 1px solid grey">Auto-Scale Resolution</button>
+             <button id="pid_adv1_submit" class="w3-button w3-white w3-padding-large w3-hover-black" style="border: 1px solid grey">Submit</button>
+            </li>
+           </ul>
+          </div>
+         </div>
+        </div>
+        <!-- End Expert Settings -->
        </div>
 
        <div id="elm2" class="tabcontent">
@@ -770,6 +888,125 @@
          <!-- End Current Temp Panel -->
         </div>
         <!-- End Quick-Settings tables -->
+
+        <!-- Expert Settings -->
+        <script>
+         function openPidAdvTab2(evt, tabName) {
+          var i, tabcontent, tablinks, bActive
+          tabcontent = document.getElementsByClassName('tabcontent2_adv')
+          for (i = 0; i < tabcontent.length; i++) {
+           tabcontent[i].style.display = 'none'
+          }
+          tablinks = document.getElementsByClassName('tablinks2_adv active')
+          for (i = 0; i < tablinks.length; i++) {
+           tablinks[i].className = tablinks[i].className.replace('tablinks2_adv active', 'tablinks2_adv')
+           bActive = true
+          }
+          if (!bActive && evt.currentTarget.checked) {
+           document.getElementById(tabName).style.display = 'block'
+           evt.currentTarget.className += ' active'
+          }
+         }
+        </script>
+
+        <input type="checkbox" class="tablinks2_adv" id="pid_adv_chk2" name="pid_adv_chk2" value="Adv" onclick="openPidAdvTab2(event, 'pid_adv2')" />
+        <label for="pid_adv_chk2">Show Advanced Settings</label>
+
+        <div id="pid_adv2" class="tabcontent2_adv" style="display: none">
+         <div style="height: 1px; width: 100%; background: linear-gradient(90deg, rgba(238, 238, 238, 0.6) 0%, rgba(238, 238, 238, 0.7) 60%, rgba(170, 170, 170, 0) 100%); margin-left: -12px"></div>
+         <h3 class="w3-padding-16 w3-text-light-grey">
+          Expert Settings
+          <div class="w3-text-grey" style="font-size: 0.55em !important">
+           Advanced control options for setup of Pulse-Width-Modulation (PWM) and PID function outputs.
+           <br />
+           <div style="color: maroon; margin-top: 5px">
+            <span style="color: orangered">WARNING!!</span>
+            The variables below can drastically change how the device operates and functions.
+            <br />
+            Please use caution when making adjustments!
+           </div>
+          </div>
+         </h3>
+         <div class="w3-row-padding" style="margin: 0 -16px">
+          <div class="w3-half w3-margin-bottom">
+           <ul class="w3-ul w3-white w3-center" style="overflow: hidden !important">
+            <div id="pwm_adv2_msg" class="adv-msg-txt">
+             <button onclick="closeAdvMsg(event, 'pwm_adv2_msg')">x</button>
+             <h4>ERROR</h4>
+             <div id="pwm_adv2_txt">Something went very wrong...</div>
+            </div>
+            <li class="w3-dark-grey w3-large w3-padding-8" style="font-size: 30px !important; height: 68px; padding-top: 10px !important">PWM 2 - Setup</li>
+            <li class="w3-padding-16">
+             <div class="adv-width">
+              Power Factor
+              <span title="Percent of output power applied to element" style="cursor: help">(%)</span>
+              :
+              <input type="number" id="pwm2_set_fact" name="pwm2_set_fact" class="pid-sets" min="0.01" max="200" step="1" value="0" />
+             </div>
+            </li>
+            <li class="w3-padding-16">
+             <div class="adv-width">
+              Frequency
+              <span title="Frequency, in Hertz, of the PWM signal" style="cursor: help">(hz)</span>
+              :
+              <input type="number" id="pwm2_set_freq" name="pwm2_set_freq" class="pid-sets" min="2" max="1000000" step="1" value="0" />
+             </div>
+            </li>
+            <li class="w3-padding-16">
+             <div class="adv-width">
+              Resolution
+              <span title="Bit resolution of the PWM. (RANGE: 8-15)" style="cursor: help">(bits)</span>
+              :
+              <input type="number" id="pwm2_set_reso" name="pwm2_set_reso" class="pid-sets" min="8" max="15" step="1" value="0" />
+             </div>
+            </li>
+            <li class="w3-light-grey w3-padding-24">
+             <button id="pwm_adv2_submit" class="w3-button w3-white w3-padding-large w3-hover-black" style="border: 1px solid grey">Submit</button>
+            </li>
+           </ul>
+          </div>
+          <div class="w3-half w3-margin-bottom">
+           <ul class="w3-ul w3-white w3-center" style="overflow: hidden !important">
+            <div id="pid_adv2_msg" class="adv-msg-txt">
+             <button onclick="closeAdvMsg(event, 'pid_adv2_msg')">x</button>
+             <h4>ERROR</h4>
+             <div id="pid_adv2_txt">Something went very wrong...</div>
+            </div>
+            <li class="w3-dark-grey w3-large w3-padding-8" style="font-size: 30px !important; height: 68px; padding-top: 10px !important">PID 2 - Setup</li>
+            <li class="w3-padding-16">
+             <div class="adv-width">
+              Output Bias
+              <span title="Bias power applied to the PID function" style="cursor: help">(p)</span>
+              :
+              <input type="number" id="pid2_set_bias" name="pid2_set_bias" class="pid-sets" min="0" max="100" step="0.1" value="0" />
+             </div>
+            </li>
+            <li class="w3-padding-16">
+             <div class="adv-width">
+              Run Time
+              <span title="How often the PID function calculates the output, in milliseconds" style="cursor: help">(ms)</span>
+              :
+              <input type="number" id="pid2_set_time" name="pid2_set_time" class="pid-sets" min="0" max="10000" step="1" value="0" />
+             </div>
+            </li>
+            <li class="w3-padding-16">
+             <div class="adv-width">
+              Resolution
+              <span title="Resolution range of output power. (RANGE: 127-16384)" style="cursor: help">(max)</span>
+              :
+              <input type="number" id="pid2_set_reso" name="pid2_set_reso" class="pid-sets" min="8" max="32768" step="1" value="0" />
+              <button>Auto Calc</button>
+             </div>
+            </li>
+            <li class="w3-light-grey w3-padding-24">
+             <button id="pid_adv2_auto" class="w3-button w3-white w3-padding-large w3-hover-black" style="border: 1px solid grey">Auto-Scale Resolution</button>
+             <button id="pid_adv2_submit" class="w3-button w3-white w3-padding-large w3-hover-black" style="border: 1px solid grey">Submit</button>
+            </li>
+           </ul>
+          </div>
+         </div>
+        </div>
+        <!-- End Expert Settings -->
        </div>
       </div>
      </div>
@@ -1522,7 +1759,8 @@
 
   <!-- LOAD JS -->
   <script src="./js/chart.min.js" type="application/javascript"></script>
-  <script src="./js/aertiny.js" async type="application/javascript"></script>
+  <script src="./js/charting.min.js" type="application/javascript"></script>
+  <script src="./js/aertiny.min.js" async type="application/javascript"></script>
   <!-- END LOAD JS -->
  </body>
 </html>

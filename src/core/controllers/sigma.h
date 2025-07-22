@@ -18,8 +18,8 @@ public:
     double calcMedian(double *vals, uint s);
     double calcMode(double *vals, uint s);
 
-    double calcDeviation(double *vals);
-    double calcDeviation(double *vals, uint samples);
+    double calcDeviation(double *vals, uint size);
+    double calcDeviation(double *vals, uint size, uint samples);
 
 protected:
 private:

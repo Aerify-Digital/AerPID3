@@ -79,6 +79,7 @@ namespace AerTftUI
     void drawSelections(AerGUI *gui, AerMenu menu, uint16_t mindex, uint16_t bgColor);
     std::vector<uint16_t> getSelectionItems(AerMenu menu, uint16_t mindex);
     void showHomeScreen(AerManager *am, bool update, bool modalOpen, bool modalUpdate);
+    void showVersionMenu(AerManager *am, bool indexupdate, bool menuChange);
     void drawBarColorScroll(TFT_eSprite *spr, uint t, uint speed = 1);
     void showSysIconsSection(AerManager *am, bool update);
     void showSysInfoSection(AerManager *am, bool update);
@@ -95,6 +96,7 @@ namespace AerTftUI
     void showPIDMenuD(AerGUI *gui, float kD, bool indexupdate);
     void showPIDTuneMenu(AerManager *am, bool indexupdate, bool change);
     void showPIDAutoMenu(AerManager *am, bool indexupdate, bool change);
+    void showPIDMeasureModeMenu(AerManager *am, bool indexupdate, bool change);
     void showPIDOutputBiasMenu(AerManager *am, bool indexupdate, bool change);
     void showPIDWindupLimitMenu(AerManager *am, bool indexupdate, bool change);
     void showPIDpwmFactorMenu(AerManager *am, bool indexupdate, bool change);

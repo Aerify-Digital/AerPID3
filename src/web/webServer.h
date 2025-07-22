@@ -149,7 +149,8 @@ private:
     static void handleSocketMessage(void *arg, uint8_t *data, size_t len, AsyncWebSocketClient *client);
     static void processSocketData(char *data, size_t len, AsyncWebSocketClient *client);
 
-    static void sendInitMessage(uint32_t client);
+    static void sendInitPacket(uint32_t client);
+    static void sendInitPacket2(uint32_t client);
 
     static char *configureFavTempName(uint8_t index, char *data);
     static void configureFavTemp(uint8_t index, double temp);

@@ -48,6 +48,8 @@ using namespace LED_EFFECTS;
 #define LED_C 19 // BLUE
 #define LED_D 1  // RED
 
+#define LED_E 20 // External
+
 #define DTR_CONTROL 6
 
 #define INVERT_DVR false
@@ -94,6 +96,7 @@ void setup()
   pinMode(LED_B, OUTPUT);
   pinMode(LED_C, OUTPUT);
   pinMode(LED_D, OUTPUT);
+  pinMode(LED_E, OUTPUT);
 
   digitalWrite(LED_A, HIGH);
   digitalWrite(LED_B, LOW);
@@ -112,7 +115,7 @@ void setup()
   digitalWrite(DTR_CONTROL, INVERT_DVR ? HIGH : LOW);
 
   pinMode(PIN_FAN, OUTPUT);
-  digitalWrite(PIN_FAN, LOW);
+  digitalWrite(PIN_FAN, HIGH);
   
   delay(100);
   // init i2c slave
@@ -176,10 +179,9 @@ void loop()
     {
       state = !state;
     }
-    // fadeIn(LED_A, 2);
-    // fadeOut(LED_A, 8);
     fadePin(LED_A);
-    digitalWrite(LED_B, !state);
+    //digitalWrite(LED_B, !state);
+    digitalWrite(LED_B, HIGH);
     digitalWrite(DTR_CONTROL, INVERT_DVR ? LOW : HIGH);
     dtr_mode_on = true;
     delay(1);
@@ -195,14 +197,10 @@ void loop()
   // status led
   if (element_enb)
   {
-    // fadeIn(LED_B, 5);
-    // fadeOut(LED_B, 2);
     fadePin(LED_B);
   }
   else
   {
-    // fadeIn(LED_A, 2);
-    // fadeOut(LED_A, 3);
     fadePin(LED_A);
   }
 
@@ -237,7 +235,7 @@ void loop()
     digitalWrite(LED_A, HIGH);
   }
 
-  delay(1);
+  delay(2);
 }
 
 // ===============================================================
@@ -280,12 +278,13 @@ void receiveEvent(int howMany)
 
   noInterrupts();
   digitalWrite(LED_C, LOW);
+  digitalWrite(LED_E, HIGH);
   // read one byte of data on the wire
   response = (uint8_t)Wire.read();
   interrupts();
 
   // fan control
-  if (response == 50 && Wire.available() > 0)
+  if (response == E_PROT_FAN_CONTROL && Wire.available() > 0)
   {
     uint8_t val = (uint8_t)Wire.read();
     duty_cycle = val;

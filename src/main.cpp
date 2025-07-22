@@ -154,6 +154,8 @@ void setup()
           Serial.print(F(" [LM75B-x1]"));
         if (i == 73)
           Serial.print(F(" [LM75B-x2]"));
+        if (i == 74)
+          Serial.print(F(" [LM75B-x3]"));
         if (i == 80)
           Serial.print(F(" [EEPROM-x0]"));
         if (i == 81)
@@ -234,38 +236,40 @@ void setup()
   aerGUI.getST7789()->showLoadingStorMessage();
   // Initialize the Flash storage
   flash.init(PIN_FLSH_CS);
-  Serial.println(F("[BOOT] Initializing Config Storage (config) "));
+  Serial.println(F("[BOOT] Initializing Config Storage (config)"));
   config.init(&flash, &eepromStor);
   char buf[16];
   version.toCharArray(buf, 16);
   config.setup(buf);
-  Serial.println(F("[BOOT] Initializing Crypto Storage (crypto)  "));
+  Serial.println(F("[BOOT] Initializing Crypto Storage (crypto)"));
   // auth.init(&flash);
   crypto.init(&flash);
-  Serial.println(F("[BOOT] Initializing PID Storage (pidStor)  "));
+  Serial.println(F("[BOOT] Initializing PID Storage (pidStor)"));
   pidStor.init(&flash);
-  Serial.println(F("[BOOT] Initializing PWM Storage (pwmStor)  "));
+  Serial.println(F("[BOOT] Initializing PWM Storage (pwmStor)"));
   pwmStor.init(&flash);
-  Serial.println(F("[BOOT] Initializing Temperate Storage (tempStor)  "));
+  Serial.println(F("[BOOT] Initializing Measure Mode Storage (measModeStorage)"));
+  measModeStorage.init(&flash);
+  Serial.println(F("[BOOT] Initializing Temperate Storage (tempStor)"));
   tempStor.init(&flash);
-  Serial.println(F("[BOOT] Initializing Bump Storage (bumpStor)  "));
+  Serial.println(F("[BOOT] Initializing Bump Storage (bumpStor)"));
   bumpStor.init(&flash);
-  Serial.println(F("[BOOT] Initializing Favorites Storage (favstor)  "));
+  Serial.println(F("[BOOT] Initializing Favorites Storage (favstor)"));
   favstor.init(&flash);
-  Serial.println(F("[BOOT] Initializing Communcations Storage (commstor)  "));
+  Serial.println(F("[BOOT] Initializing Communcations Storage (commstor)"));
   commstor.init(&flash);
-  Serial.println(F("[BOOT] Initializing Lighting Storage (lightstor)  "));
+  Serial.println(F("[BOOT] Initializing Lighting Storage (lightstor)"));
   lightstor.init(&flash);
-  Serial.println(F("[BOOT] Initializing Settings Storage (settingsStorage)  "));
+  Serial.println(F("[BOOT] Initializing Settings Storage (settingsStorage)"));
   settingsStorage.init(&flash);
-  Serial.println(F("[BOOT] Initializing Network Storage (networkStorage)  "));
+  Serial.println(F("[BOOT] Initializing Network Storage (networkStorage)"));
   networkingStorage.init(&flash);
-  Serial.println(F("[BOOT] Initializing WiFi Storage (wifiStorage)  "));
+  Serial.println(F("[BOOT] Initializing WiFi Storage (wifiStorage)"));
   wifiStorage.init(&flash);
-  Serial.println(F("[BOOT] Initializing Charting Storage (chartingStorage)  "));
+  Serial.println(F("[BOOT] Initializing Charting Storage (chartingStorage)"));
   chartingStorage.init(&flash);
 #if AERPID_COUNT == 2
-  Serial.println(F("[BOOT] Initializing Fan Control Storage (fanControlStorage)  "));
+  Serial.println(F("[BOOT] Initializing Fan Control Storage (fanControlStorage)"));
   fanControlStorage.init(&flash);
 #endif
   Serial.println(F("[BOOT] Initialized Storage Objects!"));
@@ -326,7 +330,6 @@ void setup()
 
   if (commstor.getBTEn())
   { // Bluetooth Task
-    // FIXME: brokey.
     // NOT USED!!!
     // xTaskCreatePinnedToCore(bleUpdateTask, "BleTask", taskStackSize[0], (void *)&aerManager, 8, &btTask, 0);
   }
@@ -456,16 +459,6 @@ void loop(void)
  */
 void tickMainLoop()
 {
-  // =========================================================================================
-  // TODO: Move this? I might not have too.
-  // TODO: Lets move this to the BLE task??
-  // =========================================================================================
-  /*if (Ble_Tog_Coil)
-  {
-    Ble_Tog_Coil = false;
-    toggleCoil();
-  }*/
-
   /*if (Serial && serialTask == nullptr)
   {
     startSerialTask();

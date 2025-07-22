@@ -16,6 +16,7 @@
 #include "storage/bumpStor.h"
 #include "storage/eepromStor.h"
 #include "storage/tftSettingsStor.h"
+#include "storage/measureStor.h"
 
 #include "common/datatypes/mutex.h"
 #include "common/enum/ThermalUnitsType.h"
@@ -30,11 +31,6 @@ typedef struct
 
 void save_task(void *pvParameters)
 {
-    while (millis() < 3000)
-    {
-        vTaskDelay(100 / portTICK_PERIOD_MS);
-    }
-
     SaveTaskParams *taskParams = (SaveTaskParams *)pvParameters;
     AerManager *am = taskParams->am;
 
@@ -47,6 +43,12 @@ void save_task(void *pvParameters)
 
     if (xSemaphoreTake(spi1_mutex, 1000) == pdTRUE)
     {
+        measModeStorage.load();
+        if (measModeStorage.isLoaded())
+        {
+            am->setMeasureMode(measModeStorage.getMode(), false);
+        }
+
         // Load the PID values from Flash
         pidStor.load_pid(am->getAerPID(0)->kP, am->getAerPID(0)->kI, am->getAerPID(0)->kD);
         if (am->getAerPID(0)->kP <= 0.01)
@@ -99,31 +101,56 @@ void save_task(void *pvParameters)
         if (pwmStor.pwm_exists())
         {
             int freq;
+            double factor;
+            int cycleTime;
+            bool autoTune;
             double bias;
             double windup;
+            double scaleFactor;
+            int pwmRes;
+            int pidRes;
             // load PWM settings from flash
-            pwmStor.load_pwm(freq, am->getAerPID(0)->PWM_ScaleFactor, am->getAerPID(0)->PWM_CycleTime, am->getAerPID(0)->AUTO_TUNE_ACTIVE, bias, windup);
-            // am->getAerPID(0)->setPwmFreq(freq);
+            pwmStor.load_pwm(freq, factor, cycleTime, autoTune, bias, windup, pwmRes, pidRes);
+
+            if (freq <= 0)
+            {
+                freq = 200;
+            }
+
+            am->getAerPID(0)->AUTO_TUNE_ACTIVE = autoTune;
+            am->getAerPID(0)->setPwmFreq(freq);
+            am->getAerPID(0)->setPwmScaler(factor);
+            am->getAerPID(0)->setPidTime(cycleTime);
+            am->getAerPID(0)->setPWMResolution(pwmRes);
+            am->getAerPID(0)->setOutputLimit(pidRes);
+
             if (bias < 16384)
             {
                 am->getAerPID(0)->setOutputBias(bias);
             }
             if (windup < 16384)
             {
-                am->getAerPID(0)->setWindupLimit(windup);
+                // am->getAerPID(0)->setWindupLimit(windup);
             }
 
-            if (am->getAerPID(0)->PWM_ScaleFactor <= 0)
+            if (am->getAerPID(0)->getPwmScaler() <= 0)
             {
                 Serial.println(F("Invalid PWM 1 Factor: "));
-                am->getAerPID(0)->PWM_ScaleFactor = 0.125;
+                am->getAerPID(0)->setPwmScaler(0.125);
                 am->getAerPID(0)->pwm_saved = false;
                 am->setPressTick(100);
             }
-            if (am->getAerPID(0)->PWM_CycleTime <= 0)
+            if (am->getAerPID(0)->getPidTime() <= 0)
             {
                 Serial.println(F("Invalid PWM 1 Cycle Time: "));
-                am->getAerPID(0)->PWM_CycleTime = 250;
+                am->getAerPID(0)->setPidTime(250);
+                am->getAerPID(0)->pwm_saved = false;
+                am->setPressTick(100);
+            }
+            if (am->getAerPID(0)->getPwmFreq() <= 0)
+            {
+                Serial.println(F("Invalid PWM 1 Frequency! "));
+                am->getAerPID(0)->setPwmFreq(200);
                 am->getAerPID(0)->pwm_saved = false;
                 am->setPressTick(100);
             }
@@ -132,40 +159,64 @@ void save_task(void *pvParameters)
             Serial.print(F(" Frequency "));
             Serial.print(am->getAerPID(0)->getPwmFreq(), 10);
             Serial.print(F("  Scale Factor "));
-            Serial.print(am->getAerPID(0)->PWM_ScaleFactor, 10);
+            Serial.print(am->getAerPID(0)->getPwmScaler(), 10);
             Serial.print(F("  Cycle Time "));
-            Serial.println(am->getAerPID(0)->PWM_CycleTime, 10);
+            Serial.println(am->getAerPID(0)->getPidTime(), 10);
+        }
+        else
+        {
+            am->getAerPID(0)->pwm_saved = false;
         }
 
 #if AERPID_COUNT == 2
         if (pwmStor.pwm_2_exists())
         {
             int freq;
+            double factor;
+            int cycleTime;
+            bool autoTune;
             double bias;
             double windup;
+            double scaleFactor;
+            int pwmRes;
+            int pidRes;
             // load PWM settings from flash
-            pwmStor.load_pwm_2(freq, am->getAerPID(1)->PWM_ScaleFactor, am->getAerPID(1)->PWM_CycleTime, am->getAerPID(1)->AUTO_TUNE_ACTIVE, bias, windup);
-            // am->getAerPID(1)->setPwmFreq(freq);
+            pwmStor.load_pwm_2(freq, factor, cycleTime, autoTune, bias, windup, pwmRes, pidRes);
+
+            am->getAerPID(1)->AUTO_TUNE_ACTIVE = autoTune;
+            am->getAerPID(1)->setPwmFreq(freq);
+            am->getAerPID(1)->setPwmScaler(factor);
+            am->getAerPID(1)->setPidTime(cycleTime);
+            am->getAerPID(1)->setPWMResolution(pwmRes);
+            am->getAerPID(1)->setOutputLimit(pidRes);
+
             if (bias < 16384)
             {
                 am->getAerPID(1)->setOutputBias(bias);
             }
             if (windup < 16384)
             {
-                am->getAerPID(1)->setWindupLimit(windup);
+                // am->getAerPID(1)->setWindupLimit(windup);
             }
 
-            if (am->getAerPID(1)->PWM_ScaleFactor <= 0)
+            if (am->getAerPID(1)->getPwmScaler() <= 0)
             {
                 Serial.println(F("Invalid PWM 2 Factor: "));
-                am->getAerPID(1)->PWM_ScaleFactor = 0.125;
+                am->getAerPID(1)->setPwmScaler(0.125);
                 am->getAerPID(1)->pwm_saved = false;
                 am->setPressTick(100);
             }
-            if (am->getAerPID(1)->PWM_CycleTime <= 0)
+            if (am->getAerPID(1)->getPidTime() <= 0)
             {
                 Serial.println(F("Invalid PWM 2 Cycle Time: "));
-                am->getAerPID(1)->PWM_CycleTime = 250;
+                am->getAerPID(1)->setPidTime(250);
+                am->getAerPID(1)->pwm_saved = false;
+                am->setPressTick(100);
+            }
+            if (am->getAerPID(1)->getPwmFreq() <= 0)
+            {
+                Serial.println(F("Invalid PWM 2 Frequency! "));
+                am->getAerPID(1)->setPwmFreq(200);
                 am->getAerPID(1)->pwm_saved = false;
                 am->setPressTick(100);
             }
@@ -174,9 +225,13 @@ void save_task(void *pvParameters)
             Serial.print(F(" Frequency "));
             Serial.print(am->getAerPID(1)->getPwmFreq(), 10);
             Serial.print(F("  Scale Factor "));
-            Serial.print(am->getAerPID(1)->PWM_ScaleFactor, 10);
+            Serial.print(am->getAerPID(1)->getPwmScaler(), 10);
             Serial.print(F("  Cycle Time "));
-            Serial.println(am->getAerPID(1)->PWM_CycleTime, 10);
+            Serial.println(am->getAerPID(1)->getPidTime(), 10);
+        }
+        else
+        {
+            am->getAerPID(1)->pwm_saved = false;
         }
 #endif
 
@@ -195,9 +250,9 @@ void save_task(void *pvParameters)
 #endif
 
         // Set initial PID tunings
-        am->getAerPID(0)->setTunings();
+        am->getAerPID(0)->setTunings(true);
 #if AERPID_COUNT == 2
-        am->getAerPID(1)->setTunings();
+        am->getAerPID(1)->setTunings(true);
 #endif
 
         // set thermal unit type
@@ -215,7 +270,15 @@ void save_task(void *pvParameters)
         }
         else
         {
-            am->getGUI()->getST7789()->setBacklight(255, true);
+            tftSettingsStorage.setBacklightDim(false);
+            tftSettingsStorage.setBacklightDimTimeout(300);
+            tftSettingsStorage.setBacklightLevel(255);
+            tftSettingsStorage.setBacklightLevelMin(200);
+            tftSettingsStorage.save();
+            am->getGUI()->getST7789()->setBacklightDim(tftSettingsStorage.getBacklightDim());
+            am->getGUI()->getST7789()->setBacklight(tftSettingsStorage.getBacklightLevel(), true);
+            am->getGUI()->getST7789()->setBacklightMin(tftSettingsStorage.getBacklightLevelMin());
+            am->getGUI()->getST7789()->setBacklightDimTimeout(tftSettingsStorage.getBacklightDimTimeout());
         }
         if (am->getGUI()->getST7789()->getBacklightLevel() < 32)
         {
@@ -260,7 +323,7 @@ void save_task(void *pvParameters)
                 {
                     pidStor.save_pid(am->getAerPID(0)->kP, am->getAerPID(0)->kI, am->getAerPID(0)->kD);
                     // myPID.SetTunings(aerStor->kP, aerStor->kI, aerStor->kD);
-                    am->getAerPID(0)->setTunings();
+                    am->getAerPID(0)->setTunings(false);
                     am->getAerPID(0)->pid_saved = true;
                     Serial.print("Saved: ");
                     Serial.print(" kP ");
@@ -282,7 +345,7 @@ void save_task(void *pvParameters)
                 if (xSemaphoreTake(spi1_mutex, 50) == pdTRUE)
                 {
                     pidStor.save_pid_2(am->getAerPID(1)->kP, am->getAerPID(1)->kI, am->getAerPID(1)->kD);
-                    am->getAerPID(1)->setTunings();
+                    am->getAerPID(1)->setTunings(false);
                     am->getAerPID(1)->pid_saved = true;
                     Serial.print("Saved: ");
                     Serial.print(" kP ");
@@ -304,7 +367,7 @@ void save_task(void *pvParameters)
                 if (xSemaphoreTake(spi1_mutex, 50) == pdTRUE)
                 {
                     AerPID *aerpid = am->getAerPID(0);
-                    pwmStor.save_pwm(aerpid->getPwmFreq(), aerpid->PWM_ScaleFactor, aerpid->PWM_CycleTime, aerpid->AUTO_TUNE_ACTIVE, aerpid->getOutputBias(), aerpid->getWindupLimit());
+                    pwmStor.save_pwm(aerpid->getPwmFreq(), aerpid->getPwmScaler(), aerpid->getPidTime(), aerpid->AUTO_TUNE_ACTIVE, aerpid->getOutputBias(), aerpid->getWindupLimit(), aerpid->getPwmResolution(), aerpid->getOutputLimit());
                     am->getAerPID(0)->pwm_saved = true;
                     xSemaphoreGive(spi1_mutex);
                 }
@@ -319,7 +382,7 @@ void save_task(void *pvParameters)
                 if (xSemaphoreTake(spi1_mutex, 50) == pdTRUE)
                 {
                     AerPID *aerpid = am->getAerPID(1);
-                    pwmStor.save_pwm_2(aerpid->getPwmFreq(), aerpid->PWM_ScaleFactor, aerpid->PWM_CycleTime, aerpid->AUTO_TUNE_ACTIVE, aerpid->getOutputBias(), aerpid->getWindupLimit());
+                    pwmStor.save_pwm_2(aerpid->getPwmFreq(), aerpid->getPwmScaler(), aerpid->getPidTime(), aerpid->AUTO_TUNE_ACTIVE, aerpid->getOutputBias(), aerpid->getWindupLimit(), aerpid->getPwmResolution(), aerpid->getOutputLimit());
                     am->getAerPID(1)->pwm_saved = true;
                     xSemaphoreGive(spi1_mutex);
                 }
@@ -522,6 +585,18 @@ void save_task(void *pvParameters)
             }
         }
 #endif
+        if (am->isPressTickReady() && measModeStorage.isNeedSave())
+        {
+            if (xSemaphoreTake(sys1_mutex, 500) == pdTRUE)
+            {
+                if (xSemaphoreTake(spi1_mutex, 50) == pdTRUE)
+                {
+                    measModeStorage.save();
+                    xSemaphoreGive(spi1_mutex);
+                }
+                xSemaphoreGive(sys1_mutex);
+            }
+        }
 
         // tick press tick...
         am->tickPressTick();
