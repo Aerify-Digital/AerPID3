@@ -10,7 +10,14 @@
     "publish-electron": "npm run publish --prefix ./app/electron",
     "lint-electron": "npm run lint --prefix ./app/electron",
     "minify": "node ./scripts/minify.mjs ./",
-    "version": "bash ./scripts/version.sh ./"
+    "version": "bash ./scripts/version.sh ./",
+    "update": "bash ./scripts/aerpid.sh update ",
+    "upload-1": "bash ./scripts/aerpid.sh upload-1",
+    "upload-2": "bash ./scripts/aerpid.sh upload-2",
+    "upgrade-1": "bash ./scripts/aerpid.sh upgrade 1",
+    "upgrade-2": "bash ./scripts/aerpid.sh upgrade 2",
+    "devices":  "bash ./scripts/aerpid.sh devices",
+    "deploy": "bash ./scripts/deploy.sh all"
   },
   "repository": {
     "type": "git",

@@ -15,7 +15,7 @@ make)
 $0 build
 ver=$2
 echo -e "${green}Aggregating Files...${nc}\n"
-cd ../
+#cd ../
 mkdir ./scripts/out/
 mkdir ./scripts/build/
 
@@ -59,12 +59,12 @@ cp ./scripts/build/aerpid-hp/aerpid-hp_${ver}.tar.gz ./scripts/out/aerpid-hp_${v
 
 echo -e "${green}Archives Created!${nc}"
 
-cd ./scripts
+#cd ./scripts
 $0 clean
 ;;
 
 build)
-cd ../
+#cd ../
 echo -e "${yellow}Building env 'aerpid' ...${nc}"
 pio run -e aerpid
 pio run -e aerpid --target buildfs
@@ -78,10 +78,39 @@ sleep 1
 clean)
 echo -e "${gold}Cleaning Build Files...${nc}"
 sleep 1
-rm -rf ./build/aerpid
-rm -rf ./build/aerpid-hp
-rm -rf ./build
+rm -rf ./scripts/build/aerpid
+rm -rf ./scripts/build/aerpid-hp
+rm -rf ./scripts/build
 echo -e "${green}Cleaned Build Files!${nc}"
+;;
+
+clean-out)
+echo -e "${gold}Cleaning Output Archive Files...${nc}"
+sleep 1
+rm -rf ./scripts/out/aerpid*.tar.gz
+echo -e "${green}Cleaned Output Archive Files!${nc}"
+;;
+
+all)
+if ! [ -x "$(command -v jq)" ]; then
+  echo 'Error: jq is not installed.' >&2
+  sudo apt install jq
+  if ! [ -x "$(command -v jq)" ]; then
+    exit 1
+  fi
+fi
+echo $pwd
+verMajor=$(jq -r '.version.VER_MAJOR' ./version.json)
+verMinor=$(jq -r '.version.VER_MINOR' ./version.json)
+verBuild=$(jq -r '.version.VER_BUILD' ./version.json)
+version=${verMajor}.${verMinor}.${verBuild}
+echo -e "${gold}Building all Files for version ${version} and Deploying...${nc}"
+$0 clean-out
+sleep 1
+$0 build
+sleep 1
+$0 make $version
+echo -e "${green}Deploy Complete for ${version}!${nc}"
 ;;
 
 *)
