@@ -178,11 +178,11 @@ void onBt1Clicked(EncoderButton &eb)
     if (enc_aerGUI->getMenuProps()->menuIndex <= 1)
     {
         SerialCmdOp *sco = new SerialCmdOp(COIL_TOGGLE);
-        sco->Val(!enc_am->getAerPID(elementIndex)->PID_ON);
+        sco->Val(!enc_am->getAerPID(elementIndex)->isPidOn());
         sco->build();
         sco->emit();
         delayMicroseconds(250);
-        enc_am->getAerPID(elementIndex)->PID_ON = !enc_am->getAerPID(elementIndex)->PID_ON;
+        enc_am->getAerPID(elementIndex)->setPidOn(!enc_am->getAerPID(elementIndex)->isPidOn());
     }
 }
 
@@ -1265,13 +1265,13 @@ void onEb1Clicked(EncoderButton &eb)
             {
                 if (commstor.getWifiEn())
                 {
-                    if (enc_am->getAerPID(0)->PID_ON)
+                    if (enc_am->getAerPID(0)->isPidOn())
                     {
                         // ignore if pid on...
                         return;
                     }
 #if AERPID_COUNT == 2
-                    if (enc_am->getAerPID(1)->PID_ON)
+                    if (enc_am->getAerPID(1)->isPidOn())
                     {
                         // ignore if pid on...
                         return;

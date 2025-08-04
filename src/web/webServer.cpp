@@ -651,7 +651,7 @@ void WebServer::enPackFill(MessagePack *messagePack)
     // auto_off_enb, coil_enb, lights_enb, unused, wifi_enb, unused, bt_enb, unused
     byte bitmap = 0b00000000;
     bitWrite(bitmap, 7, as->AUTO_OFF_ENB);
-    bitWrite(bitmap, 6, as->PID_ON);
+    bitWrite(bitmap, 6, as->isPidOn());
     bitWrite(bitmap, 5, aerManager.getLights()->isEnabled());
     bitWrite(bitmap, 4, aerManager.getBump()->getEnabled(0)); // get bump enabled status
     bitWrite(bitmap, 3, aerManager.getComms()->getWifiEn());  // get status of wifi
@@ -723,7 +723,7 @@ void WebServer::updateClients()
     }
     SocketCmdOp *cmd = new SocketCmdOp(SerialCommand::CMD_STATUS);
     cmd->Op(Operation::OP_GET);
-    cmd->Val(xAerPID1.PID_ON);
+    cmd->Val(xAerPID1.isPidOn());
     cmd->Val(static_cast<uint16_t>(10.0 * xAerPID1.MES_TEMP));
     cmd->Val(static_cast<uint16_t>(10.0 * xAerPID1.AVG_TEMP));
     cmd->Val(static_cast<uint16_t>(10.0 * xAerPID1.SET_TEMP));
@@ -736,7 +736,7 @@ void WebServer::updateClients()
 #if AERPID_COUNT == 2
     SocketCmdOp *cmd2 = new SocketCmdOp(SerialCommand::CMD_STATUS2);
     cmd2->Op(Operation::OP_GET);
-    cmd2->Val(xAerPID2.PID_ON);
+    cmd2->Val(xAerPID2.isPidOn());
     cmd2->Val(static_cast<uint16_t>(10.0 * xAerPID2.MES_TEMP));
     cmd2->Val(static_cast<uint16_t>(10.0 * xAerPID2.AVG_TEMP));
     cmd2->Val(static_cast<uint16_t>(10.0 * xAerPID2.SET_TEMP));
@@ -1110,14 +1110,14 @@ void WebServer::processSocketData(char *data, size_t len, AsyncWebSocketClient *
         uint8_t val;
         if (op == Operation::OP_GET)
         {
-            bool enb = xAerPID1.PID_ON;
+            bool enb = xAerPID1.isPidOn();
             val = enb ? 0x01 : 0x00;
         }
         else
         {
             val = data[2];
             bool enb = val > 0 ? true : false;
-            xAerPID1.PID_ON = enb;
+            xAerPID1.setPidOn(enb);
         }
         SocketCmdOp *reply = new SocketCmdOp(SerialCommand::COIL_TOGGLE);
         reply->AddClient(client->id());
@@ -1134,14 +1134,14 @@ void WebServer::processSocketData(char *data, size_t len, AsyncWebSocketClient *
         uint8_t val;
         if (op == Operation::OP_GET)
         {
-            bool enb = xAerPID2.PID_ON;
+            bool enb = xAerPID2.isPidOn();
             val = enb ? 0x01 : 0x00;
         }
         else
         {
             val = data[2];
             bool enb = val > 0 ? true : false;
-            xAerPID2.PID_ON = enb;
+            xAerPID2.setPidOn(enb);
         }
         SocketCmdOp *reply = new SocketCmdOp(SerialCommand::COIL_TOGGLE2);
         reply->AddClient(client->id());

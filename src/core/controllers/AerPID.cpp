@@ -125,7 +125,7 @@ bool AerPID::init()
 
 void AerPID::handleFeatureSetTick()
 {
-    if (PID_ON && millis() - _last_time_ms >= 1000)
+    if (pidEnabled && millis() - _last_time_ms >= 1000)
     {
         running_time++;
         if (AUTO_OFF_ENB)
@@ -134,7 +134,7 @@ void AerPID::handleFeatureSetTick()
             if (run_time > AUTO_OFF_TIME)
             {
                 run_time = 0;
-                PID_ON = false;
+                pidEnabled = false;
                 Serial.print("PID ");
                 Serial.print(F("["));
                 Serial.print(index);
@@ -193,7 +193,7 @@ void AerPID::tick()
     {
         timed_running = true;
         timed_start = millis();
-        if (PID_ON)
+        if (pidEnabled)
         {
             // status indicator led
             digitalWrite(PIN_LED_ACT, HIGH);
@@ -220,7 +220,7 @@ void AerPID::tick()
 bool AerPID::compute()
 {
     // check if PID functions are active...
-    if (!PID_ON) // output disabled
+    if (!pidEnabled) // output disabled
     {
         digitalWrite(PIN_LED_ACT, LOW);
         ledcWrite(ssrChan, 0); // output pin off
@@ -231,7 +231,7 @@ bool AerPID::compute()
     // disable if above set temp max
     if (MES_TEMP > SET_TEMP_MAX + (SET_TEMP_MAX * 0.01))
     {
-        PID_ON = false;        // toggle pid off
+        pidEnabled = false;        // toggle pid off
         ledcWrite(ssrChan, 0); // output pin off
         return false;
     }
@@ -732,13 +732,13 @@ AerPID::MeasureResult AerPID::measureElementTemperature()
         }
         if (_measMode == 2)
         {
-            if (PID_ON)
+            if (pidEnabled)
             {
                 ledcWrite(ssrChan, 0); // output pin off
                 delayMicroseconds(60); // some time to settle...
             }
             MeasureResult result = measureElementTemperatureBlocking();
-            if (PID_ON && output > 0.09)
+            if (pidEnabled && output > 0.09)
             {
                 uint32_t xOutput = static_cast<uint32_t>(output);
                 ledcWrite(ssrChan, xOutput);
@@ -800,7 +800,7 @@ AerPID::MeasureResult AerPID::measureElementTemperature()
     }
 
     // Firstly, disable the power to the element if in safe mode.
-    if ((!useAsync || _faultError) && PID_ON)
+    if ((!useAsync || _faultError) && pidEnabled)
     {
         ledcWrite(ssrChan, 0); // output pin off
         delayMicroseconds(80); // some time to settle...
@@ -809,7 +809,7 @@ AerPID::MeasureResult AerPID::measureElementTemperature()
     MeasureResult result = useAsync ? measureElementTemperatureAsync() : measureElementTemperatureBlocking();
 
     // Third, re-enable output power to the element.
-    if ((!useAsync || _faultError) && PID_ON && output > 0.09)
+    if ((!useAsync || _faultError) && pidEnabled && output > 0.09)
     {
         uint32_t xOutput = static_cast<uint32_t>(output);
         ledcWrite(ssrChan, xOutput);
@@ -947,7 +947,7 @@ AerPID::MeasureResult AerPID::measureElementTemperatureAsync()
         // Serial.println(raw, HEX);
         if (raw & 0x01)
         {
-            if (PID_ON)
+            if (pidEnabled)
             {
                 _faultCodeLast = getMax31855ErrorCode(raw);
                 Serial.print(F("(async) ERROR: "));
@@ -1085,7 +1085,7 @@ AerPID::MeasureResult AerPID::measureElementTemperatureBlocking()
     // Serial.println(raw, HEX);
     if (raw & 0x01)
     {
-        if (PID_ON)
+        if (pidEnabled)
         {
             _faultCodeLast = getMax31855ErrorCode(raw);
             Serial.print(F("ERROR: "));

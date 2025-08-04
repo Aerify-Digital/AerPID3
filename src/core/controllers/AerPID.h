@@ -192,8 +192,9 @@ public:
     bool temp_saved = true;
     bool temp_changed = true;
 
-    // State for PID enable/running toggle
-    bool PID_ON = false;
+    // Functions for PID enable/running toggle
+    void setPidOn(bool on) { pidEnabled = on; }
+    bool isPidOn() { return pidEnabled; }
 
     // Usage detection auto off..
     bool USAGE_DETECT = true;
@@ -294,6 +295,9 @@ private:
     // PID compute output
     double output = 0;
     double xOutput = 0;
+
+    // State for PID enable/running toggle
+    bool pidEnabled = false;
 
     // PWM power scaler value
     double _pwmScaleFactor = PWM_SCALE_FACTOR;

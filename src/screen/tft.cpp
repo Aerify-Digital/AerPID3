@@ -379,7 +379,7 @@ namespace AerTftUI
 #endif
 
             uint8_t elementIndex = aerGUI->getElementIndex();
-            if (am->getAerPID(elementIndex)->PID_ON)
+            if (am->getAerPID(elementIndex)->isPidOn())
             {
                 spr1->pushImage(4, 40, 44, 43, image_data_bg03_right_btn_on);
             }
@@ -469,7 +469,7 @@ namespace AerTftUI
             spr1->createSprite(272, 14);
             spr1->drawRect(0, 0, 272, 3, TFT_BLACK);
             spr1->pushImage(0, 3, 272, 11, image_data_bg02_mid);
-            /*if (am->getAerPID(0)->PID_ON)
+            /*if (am->getAerPID(0)->isPidOn())
             {
                 drawBarColorScroll(spr1, 1, 1); // green
                 drawBarColorScroll(spr1, 2, 2); // blue
@@ -7049,6 +7049,10 @@ namespace AerTftUI
 
         uint16_t seriesColor = color565(8, 255, 32);
 
+        // get the measured data to display
+        double *mes = am->getAerPID(elementIndex)->getMeasures();
+        double sett = am->getAerPID(elementIndex)->SET_TEMP;
+
         // rescale the y axis based on the measured
         yhi = am->getAerPID(elementIndex)->maxMeasures() + 15;
         ylo = am->getAerPID(elementIndex)->minMeasuresLong() - 25;
@@ -7061,19 +7065,19 @@ namespace AerTftUI
         // rescale increment for y axis
         if (yhi < 50)
         {
-            yinc = 5;
+            yinc = 10;
         }
         else if (yhi < 75)
         {
-            yinc = 7.5;
+            yinc = 15;
         }
         else if (yhi < 125)
         {
-            yinc = 10;
+            yinc = 20;
         }
         else if (yhi < 200)
         {
-            yinc = 20;
+            yinc = 25;
             yhi += 20;
         }
         else if (yhi < 250)
@@ -7101,17 +7105,31 @@ namespace AerTftUI
         {
             // ylo = 30;
             yhi = toFahrenheit(yhi);
-            yinc = toFahrenheit(yinc);
+            //yinc = toFahrenheit(yinc);
         }
         else if (am->getReadingType() == ThermalUnitsType::KELVIN)
         {
             yhi = toKelvin(yhi);
-            yinc = toKelvin(yinc);
+            //yinc = toKelvin(yinc);
+        }
+
+        double mY = y1;
+        if (am->getReadingType() == ThermalUnitsType::FAHRENHEIT)
+        {
+            mY = toFahrenheit(mes[0]);
+        }
+        else if (am->getReadingType() == ThermalUnitsType::CELSIUS)
+        {
+            mY = mes[0];
+        }
+        else if (am->getReadingType() == ThermalUnitsType::KELVIN)
+        {
+            mY = toKelvin(mes[0]);
         }
 
         // draw the basic graph canvas
         display1 = update || change || chngd;
-        graph->Graph(gui, x, y1, dp, gx - 1, gy, w + 5, h, xlo, xhi, xinc, ylo, yhi, yinc, "", "", "", display1, seriesColor, bgColor);
+        graph->Graph(gui, x, mY, 0, dp, gx - 1, gy, w + 5, h, xlo, xhi, xinc, ylo, yhi, yinc, "", "", "", display1, seriesColor, seriesColor, bgColor);
 
         // sprite buffer
         TFT_eSprite *spr = gui->getSpriteBuffer(0);
@@ -7126,10 +7144,6 @@ namespace AerTftUI
         double t_w = w / chnk; // graph chunk width
         double t_gx = 0;       // x graph location (lower left)
         double t_gy = h;       // y graph location (lower left)
-
-        // get the measured data to display
-        double *mes = am->getAerPID(elementIndex)->getMeasures();
-        double sett = am->getAerPID(elementIndex)->SET_TEMP;
 
         // iterate over sprite data, build chart series
         for (int z = 0; z < 8; z++)
@@ -7187,6 +7201,7 @@ namespace AerTftUI
             spr->deleteSprite();
         }
 
+        update1 = false;
         lastindex = mindex;
     }
 
@@ -7236,7 +7251,7 @@ namespace AerTftUI
         double xinc = 16;   // division of x axis (distance not count)
         double ylo = 0;     // lower bound of y axis
         double yhi = 500;   // upper bound of y asis
-        double yinc = 0.05; // division of y axis (distance not count)
+        double yinc = 2.5;  // division of y axis (distance not count)
 
         // labels are not used!
         const char *title = "T(x)";   // title of graph
@@ -7245,45 +7260,49 @@ namespace AerTftUI
 
         uint16_t seriesColor = color565(8, 255, 32);
 
+        // get the measured data to display
+        double *mes = am->getAerPID(elementIndex)->getMeasures();
+        double sett = am->getAerPID(elementIndex)->SET_TEMP;
+
         double avg = am->getAerPID(elementIndex)->avgMeasuresLong();
-        double dev = am->getAerPID(elementIndex)->maxMeasuresLong() - max(am->getAerPID(elementIndex)->minMeasuresLong(), avg - 10);
+        double dev = am->getAerPID(elementIndex)->maxMeasuresLong() - max(am->getAerPID(elementIndex)->minMeasuresLong(), avg - 5);
         // rescale the y axis based on the measured
-        yhi = am->getAerPID(elementIndex)->maxMeasuresLong() + dev;
-        ylo = am->getAerPID(elementIndex)->minMeasuresLong() - dev;
-        yhi = min(yhi, avg + dev);
-        ylo = max(ylo, avg - dev);
+        yhi = am->getAerPID(elementIndex)->maxMeasuresLong() + (dev + 1);
+        ylo = am->getAerPID(elementIndex)->minMeasuresLong() - (dev + 1);
+        yhi = min(yhi, avg + (dev + 5));
+        ylo = max(0.0, max(ylo, avg - (dev + 5)));
 
         if (dev > 300)
         {
-            yinc = 10;
+            yinc = 100;
         }
         else if (dev > 200)
         {
-            yinc = 8;
+            yinc = 50;
         }
         else if (dev > 120)
         {
-            yinc = 4;
+            yinc = 40;
         }
         else if (dev > 90)
         {
-            yinc = 3;
+            yinc = 20;
         }
         else if (dev > 70)
         {
-            yinc = 1;
+            yinc = 15;
         }
         else if (dev > 40)
         {
-            yinc = 0.5;
+            yinc = 10;
         }
         else if (dev > 20)
         {
-            yinc = 0.2;
+            yinc = 5;
         }
         else if (dev > 10)
         {
-            yinc = 0.1;
+            yinc = 5;
         }
 
         // changed flag for redrawing axises
@@ -7295,19 +7314,33 @@ namespace AerTftUI
         if (am->getReadingType() == ThermalUnitsType::FAHRENHEIT)
         {
             yhi = toFahrenheit(yhi);
-            yinc = toFahrenheit(yinc);
+            //yinc = toFahrenheit(yinc);
             ylo = toFahrenheit(ylo);
         }
         else if (am->getReadingType() == ThermalUnitsType::KELVIN)
         {
             yhi = toKelvin(yhi);
-            yinc = toKelvin(yinc);
+            //yinc = toKelvin(yinc);
             ylo = toKelvin(ylo);
+        }
+
+        double mY = y1;
+        if (am->getReadingType() == ThermalUnitsType::FAHRENHEIT)
+        {
+            mY = toFahrenheit(mes[0]);
+        }
+        else if (am->getReadingType() == ThermalUnitsType::CELSIUS)
+        {
+            mY = mes[0];
+        }
+        else if (am->getReadingType() == ThermalUnitsType::KELVIN)
+        {
+            mY = toKelvin(mes[0]);
         }
 
         // draw the basic graph canvas
         display1 = update || change || chngd;
-        graph->Graph(gui, x, y1, dp, gx - 1, gy, w + 5, h, xlo, xhi, xinc, ylo, yhi, yinc, "", "", "", display1, seriesColor, bgColor);
+        graph->Graph(gui, x, mY, 0, dp, gx - 1, gy, w + 5, h, xlo, xhi, xinc, ylo, yhi, yinc, "", "", "", display1, seriesColor, seriesColor, bgColor);
 
         // sprite buffer
         TFT_eSprite *spr = gui->getSpriteBuffer(0);
@@ -7322,10 +7355,6 @@ namespace AerTftUI
         double t_w = w / chnk; // graph chunk width
         double t_gx = 0;       // x graph location (lower left)
         double t_gy = h;       // y graph location (lower left)
-
-        // get the measured data to display
-        double *mes = am->getAerPID(elementIndex)->getMeasures();
-        double sett = am->getAerPID(elementIndex)->SET_TEMP;
 
         // iterate over sprite data, build chart series
         for (int z = 0; z < 8; z++)
@@ -7383,6 +7412,7 @@ namespace AerTftUI
             spr->deleteSprite();
         }
 
+        update1 = false;
         lastindex = mindex;
     }
 
@@ -7441,6 +7471,10 @@ namespace AerTftUI
 
         uint16_t seriesColor = color565(8, 255, 32);
 
+        // get the measured data to display
+        double *mes = am->getAerPID(elementIndex)->getMeasuresLong();
+        double sett = am->getAerPID(elementIndex)->SET_TEMP;
+
         // rescale the y axis based on the measured
         yhi = am->getAerPID(elementIndex)->maxMeasures() + 25;
         ylo = am->getAerPID(elementIndex)->minMeasuresLong() - 25;
@@ -7453,19 +7487,19 @@ namespace AerTftUI
         // rescale increment for y axis
         if (yhi < 50)
         {
-            yinc = 5;
+            yinc = 10;
         }
         else if (yhi < 75)
         {
-            yinc = 7.5;
+            yinc = 15;
         }
         else if (yhi < 125)
         {
-            yinc = 10;
+            yinc = 20;
         }
         else if (yhi < 200)
         {
-            yinc = 20;
+            yinc = 25;
             yhi += 20;
         }
         else if (yhi < 250)
@@ -7493,17 +7527,31 @@ namespace AerTftUI
         {
             // ylo = 30;
             yhi = toFahrenheit(yhi);
-            yinc = toFahrenheit(yinc);
+            //yinc = toFahrenheit(yinc);
         }
         else if (am->getReadingType() == ThermalUnitsType::KELVIN)
         {
             yhi = toKelvin(yhi);
-            yinc = toKelvin(yinc);
+            //yinc = toKelvin(yinc);
+        }
+        
+        double mY = y1;
+        if (am->getReadingType() == ThermalUnitsType::FAHRENHEIT)
+        {
+            mY = toFahrenheit(mes[0]);
+        }
+        else if (am->getReadingType() == ThermalUnitsType::CELSIUS)
+        {
+            mY = mes[0];
+        }
+        else if (am->getReadingType() == ThermalUnitsType::KELVIN)
+        {
+            mY = toKelvin(mes[0]);
         }
 
         // draw the basic graph canvas
         display1 = update || change || chngd;
-        graph->Graph(gui, x, y1, dp, gx - 1, gy, w + 5, h, xlo, xhi, xinc, ylo, yhi, yinc, "", "", "", display1, seriesColor, bgColor);
+        graph->Graph(gui, x, mY, 0, dp, gx - 1, gy, w + 5, h, xlo, xhi, xinc, ylo, yhi, yinc, "", "", "", display1, seriesColor, seriesColor, bgColor);
 
         // sprite buffer
         TFT_eSprite *spr = gui->getSpriteBuffer(0);
@@ -7518,10 +7566,6 @@ namespace AerTftUI
         double t_w = w / 8; // graph chunk width
         double t_gx = 0;    // x graph location (lower left)
         double t_gy = h;    // y graph location (lower left)
-
-        // get the measured data to display
-        double *mes = am->getAerPID(elementIndex)->getMeasuresLong();
-        double sett = am->getAerPID(elementIndex)->SET_TEMP;
 
         // iterate over sprite data, build chart series
         for (int z = 0; z < 8; z++)
@@ -7579,6 +7623,7 @@ namespace AerTftUI
             spr->deleteSprite();
         }
 
+        update1 = false;
         lastindex = mindex;
     }
 
@@ -7635,9 +7680,15 @@ namespace AerTftUI
         const char *xlabel = "x";     // x asis label
         const char *ylabel = "fn(x)"; // y asis label
 
+        // get the measured data to display
+        double *mes1 = am->getAerPID(0)->getMeasures();
+        double *mes2 = am->getAerPID(1)->getMeasures();
+        double sett1 = am->getAerPID(0)->SET_TEMP;
+        double sett2 = am->getAerPID(1)->SET_TEMP;
+
         // rescale the y axis based on the measured
-        yhi = max(am->getAerPID(0)->maxMeasures() + 15, am->getAerPID(1)->maxMeasures() + 15);
-        ylo = min(am->getAerPID(0)->minMeasuresLong() - 25, am->getAerPID(1)->minMeasuresLong() - 25);
+        yhi = max(am->getAerPID(0)->maxMeasures() + 10, am->getAerPID(1)->maxMeasures() + 10);
+        ylo = min(am->getAerPID(0)->minMeasuresLong() - 20, am->getAerPID(1)->minMeasuresLong() - 20);
 
         if (ylo < 100)
         {
@@ -7647,19 +7698,19 @@ namespace AerTftUI
         // rescale increment for y axis
         if (yhi < 50)
         {
-            yinc = 5;
+            yinc = 10;
         }
         else if (yhi < 75)
         {
-            yinc = 7.5;
+            yinc = 15;
         }
         else if (yhi < 125)
         {
-            yinc = 10;
+            yinc = 20;
         }
         else if (yhi < 200)
         {
-            yinc = 20;
+            yinc = 25;
             yhi += 20;
         }
         else if (yhi < 250)
@@ -7687,17 +7738,35 @@ namespace AerTftUI
         {
             // ylo = 30;
             yhi = toFahrenheit(yhi);
-            yinc = toFahrenheit(yinc);
+            //yinc = toFahrenheit(yinc);
         }
         else if (am->getReadingType() == ThermalUnitsType::KELVIN)
         {
             yhi = toKelvin(yhi);
-            yinc = toKelvin(yinc);
+            //yinc = toKelvin(yinc);
+        }
+
+        double mY1 = y1;
+        double mY2 = y2;
+        if (am->getReadingType() == ThermalUnitsType::FAHRENHEIT)
+        {
+            mY1 = toFahrenheit(mes1[0]);
+            mY2 = toFahrenheit(mes2[0]);
+        }
+        else if (am->getReadingType() == ThermalUnitsType::CELSIUS)
+        {
+            mY1 = mes1[0];
+            mY2 = mes2[0];
+        }
+        else if (am->getReadingType() == ThermalUnitsType::KELVIN)
+        {
+            mY1 = toKelvin(mes1[0]);
+            mY2 = toKelvin(mes2[0]);
         }
 
         // draw the basic graph canvas
         display1 = update || change || chngd;
-        graph->Graph(gui, x, y1, dp, gx - 1, gy, w + 5, h, xlo, xhi, xinc, ylo, yhi, yinc, "", "", "", display1, 0x0000, bgColor);
+        graph->Graph(gui, x, mY1, mY2, dp, gx - 1, gy, w + 5, h, xlo, xhi, xinc, ylo, yhi, yinc, "", "", "", display1, color565(8, 255, 32), color565(196, 8, 255), bgColor);
 
         // sprite buffer
         TFT_eSprite *spr = gui->getSpriteBuffer(0);
@@ -7712,12 +7781,6 @@ namespace AerTftUI
         double t_w = w / chnk; // graph chunk width
         double t_gx = 0;       // x graph location (lower left)
         double t_gy = h;       // y graph location (lower left)
-
-        // get the measured data to display
-        double *mes1 = am->getAerPID(0)->getMeasures();
-        double *mes2 = am->getAerPID(1)->getMeasures();
-        double sett1 = am->getAerPID(0)->SET_TEMP;
-        double sett2 = am->getAerPID(1)->SET_TEMP;
 
         // iterate over sprite data, build chart series
         for (int z = 0; z < 8; z++)
@@ -7782,6 +7845,7 @@ namespace AerTftUI
             spr->deleteSprite();
         }
 
+        update1 = false;
         lastindex = mindex;
     }
 
@@ -7831,7 +7895,7 @@ namespace AerTftUI
         double xinc = 16;   // division of x axis (distance not count)
         double ylo = 0;     // lower bound of y axis
         double yhi = 500;   // upper bound of y asis
-        double yinc = 0.05; // division of y axis (distance not count)
+        double yinc = 2; // division of y axis (distance not count)
 
         // labels are not used!
         const char *title = "T(x)";   // title of graph
@@ -7839,6 +7903,12 @@ namespace AerTftUI
         const char *ylabel = "fn(x)"; // y asis label
 
         uint16_t seriesColor = color565(8, 255, 32);
+
+        // get the measured data to display
+        double *mes1 = am->getAerPID(0)->getMeasures();
+        double *mes2 = am->getAerPID(1)->getMeasures();
+        double sett1 = am->getAerPID(0)->SET_TEMP;
+        double sett2 = am->getAerPID(1)->SET_TEMP;
 
         double avg1 = am->getAerPID(0)->avgMeasuresLong();
         double avg2 = am->getAerPID(1)->avgMeasuresLong();
@@ -7850,38 +7920,38 @@ namespace AerTftUI
         ylo = max(am->getAerPID(0)->minMeasuresLong() - dev1, am->getAerPID(1)->minMeasuresLong() - dev2);
         yhi = min(yhi, max(avg1 + dev1, avg2 + dev2)) + 1;
         ylo = max(ylo, min(avg1 - dev1, avg2 - dev2)) - 1;
-
+      
         if (dev > 300)
         {
-            yinc = 10;
+            yinc = 100;
         }
         else if (dev > 200)
         {
-            yinc = 8;
+            yinc = 50;
         }
         else if (dev > 120)
         {
-            yinc = 4;
+            yinc = 40;
         }
         else if (dev > 90)
         {
-            yinc = 3;
+            yinc = 20;
         }
         else if (dev > 70)
         {
-            yinc = 1;
+            yinc = 15;
         }
         else if (dev > 40)
         {
-            yinc = 0.5;
+            yinc = 10;
         }
         else if (dev > 20)
         {
-            yinc = 0.2;
+            yinc = 5;
         }
         else if (dev > 10)
         {
-            yinc = 0.1;
+            yinc = 5;
         }
 
         // changed flag for redrawing axises
@@ -7893,19 +7963,37 @@ namespace AerTftUI
         if (am->getReadingType() == ThermalUnitsType::FAHRENHEIT)
         {
             yhi = toFahrenheit(yhi);
-            yinc = toFahrenheit(yinc);
+            //yinc = toFahrenheit(yinc);
             ylo = toFahrenheit(ylo);
         }
         else if (am->getReadingType() == ThermalUnitsType::KELVIN)
         {
             yhi = toKelvin(yhi);
-            yinc = toKelvin(yinc);
+            //yinc = toKelvin(yinc);
             ylo = toKelvin(ylo);
+        }
+
+        double mY1 = y1;
+        double mY2 = y2;
+        if (am->getReadingType() == ThermalUnitsType::FAHRENHEIT)
+        {
+            mY1 = toFahrenheit(mes1[0]);
+            mY2 = toFahrenheit(mes2[0]);
+        }
+        else if (am->getReadingType() == ThermalUnitsType::CELSIUS)
+        {
+            mY1 = mes1[0];
+            mY2 = mes2[0];
+        }
+        else if (am->getReadingType() == ThermalUnitsType::KELVIN)
+        {
+            mY1 = toKelvin(mes1[0]);
+            mY2 = toKelvin(mes2[0]);
         }
 
         // draw the basic graph canvas
         display1 = update || change || chngd;
-        graph->Graph(gui, x, y1, dp, gx - 1, gy, w + 5, h, xlo, xhi, xinc, ylo, yhi, yinc, "", "", "", display1, seriesColor, bgColor);
+        graph->Graph(gui, x, mY1, mY2, dp, gx - 1, gy, w + 5, h, xlo, xhi, xinc, ylo, yhi, yinc, "", "", "", display1, seriesColor, seriesColor, bgColor);
 
         // sprite buffer
         TFT_eSprite *spr = gui->getSpriteBuffer(0);
@@ -7920,12 +8008,6 @@ namespace AerTftUI
         double t_w = w / chnk; // graph chunk width
         double t_gx = 0;       // x graph location (lower left)
         double t_gy = h;       // y graph location (lower left)
-
-        // get the measured data to display
-        double *mes1 = am->getAerPID(0)->getMeasures();
-        double *mes2 = am->getAerPID(1)->getMeasures();
-        double sett1 = am->getAerPID(0)->SET_TEMP;
-        double sett2 = am->getAerPID(1)->SET_TEMP;
 
         // iterate over sprite data, build chart series
         for (int z = 0; z < 8; z++)
@@ -7990,6 +8072,7 @@ namespace AerTftUI
             spr->deleteSprite();
         }
 
+        update1 = false;
         lastindex = mindex;
     }
 
@@ -8048,6 +8131,12 @@ namespace AerTftUI
 
         uint16_t seriesColor = color565(8, 255, 32);
 
+        // get the measured data to display
+        double *mes1 = am->getAerPID(0)->getMeasuresLong();
+        double sett1 = am->getAerPID(0)->SET_TEMP;
+        double *mes2 = am->getAerPID(1)->getMeasuresLong();
+        double sett2 = am->getAerPID(1)->SET_TEMP;
+
         // rescale the y axis based on the measured
         yhi = max(am->getAerPID(0)->maxMeasures() + 25, am->getAerPID(1)->maxMeasures() + 25);
         ylo = min(am->getAerPID(0)->minMeasuresLong() - 25, am->getAerPID(1)->minMeasuresLong() - 25);
@@ -8058,21 +8147,25 @@ namespace AerTftUI
         }
 
         // rescale increment for y axis
-        if (yhi < 50)
+        if (yhi < 25) 
         {
             yinc = 5;
         }
-        else if (yhi < 75)
-        {
-            yinc = 7.5;
-        }
-        else if (yhi < 125)
+        else if (yhi < 50)
         {
             yinc = 10;
         }
-        else if (yhi < 200)
+        else if (yhi < 75)
+        {
+            yinc = 15;
+        }
+        else if (yhi < 125)
         {
             yinc = 20;
+        }
+        else if (yhi < 200)
+        {
+            yinc = 25;
             yhi += 20;
         }
         else if (yhi < 250)
@@ -8100,17 +8193,35 @@ namespace AerTftUI
         {
             // ylo = 30;
             yhi = toFahrenheit(yhi);
-            yinc = toFahrenheit(yinc);
+            //yinc = toFahrenheit(yinc);
         }
         else if (am->getReadingType() == ThermalUnitsType::KELVIN)
         {
             yhi = toKelvin(yhi);
-            yinc = toKelvin(yinc);
+            //yinc = toKelvin(yinc);
+        }
+
+        double mY1 = y1;
+        double mY2 = y2;
+        if (am->getReadingType() == ThermalUnitsType::FAHRENHEIT)
+        {
+            mY1 = toFahrenheit(mes1[0]);
+            mY2 = toFahrenheit(mes2[0]);
+        }
+        else if (am->getReadingType() == ThermalUnitsType::CELSIUS)
+        {
+            mY1 = mes1[0];
+            mY2 = mes2[0];
+        }
+        else if (am->getReadingType() == ThermalUnitsType::KELVIN)
+        {
+            mY1 = toKelvin(mes1[0]);
+            mY2 = toKelvin(mes2[0]);
         }
 
         // draw the basic graph canvas
         display1 = update || change || chngd;
-        graph->Graph(gui, x, y1, dp, gx - 1, gy, w + 5, h, xlo, xhi, xinc, ylo, yhi, yinc, "", "", "", display1, seriesColor, bgColor);
+        graph->Graph(gui, x, mY1, mY2, dp, gx - 1, gy, w + 5, h, xlo, xhi, xinc, ylo, yhi, yinc, "", "", "", display1, color565(8, 255, 32), color565(196, 8, 255), bgColor);
 
         // sprite buffer
         TFT_eSprite *spr = gui->getSpriteBuffer(0);
@@ -8125,12 +8236,6 @@ namespace AerTftUI
         double t_w = w / 8; // graph chunk width
         double t_gx = 0;    // x graph location (lower left)
         double t_gy = h;    // y graph location (lower left)
-
-        // get the measured data to display
-        double *mes1 = am->getAerPID(0)->getMeasuresLong();
-        double sett1 = am->getAerPID(0)->SET_TEMP;
-        double *mes2 = am->getAerPID(1)->getMeasuresLong();
-        double sett2 = am->getAerPID(1)->SET_TEMP;
 
         // iterate over sprite data, build chart series
         for (int z = 0; z < 8; z++)
@@ -8195,6 +8300,7 @@ namespace AerTftUI
             spr->deleteSprite();
         }
 
+        update1 = false;
         lastindex = mindex;
     }
 }
