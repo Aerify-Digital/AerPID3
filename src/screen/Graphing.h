@@ -49,12 +49,12 @@
 class AerChart
 {
 public:
-    void Graph(AerGUI *gui, double x, double y, byte dp,
+    void Graph(AerGUI *gui, double x, double y1, double y2, byte dp,
                double gx, double gy, double w, double h,
                double xlo, double xhi, double xinc,
                double ylo, double yhi, double yinc,
                const char *title, const char *xlabel, const char *ylabel,
-               bool &redraw, unsigned int color, unsigned int bcolor);
+               bool &redraw, unsigned int color1, unsigned int color2, unsigned int bcolor);
     void Trace(TFT_eSprite *spr, double x, double y1, double y2, byte dp,
                double gx, double gy,
                double w, double h,
