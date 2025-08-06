@@ -1,7 +1,7 @@
 {
   "name": "aertiny",
-  "version": "3.0.0",
-  "description": "ESP32 Based PID Control of 150 watt Heating Element",
+  "version": "3.3.0",
+  "description": "ESP32 PID Controller for Heating Element",
   "scripts": {
     "setup-electron": "npm install --prefix ./app/electron",
     "start-electron": "npm run start --prefix ./app/electron",
