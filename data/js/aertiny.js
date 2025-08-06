@@ -529,13 +529,14 @@ let connecting = false;
 let connected = false;
 
 function initWebSocket() {
-  if (connecting) {
+  if (connecting || connected) {
     return;
   }
   console.log('Attempting to open WebSocket connection...');
   connecting = true;
   document.getElementById('sockets-modal-connect-btn').disabled = true;
   document.getElementById('sockets-modal').style.display = 'block';
+  document.getElementById('sockets-modal-mobile').style.display = 'block';
   document.getElementById('sockets-modal-text').innerHTML = '...Connecting...';
   websocket = new WebSocket(gateway);
   websocket.onopen = onOpen;
@@ -548,6 +549,7 @@ function onOpen(event) {
   connected = true;
   document.getElementById('sockets-modal-text').innerHTML = 'Connected!';
   document.getElementById('sockets-modal').style.display = 'none';
+  document.getElementById('sockets-modal-mobile').style.display = 'none';
 }
 function onClose(event) {
   console.log('Connection to host closed!');
@@ -556,6 +558,7 @@ function onClose(event) {
   document.getElementById('sockets-modal-connect-btn').disabled = false;
   document.getElementById('sockets-modal-text').innerHTML = 'Connection Error!';
   document.getElementById('sockets-modal').style.display = 'block';
+  document.getElementById('sockets-modal-mobile').style.display = 'block';
   //setTimeout(initWebSocket, 3000);
 }
 
@@ -692,7 +695,7 @@ const initPageData = async (initData) => {
         ? cToF(state.FAV_1.temp)
         : state.UNIT == TemperatureUnit.KELVIN
         ? cToK(state.FAV_1.temp)
-        : cToC(state.FAV_1.temp) + '&deg;';
+        : cToC(state.FAV_1.temp) + '';
   }
   if (document.getElementById('fav1_t')) {
     document.getElementById('fav1_t').value = `${state.FAV_1.name}`;
@@ -717,7 +720,7 @@ const initPageData = async (initData) => {
         ? cToF(state.FAV_2.temp)
         : state.UNIT == TemperatureUnit.KELVIN
         ? cToK(state.FAV_2.temp)
-        : cToC(state.FAV_2.temp) + '&deg;';
+        : cToC(state.FAV_2.temp) + '';
   }
   if (document.getElementById('fav2_t')) {
     document.getElementById('fav2_t').value = `${state.FAV_2.name}`;
@@ -742,7 +745,7 @@ const initPageData = async (initData) => {
         ? cToF(state.FAV_3.temp)
         : state.UNIT == TemperatureUnit.KELVIN
         ? cToK(state.FAV_3.temp)
-        : cToC(state.FAV_3.temp) + '&deg;';
+        : cToC(state.FAV_3.temp) + '';
   }
   if (document.getElementById('fav3_t')) {
     document.getElementById('fav3_t').value = `${state.FAV_3.name}`;
@@ -767,7 +770,7 @@ const initPageData = async (initData) => {
         ? cToF(state.FAV_4.temp)
         : state.UNIT == TemperatureUnit.KELVIN
         ? cToK(state.FAV_4.temp)
-        : cToC(state.FAV_4.temp) + '&deg;';
+        : cToC(state.FAV_4.temp) + '';
   }
   if (document.getElementById('fav4_t')) {
     document.getElementById('fav4_t').value = `${state.FAV_4.name}`;
@@ -2140,7 +2143,10 @@ function advButtonInit() {
 
 function autoScaleResolution1() {
   const r = state.COIL1.adv.pwm_res;
-  const nr = Math.pow(2, r + 1) - 1;
+  if (r === undefined || r < 8 || r > 14) {
+    return; // TODO: add messaage
+  }
+  const nr = Math.pow(2, r) - 1;
   state.COIL1.adv.pid_res = nr;
   if (document.getElementById('pid1_set_reso')) {
     document.getElementById('pid1_set_reso').value = `${nr}`;
@@ -2148,7 +2154,10 @@ function autoScaleResolution1() {
 }
 function autoScaleResolution2() {
   const r = state.COIL2.adv.pwm_res;
-  const nr = Math.pow(2, r + 1) - 1;
+  if (r === undefined || r < 8 || r > 14) {
+    return; // TODO: add messaage
+  }
+  const nr = Math.pow(2, r) - 1;
   state.COIL2.adv.pid_res = nr;
   if (document.getElementById('pid2_set_reso')) {
     document.getElementById('pid2_set_reso').value = `${nr}`;
@@ -2242,11 +2251,11 @@ function sendPid1AdvSettings() {
   console.log('PID1 Adv changes submitted.');
   if (true) {
     let val = document.getElementById('pid1_set_bias').value;
-    if (val.includes('.')) {
+    /*if (val.includes('.')) {
       document.getElementById('pid_adv1_txt').innerHTML = 'PID Bias must be a whole number!';
       document.getElementById('pid_adv1_msg').style.display = 'block';
       return;
-    } else if (val > 1000) {
+    } else*/ if (val > 1000) {
       document.getElementById('pid_adv1_txt').innerHTML =
         'PID Bias must be less than or equal to 1000!';
       document.getElementById('pid_adv1_msg').style.display = 'block';
@@ -2267,12 +2276,12 @@ function sendPid1AdvSettings() {
   }
   if (true) {
     let val = document.getElementById('pid1_set_time').value;
-    if (val.includes('-')) {
+    /*if (val.includes('-')) {
       document.getElementById('pid_adv1_txt').innerHTML =
         'Time must be a non negative whole number!';
       document.getElementById('pid_adv1_msg').style.display = 'block';
       return;
-    } else if (val < 100) {
+    } else*/ if (val < 100) {
       document.getElementById('pid_adv1_txt').innerHTML =
         'Time must be 100 milliseconds or greater!';
       document.getElementById('pid_adv1_msg').style.display = 'block';

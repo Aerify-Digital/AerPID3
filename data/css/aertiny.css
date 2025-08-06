@@ -337,6 +337,10 @@ h6 {
   );
   backdrop-filter: blur(8px);
 }
+.navbar-mobile {
+  z-index: 100;
+  max-width: 100vw;
+}
 .navbar h4 {
   margin: 3px 0 !important;
 }
@@ -679,6 +683,15 @@ h6 {
   position: fixed;
   right: 10px;
   opacity: 0.8;
+  min-width: 192px;
+}
+#sockets-modal-mobile {
+  display: block;
+  position: fixed;
+  top: 100px;
+  right: 50px;
+  left: 50px;
+  opacity: 0.88;
   min-width: 192px;
 }
 
