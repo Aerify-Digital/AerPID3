@@ -534,6 +534,7 @@ function initWebSocket() {
   }
   console.log('Attempting to open WebSocket connection...');
   connecting = true;
+  document.getElementById('sockets-modal-connect-btn').disabled = true;
   document.getElementById('sockets-modal').style.display = 'block';
   document.getElementById('sockets-modal-text').innerHTML = '...Connecting...';
   websocket = new WebSocket(gateway);
@@ -552,6 +553,7 @@ function onClose(event) {
   console.log('Connection to host closed!');
   connecting = false;
   connected = false;
+  document.getElementById('sockets-modal-connect-btn').disabled = false;
   document.getElementById('sockets-modal-text').innerHTML = 'Connection Error!';
   document.getElementById('sockets-modal').style.display = 'block';
   //setTimeout(initWebSocket, 3000);
@@ -879,6 +881,23 @@ const initPageData2 = async (initData) => {
     }
     document.getElementById('pwm_adv2_msg').style.display = 'none';
     document.getElementById('pid_adv2_msg').style.display = 'none';
+  }
+};
+
+const updateTempUnits = () => {
+  for (const elm of document.getElementsByClassName('temp_unit')) {
+    switch (state.UNIT) {
+      case TemperatureUnit.FAHRENHEIT:
+        elm.innerHTML = '&deg;F';
+        break;
+      case TemperatureUnit.KELVIN:
+        elm.innerHTML = '&deg;K';
+        break;
+      case TemperatureUnit.CELSIUS:
+      default:
+        elm.innerHTML = '&deg;C';
+        break;
+    }
   }
 };
 
@@ -1254,6 +1273,7 @@ const handleMessage = (dat) => {
     case SerialCommand.UNIT:
       const unitType = dat[1];
       state.UNIT = unitType;
+      document.getElementsByClassName('temp_unit').innerHTML = unitType;
       break;
     case SerialCommand.COIL_TOGGLE:
       pid_enb = dat[1] > 0;

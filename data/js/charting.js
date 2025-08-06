@@ -99,6 +99,10 @@ const createChart = (name) => {
             gridLines: {
               display: true,
               color: 'rgba(255, 255, 255, 0.1)' // Set the x-axis grid color to a light color
+            },
+            scaleLabel: {
+              display: true,
+              labelString: 'Temperature'
             }
           },
           {
@@ -107,20 +111,19 @@ const createChart = (name) => {
             display: true,
             position: 'right',
             color: 'blue',
-            title: {
-              display: true,
-              color: 'blue'
-            },
             ticks: {
               beginAtZero: true,
               color: 'blue'
             },
-
             // grid line settings
             grid: {
               drawOnChartArea: false, // only want the grid lines for one axis to show up
               backdropColor: 'blue',
               color: 'blue'
+            },
+            scaleLabel: {
+              display: false,
+              labelString: 'Power'
             }
           }
           /*{
@@ -311,6 +314,23 @@ const updateChart = (state, t, ta, st, o, s) => {
     }
   }
 
+  let unitLabel = '';
+  switch (state.UNIT) {
+    case TemperatureUnit.FAHRENHEIT:
+      unitLabel = '°F';
+      break;
+    case TemperatureUnit.KELVIN:
+      unitLabel = '°K';
+      break;
+    case TemperatureUnit.CELSIUS:
+    default:
+      unitLabel = '°C';
+      break;
+  }
+
+  chart.config.options.scales.yAxes[0].scaleLabel.labelString = `Temperature (${unitLabel})`;
+  chart.config.options.scales.yAxes[0].scaleLabel.display = true;
+
   chart.data.datasets[0].data = temps;
   chart.data.datasets[1].data = avg_temps;
   chart.data.datasets[2].data = set_temps;
@@ -432,6 +452,23 @@ const updateChart2 = (state, t, ta, st, o, s) => {
       }
     }
   }
+
+  let unitLabel = '';
+  switch (state.UNIT) {
+    case TemperatureUnit.FAHRENHEIT:
+      unitLabel = '°F';
+      break;
+    case TemperatureUnit.KELVIN:
+      unitLabel = '°K';
+      break;
+    case TemperatureUnit.CELSIUS:
+    default:
+      unitLabel = '°C';
+      break;
+  }
+
+  chart2.config.options.scales.yAxes[0].scaleLabel.labelString = `Temperature (${unitLabel})`;
+  chart2.config.options.scales.yAxes[0].scaleLabel.display = true;
 
   chart2.data.datasets[0].data = temps;
   chart2.data.datasets[1].data = avg_temps;

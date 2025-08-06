@@ -193,10 +193,11 @@
 
    <div id="sockets-modal" class="" style="z-index: 100">
     <div class="w3-border w3-border-black">
-     <div class="w3-amber w3-center" style="padding: 20px">
+     <div class="w3-amber w3-center" style="padding: 10px">
       <i class="fa-solid fa-spinner fa-spin-pulse w3-text-white w3-xxlarge"></i>
+      <div style="margin-top: 5px">Socket Server</div>
       <div id="sockets-modal-text">...Connecting...</div>
-      <button onclick="initWebSocket()">Connect</button>
+      <button id="sockets-modal-connect-btn" onclick="initWebSocket()">Connect</button>
      </div>
     </div>
    </div>
@@ -229,7 +230,7 @@
           <br />
           <span style="font-size: 28px; font-weight: bold; position: relative; bottom: 80%">
            <span id="meas_temp">0.0</span>
-           &deg;&nbsp;F
+           <span class="temp_unit">&deg;C</span>
           </span>
          </div>
         </li>
@@ -279,7 +280,8 @@
      <!-- Favorites Panel -->
      <div class="w3-row w3-center w3-padding-8 w3-section w3-light-grey w3-opacity-min w3-hover-opacity-off">
       <div class="w3-quarter w3-section">
-       <span id="fav1q_n" class="w3-xlarge">505&deg;F</span>
+       <span id="fav1q_n" class="w3-xlarge">505</span>
+       <span class="temp_unit w3-xlarge">&deg;C</span>
        <br />
        <button id="fav1_b" class="w3-button w3-light-grey w3-section">
         <i class="fa fa-star"></i>
@@ -288,7 +290,8 @@
        </button>
       </div>
       <div class="w3-quarter w3-section">
-       <span id="fav2q_n" class="w3-xlarge">525&deg;F</span>
+       <span id="fav2q_n" class="w3-xlarge">525</span>
+       <span class="temp_unit w3-xlarge">&deg;C</span>
        <br />
        <button id="fav2_b" class="w3-button w3-light-grey w3-section">
         <i class="fa fa-star"></i>
@@ -297,7 +300,8 @@
        </button>
       </div>
       <div class="w3-quarter w3-section">
-       <span id="fav3q_n" class="w3-xlarge">495&deg;F</span>
+       <span id="fav3q_n" class="w3-xlarge">495</span>
+       <span class="temp_unit w3-xlarge">&deg;C</span>
        <br />
        <button id="fav3_b" class="w3-button w3-light-grey w3-section">
         <i class="fa fa-star"></i>
@@ -306,7 +310,8 @@
        </button>
       </div>
       <div class="w3-quarter w3-section">
-       <span id="fav4q_n" class="w3-xlarge">550&deg;F</span>
+       <span id="fav4q_n" class="w3-xlarge">550</span>
+       <span class="temp_unit w3-xlarge">&deg;C</span>
        <br />
        <button id="fav4_b" class="w3-button w3-light-grey w3-section">
         <i class="fa fa-star"></i>
@@ -606,7 +611,7 @@
              <br />
              <span style="font-size: 28px; font-weight: bold; position: relative; bottom: 80%">
               <span id="meas_temp_1">0.0</span>
-              &deg;&nbsp;F
+              <span class="temp_unit">&deg;C</span>
              </span>
             </div>
            </li>
@@ -857,7 +862,7 @@
              <br />
              <span style="font-size: 28px; font-weight: bold; position: relative; bottom: 80%">
               <span id="meas_temp_2">0.0</span>
-              &deg;&nbsp;F
+              <span class="temp_unit">&deg;C</span>
              </span>
             </div>
            </li>
