@@ -923,6 +923,7 @@ void WebServer::updateClients()
         reply->build();
         reply->emitAll(getWebSocket());
         delete reply;
+#if AERPID_COUNT == 2
         reply = new SocketCmdOp(SerialCommand::CMD_PID2);
         reply->Param(PARAM_PID::PARAM_PID);
         reply->Val(aerManager.getAerPID(1)->kP);
@@ -931,6 +932,7 @@ void WebServer::updateClients()
         reply->build();
         reply->emitAll(getWebSocket());
         delete reply;
+#endif
         aerManager.webUpdatePID(false);
     }
     if (aerManager.webUpdateTemp())
@@ -961,8 +963,7 @@ void WebServer::handleSocketMessage(void *arg, uint8_t *data, size_t len, AsyncW
     {
         char *decoded = new char[1024];
         decodeData((char *)data, len, decoded);
-        uint ln = 3; // what does this do???
-        processSocketData(decoded, ln, client);
+        processSocketData(decoded, client);
         delete[] decoded;
         return;
     }
@@ -972,7 +973,7 @@ void WebServer::handleSocketMessage(void *arg, uint8_t *data, size_t len, AsyncW
     }
 }
 
-void WebServer::processSocketData(char *data, size_t len, AsyncWebSocketClient *client)
+void WebServer::processSocketData(char *data, AsyncWebSocketClient *client)
 {
     SerialCommand cmd = (SerialCommand)data[0];
 
