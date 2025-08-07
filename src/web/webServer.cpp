@@ -923,6 +923,14 @@ void WebServer::updateClients()
         reply->build();
         reply->emitAll(getWebSocket());
         delete reply;
+        reply = new SocketCmdOp(SerialCommand::CMD_PID2);
+        reply->Param(PARAM_PID::PARAM_PID);
+        reply->Val(aerManager.getAerPID(1)->kP);
+        reply->Val(aerManager.getAerPID(1)->kI);
+        reply->Val(aerManager.getAerPID(1)->kD);
+        reply->build();
+        reply->emitAll(getWebSocket());
+        delete reply;
         aerManager.webUpdatePID(false);
     }
     if (aerManager.webUpdateTemp())

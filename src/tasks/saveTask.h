@@ -325,6 +325,7 @@ void save_task(void *pvParameters)
                     // myPID.SetTunings(aerStor->kP, aerStor->kI, aerStor->kD);
                     am->getAerPID(0)->setTunings(false);
                     am->getAerPID(0)->pid_saved = true;
+                    am->webUpdatePID(true);
                     Serial.print("Saved: ");
                     Serial.print(" kP ");
                     Serial.print(am->getAerPID(0)->kP, 10);
@@ -347,6 +348,7 @@ void save_task(void *pvParameters)
                     pidStor.save_pid_2(am->getAerPID(1)->kP, am->getAerPID(1)->kI, am->getAerPID(1)->kD);
                     am->getAerPID(1)->setTunings(false);
                     am->getAerPID(1)->pid_saved = true;
+                    am->webUpdatePID(true);
                     Serial.print("Saved: ");
                     Serial.print(" kP ");
                     Serial.print(am->getAerPID(1)->kP, 10);
