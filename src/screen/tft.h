@@ -156,7 +156,7 @@ namespace AerTftUI
     void showBacklightDimTimeout(AerManager *am, bool update, bool change);
     void printSelectedChar(AerGUI *gui, TFT_eSprite *spr, uint type = 0);
     void printSelectedNumber(AerGUI *gui, TFT_eSprite *spr);
-    int getGraphAxisScale(double low, double high);
+    double getGraphScaleAxisY(double low, double high);
     void showGraphTemperature(AerManager *am, bool update, bool change, uint8_t elementIndex);
     void showGraphTemperatureZoom(AerManager *am, bool update, bool change, uint8_t elementIndex);
     void showGraphTemperatureLong(AerManager *am, bool update, bool change, uint8_t elementIndex);

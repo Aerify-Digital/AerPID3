@@ -7011,28 +7011,63 @@ namespace AerTftUI
 
     // =======================================================================
 
-    int getGraphAxisScale(double low, double high)
+    double getGraphScaleAxisY(double low, double high)
     {
         double delta = high - low;
-        if (delta < 15.0) {
+        if (delta < 1.0)
+        {
+            return 0.25;
+        }
+        else if (delta < 5.0)
+        {
+            return 1;
+        }
+        else if (delta < 10.0)
+        {
+            return 2;
+        }
+        else if (delta < 15.0)
+        {
+            return 3;
+        }
+        else if (delta < 20.0)
+        {
             return 4;
-        } else if (delta < 25.0) {
+        }
+        else if (delta < 25.0)
+        {
             return 5;
-        } else if (delta < 50.0) {
+        }
+        else if (delta < 50.0)
+        {
             return 10;
-        } else if (delta < 100.0) {
+        }
+        else if (delta < 100.0)
+        {
             return 20;
-        } else if (delta < 200.0) {
+        }
+        else if (delta < 200.0)
+        {
             return 40;
-        } else if (delta < 300.0) {
+        }
+        else if (delta < 300.0)
+        {
             return 60;
-        } else if (delta < 400.0) {
+        }
+        else if (delta < 400.0)
+        {
             return 80;
-        } else if (delta < 500.0) {
+        }
+        else if (delta < 500.0)
+        {
             return 100;
-        } else if (delta < 600.0) {
+        }
+        else if (delta < 600.0)
+        {
             return 150;
-        } else if (delta < 1000.0) {
+        }
+        else if (delta < 1000.0)
+        {
             return 250;
         }
         return 50;
@@ -7047,7 +7082,8 @@ namespace AerTftUI
 
     void showGraphTemperature(AerManager *am, bool update, bool change, uint8_t elementIndex)
     {
-        const uint16_t bgColor = color565(2, 5, 3);
+        const uint16_t bgColor = color565(2, 3, 4);
+        const uint16_t brdColor = color565(15, 202, 213);
 
         AerGUI *gui = am->getGUI();
         PropsMenu *props = gui->getMenuProps();
@@ -7063,15 +7099,14 @@ namespace AerTftUI
         if (update && change)
         {
             lcd->fillScreen(0x0841);
-            lcd->fillRoundRect(20, 20, 280, 200, 7, bgColor); // TFT_DARKGREY
-            lcd->drawRoundRect(18, 18, 284, 204, 7, TFT_CYAN);
-
+            lcd->fillRoundRect(16, 16, 288, 208, 7, bgColor);
+            lcd->drawRoundRect(14, 14, 292, 212, 7, brdColor);
             graph = new AerChart();
         }
         lcd->setTextWrap(false);
         lcd->setTextColor(TFT_WHITE, bgColor);
         lcd->setTextSize(2);
-        lcd->setCursor(64, 22);
+        lcd->setCursor(64, 20);
         lcd->print("Temperature Graph");
         lcd->setTextSize(1);
 
@@ -7114,7 +7149,7 @@ namespace AerTftUI
         }
 
         // rescale increment for y axis
-        yinc = getGraphAxisScale(ylo, yhi);
+        yinc = getGraphScaleAxisY(ylo, yhi);
 
         // changed flag for redrawing axises
         bool chngd = l_yhi != yhi;
@@ -7123,14 +7158,13 @@ namespace AerTftUI
         // adjust based on reading type
         if (am->getReadingType() == ThermalUnitsType::FAHRENHEIT)
         {
-            // ylo = 30;
+            ylo = toFahrenheit(ylo);
             yhi = toFahrenheit(yhi);
-            //yinc = toFahrenheit(yinc);
         }
         else if (am->getReadingType() == ThermalUnitsType::KELVIN)
         {
+            ylo = toKelvin(ylo);
             yhi = toKelvin(yhi);
-            //yinc = toKelvin(yinc);
         }
 
         double mY = y1;
@@ -7227,7 +7261,8 @@ namespace AerTftUI
 
     void showGraphTemperatureZoom(AerManager *am, bool update, bool change, uint8_t elementIndex)
     {
-        uint16_t bgColor = color565(2, 5, 3);
+        const uint16_t bgColor = color565(2, 3, 4);
+        const uint16_t brdColor = color565(15, 202, 213);
 
         AerGUI *gui = am->getGUI();
         PropsMenu *props = gui->getMenuProps();
@@ -7243,15 +7278,14 @@ namespace AerTftUI
         if (update && change)
         {
             lcd->fillScreen(0x0841);
-            lcd->fillRoundRect(20, 20, 280, 200, 7, bgColor); // TFT_DARKGREY
-            lcd->drawRoundRect(18, 18, 284, 204, 7, TFT_CYAN);
-
+            lcd->fillRoundRect(16, 16, 288, 208, 7, bgColor);
+            lcd->drawRoundRect(14, 14, 292, 212, 7, brdColor);
             graph = new AerChart();
         }
         lcd->setTextWrap(false);
         lcd->setTextColor(TFT_WHITE, bgColor);
         lcd->setTextSize(2);
-        lcd->setCursor(64, 22);
+        lcd->setCursor(64, 20);
         lcd->print("Temp Graph Zoom");
         lcd->setTextSize(1);
 
@@ -7261,17 +7295,17 @@ namespace AerTftUI
         /* datapoint variables x,y */
         double x, y1, y2 = 0;
 
-        uint8_t dp = 1;     // datapoint flag
-        double gx = 60;     // x graph location (lower left)
-        double gy = 198;    // y graph location (lower left)
-        double w = 220;     // width of graph
-        double h = 160;     // height of graph
-        double xlo = 0;     // lower bound of x axis
-        double xhi = 64;    // upper bound of x asis
-        double xinc = 16;   // division of x axis (distance not count)
-        double ylo = 0;     // lower bound of y axis
-        double yhi = 500;   // upper bound of y asis
-        double yinc = 50;  // division of y axis (distance not count)
+        uint8_t dp = 1;   // datapoint flag
+        double gx = 60;   // x graph location (lower left)
+        double gy = 198;  // y graph location (lower left)
+        double w = 220;   // width of graph
+        double h = 160;   // height of graph
+        double xlo = 0;   // lower bound of x axis
+        double xhi = 64;  // upper bound of x asis
+        double xinc = 16; // division of x axis (distance not count)
+        double ylo = 0;   // lower bound of y axis
+        double yhi = 500; // upper bound of y asis
+        double yinc = 50; // division of y axis (distance not count)
 
         // labels are not used!
         const char *title = "T(x)";   // title of graph
@@ -7286,14 +7320,14 @@ namespace AerTftUI
 
         double avg = am->getAerPID(elementIndex)->avgMeasuresLong();
         double dev = am->getAerPID(elementIndex)->maxMeasuresLong() - max(am->getAerPID(elementIndex)->minMeasuresLong(), avg - 5);
-        
+
         yhi = am->getAerPID(elementIndex)->maxMeasuresLong() + (dev + 1);
         ylo = am->getAerPID(elementIndex)->minMeasuresLong() - (dev + 1);
-        yhi = min(yhi, avg + (dev + 5));
-        ylo = max(0.0, max(ylo, avg - (dev + 5)));
+        yhi = min(yhi, avg + (dev + 1)) - 1;
+        ylo = max(0.0, max(ylo, avg - (dev + 1))) + 1;
 
         // rescale the y axis based on the measured
-        yinc = getGraphAxisScale(ylo, yhi);
+        yinc = getGraphScaleAxisY(ylo, yhi);
 
         // changed flag for redrawing axises
         bool chngd = l_yhi != yhi || l_ylo != ylo;
@@ -7304,13 +7338,11 @@ namespace AerTftUI
         if (am->getReadingType() == ThermalUnitsType::FAHRENHEIT)
         {
             yhi = toFahrenheit(yhi);
-            //yinc = toFahrenheit(yinc);
             ylo = toFahrenheit(ylo);
         }
         else if (am->getReadingType() == ThermalUnitsType::KELVIN)
         {
             yhi = toKelvin(yhi);
-            //yinc = toKelvin(yinc);
             ylo = toKelvin(ylo);
         }
 
@@ -7408,7 +7440,8 @@ namespace AerTftUI
 
     void showGraphTemperatureLong(AerManager *am, bool update, bool change, uint8_t elementIndex)
     {
-        uint16_t bgColor = color565(2, 5, 3);
+        const uint16_t bgColor = color565(2, 3, 4);
+        const uint16_t brdColor = color565(15, 202, 213);
 
         AerGUI *gui = am->getGUI();
         PropsMenu *props = gui->getMenuProps();
@@ -7424,15 +7457,14 @@ namespace AerTftUI
         if (update && change)
         {
             lcd->fillScreen(0x0841);
-            lcd->fillRoundRect(20, 20, 280, 200, 7, bgColor); // TFT_DARKGREY
-            lcd->drawRoundRect(18, 18, 284, 204, 7, TFT_CYAN);
-
+            lcd->fillRoundRect(16, 16, 288, 208, 7, bgColor);
+            lcd->drawRoundRect(14, 14, 292, 212, 7, brdColor);
             graph = new AerChart();
         }
         lcd->setTextWrap(false);
         lcd->setTextColor(TFT_WHITE, bgColor);
         lcd->setTextSize(2);
-        lcd->setCursor(64, 22);
+        lcd->setCursor(64, 20);
         lcd->print("Temp Graph 3 Sec");
         lcd->setTextSize(1);
 
@@ -7474,7 +7506,7 @@ namespace AerTftUI
         }
 
         // rescale the y axis based on the measured
-        yinc = getGraphAxisScale(ylo, yhi);
+        yinc = getGraphScaleAxisY(ylo, yhi);
 
         // changed flag for redrawing axises
         bool chngd = l_yhi != yhi;
@@ -7483,16 +7515,15 @@ namespace AerTftUI
         // adjust based on reading type
         if (am->getReadingType() == ThermalUnitsType::FAHRENHEIT)
         {
-            // ylo = 30;
+            ylo = toFahrenheit(ylo);
             yhi = toFahrenheit(yhi);
-            //yinc = toFahrenheit(yinc);
         }
         else if (am->getReadingType() == ThermalUnitsType::KELVIN)
         {
+            ylo = toKelvin(ylo);
             yhi = toKelvin(yhi);
-            //yinc = toKelvin(yinc);
         }
-        
+
         double mY = y1;
         if (am->getReadingType() == ThermalUnitsType::FAHRENHEIT)
         {
@@ -7587,7 +7618,8 @@ namespace AerTftUI
 
     void showGraphTemperature(AerManager *am, bool update, bool change)
     {
-        const uint16_t bgColor = color565(2, 5, 3);
+        const uint16_t bgColor = color565(2, 3, 4);
+        const uint16_t brdColor = color565(15, 202, 213);
 
         AerGUI *gui = am->getGUI();
         PropsMenu *props = gui->getMenuProps();
@@ -7603,15 +7635,14 @@ namespace AerTftUI
         if (update && change)
         {
             lcd->fillScreen(0x0841);
-            lcd->fillRoundRect(20, 20, 280, 200, 7, bgColor); // TFT_DARKGREY
-            lcd->drawRoundRect(18, 18, 284, 204, 7, TFT_CYAN);
-
+            lcd->fillRoundRect(16, 16, 288, 208, 7, bgColor);
+            lcd->drawRoundRect(14, 14, 292, 212, 7, brdColor);
             graph = new AerChart();
         }
         lcd->setTextWrap(false);
         lcd->setTextColor(TFT_WHITE, bgColor);
         lcd->setTextSize(2);
-        lcd->setCursor(64, 22);
+        lcd->setCursor(64, 20);
         lcd->print("Temperature Graph");
         lcd->setTextSize(1);
 
@@ -7654,7 +7685,7 @@ namespace AerTftUI
         }
 
         // rescale increment for y axis
-        yinc = getGraphAxisScale(ylo, yhi);
+        yinc = getGraphScaleAxisY(ylo, yhi);
 
         // changed flag for redrawing axises
         bool chngd = l_yhi != yhi;
@@ -7663,14 +7694,13 @@ namespace AerTftUI
         // adjust based on reading type
         if (am->getReadingType() == ThermalUnitsType::FAHRENHEIT)
         {
-            // ylo = 30;
+            ylo = toFahrenheit(ylo);
             yhi = toFahrenheit(yhi);
-            //yinc = toFahrenheit(yinc);
         }
         else if (am->getReadingType() == ThermalUnitsType::KELVIN)
         {
+            ylo = toKelvin(ylo);
             yhi = toKelvin(yhi);
-            //yinc = toKelvin(yinc);
         }
 
         double mY1 = y1;
@@ -7778,7 +7808,8 @@ namespace AerTftUI
 
     void showGraphTemperatureZoom(AerManager *am, bool update, bool change)
     {
-        uint16_t bgColor = color565(2, 5, 3);
+        uint16_t bgColor = color565(2, 3, 4);
+        const uint16_t brdColor = color565(15, 202, 213);
 
         AerGUI *gui = am->getGUI();
         PropsMenu *props = gui->getMenuProps();
@@ -7794,15 +7825,14 @@ namespace AerTftUI
         if (update && change)
         {
             lcd->fillScreen(0x0841);
-            lcd->fillRoundRect(20, 20, 280, 200, 7, bgColor); // TFT_DARKGREY
-            lcd->drawRoundRect(18, 18, 284, 204, 7, TFT_CYAN);
-
+            lcd->fillRoundRect(16, 16, 288, 208, 7, bgColor);
+            lcd->drawRoundRect(14, 14, 292, 212, 7, brdColor);
             graph = new AerChart();
         }
         lcd->setTextWrap(false);
         lcd->setTextColor(TFT_WHITE, bgColor);
         lcd->setTextSize(2);
-        lcd->setCursor(64, 22);
+        lcd->setCursor(64, 20);
         lcd->print("Temp Graph Zoom");
         lcd->setTextSize(1);
 
@@ -7812,16 +7842,16 @@ namespace AerTftUI
         /* datapoint variables x,y */
         double x, y1, y2, y3, y4 = 0;
 
-        uint8_t dp = 1;     // datapoint flag
-        double gx = 60;     // x graph location (lower left)
-        double gy = 198;    // y graph location (lower left)
-        double w = 220;     // width of graph
-        double h = 160;     // height of graph
-        double xlo = 0;     // lower bound of x axis
-        double xhi = 64;    // upper bound of x asis
-        double xinc = 16;   // division of x axis (distance not count)
-        double ylo = 0;     // lower bound of y axis
-        double yhi = 500;   // upper bound of y asis
+        uint8_t dp = 1;   // datapoint flag
+        double gx = 60;   // x graph location (lower left)
+        double gy = 198;  // y graph location (lower left)
+        double w = 220;   // width of graph
+        double h = 160;   // height of graph
+        double xlo = 0;   // lower bound of x axis
+        double xhi = 64;  // upper bound of x asis
+        double xinc = 16; // division of x axis (distance not count)
+        double ylo = 0;   // lower bound of y axis
+        double yhi = 500; // upper bound of y asis
         double yinc = 50; // division of y axis (distance not count)
 
         // labels are not used!
@@ -7847,9 +7877,9 @@ namespace AerTftUI
         ylo = max(am->getAerPID(0)->minMeasuresLong() - dev1, am->getAerPID(1)->minMeasuresLong() - dev2);
         yhi = min(yhi, max(avg1 + dev1, avg2 + dev2)) + 1;
         ylo = max(ylo, min(avg1 - dev1, avg2 - dev2)) - 1;
-      
+
         // rescale increment for y axis
-        yinc = getGraphAxisScale(ylo, yhi);
+        yinc = getGraphScaleAxisY(ylo, yhi);
 
         // changed flag for redrawing axises
         bool chngd = l_yhi != yhi || l_ylo != ylo;
@@ -7860,13 +7890,11 @@ namespace AerTftUI
         if (am->getReadingType() == ThermalUnitsType::FAHRENHEIT)
         {
             yhi = toFahrenheit(yhi);
-            //yinc = toFahrenheit(yinc);
             ylo = toFahrenheit(ylo);
         }
         else if (am->getReadingType() == ThermalUnitsType::KELVIN)
         {
             yhi = toKelvin(yhi);
-            //yinc = toKelvin(yinc);
             ylo = toKelvin(ylo);
         }
 
@@ -7975,7 +8003,8 @@ namespace AerTftUI
 
     void showGraphTemperatureLong(AerManager *am, bool update, bool change)
     {
-        uint16_t bgColor = color565(2, 5, 3);
+        uint16_t bgColor = color565(2, 3, 4);
+        const uint16_t brdColor = color565(15, 202, 213);
 
         AerGUI *gui = am->getGUI();
         PropsMenu *props = gui->getMenuProps();
@@ -7991,15 +8020,14 @@ namespace AerTftUI
         if (update && change)
         {
             lcd->fillScreen(0x0841);
-            lcd->fillRoundRect(20, 20, 280, 200, 7, bgColor); // TFT_DARKGREY
-            lcd->drawRoundRect(18, 18, 284, 204, 7, TFT_CYAN);
-
+            lcd->fillRoundRect(16, 16, 288, 208, 7, bgColor);
+            lcd->drawRoundRect(14, 14, 292, 212, 7, brdColor);
             graph = new AerChart();
         }
         lcd->setTextWrap(false);
         lcd->setTextColor(TFT_WHITE, bgColor);
         lcd->setTextSize(2);
-        lcd->setCursor(64, 22);
+        lcd->setCursor(64, 20);
         lcd->print("Temp Graph 3 Sec");
         lcd->setTextSize(1);
 
@@ -8044,7 +8072,7 @@ namespace AerTftUI
         }
 
         // rescale increment for y axis
-        yinc = getGraphAxisScale(ylo, yhi);
+        yinc = getGraphScaleAxisY(ylo, yhi);
 
         // changed flag for redrawing axises
         bool chngd = l_yhi != yhi;
@@ -8053,14 +8081,13 @@ namespace AerTftUI
         // adjust based on reading type
         if (am->getReadingType() == ThermalUnitsType::FAHRENHEIT)
         {
-            // ylo = 30;
+            ylo = toFahrenheit(ylo);
             yhi = toFahrenheit(yhi);
-            //yinc = toFahrenheit(yinc);
         }
         else if (am->getReadingType() == ThermalUnitsType::KELVIN)
         {
+            ylo = toKelvin(ylo);
             yhi = toKelvin(yhi);
-            //yinc = toKelvin(yinc);
         }
 
         double mY1 = y1;
