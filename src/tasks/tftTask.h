@@ -141,44 +141,26 @@ void tft_task(void *pvParameters)
                     break;
                 }
                 case MENU_PID_P: /* P Settings */
-                    if (_menu->menuUpdate)
-                    {
-                        tft->fillRoundRect(19, 19, 282, 202, 7, TFT_DARKCYAN);
-                        tft->drawRoundRect(18, 18, 284, 204, 7, TFT_CYAN);
-                        _menu->menuUpdate = false;
-                        AerTftUI::showPIDMenuP(_aerGUI, _am->getAerPID(elementIndex)->kP, true);
-                    }
-                    else
-                    {
-                        AerTftUI::showPIDMenuP(_aerGUI, _am->getAerPID(elementIndex)->kP, false);
-                    }
+                {
+                    AerTftUI::showPIDMenuSet(_aerGUI, _menu->menuUpdate, _menu->menuChange, _am->getAerPID(elementIndex)->kP, "P Setting", "P= ", MENU_PID_P_SET);
+                    _menu->menuUpdate = false;
+                    _menu->menuChange = false;
                     break;
+                }
                 case MENU_PID_I: /* I Settings */
-                    if (_menu->menuUpdate)
-                    {
-                        tft->fillRoundRect(19, 19, 282, 202, 7, TFT_DARKCYAN);
-                        tft->drawRoundRect(18, 18, 284, 204, 7, TFT_CYAN);
-                        _menu->menuUpdate = false;
-                        AerTftUI::showPIDMenuI(_aerGUI, _am->getAerPID(elementIndex)->kI, true);
-                    }
-                    else
-                    {
-                        AerTftUI::showPIDMenuI(_aerGUI, _am->getAerPID(elementIndex)->kI, false);
-                    }
+                {
+                    AerTftUI::showPIDMenuSet(_aerGUI, _menu->menuUpdate, _menu->menuChange, _am->getAerPID(elementIndex)->kI, "I Setting", "I= ", MENU_PID_I_SET);
+                    _menu->menuUpdate = false;
+                    _menu->menuChange = false;
                     break;
+                }
                 case MENU_PID_D: /* D Settings */
-                    if (_menu->menuUpdate)
-                    {
-                        tft->fillRoundRect(19, 19, 282, 202, 7, TFT_DARKCYAN);
-                        tft->drawRoundRect(18, 18, 284, 204, 7, TFT_CYAN);
-                        _menu->menuUpdate = false;
-                        AerTftUI::showPIDMenuD(_aerGUI, _am->getAerPID(elementIndex)->kD, true);
-                    }
-                    else
-                    {
-                        AerTftUI::showPIDMenuD(_aerGUI, _am->getAerPID(elementIndex)->kD, false);
-                    }
+                {
+                    AerTftUI::showPIDMenuSet(_aerGUI, _menu->menuUpdate, _menu->menuChange, _am->getAerPID(elementIndex)->kD, "D Setting", "D= ", MENU_PID_D_SET);
+                    _menu->menuUpdate = false;
+                    _menu->menuChange = false;
                     break;
+                }
                 case MENU_PID_TUNING: /* PID Tuning */
                 {
                     AerTftUI::showPIDTuneMenu(_am, _menu->menuUpdate, _menu->menuChange);

@@ -1429,12 +1429,63 @@ void onEb1Clicked(EncoderButton &eb)
                 return;
             }
         }
+        else if (enc_aerGUI->getMenuProps()->menuIndex == MENU_PID_P)
+        {
+            if (enc_aerGUI->getMenuProps()->menuLevelVal == MENU_PID_P_SET)
+            {
+                if (!enc_aerGUI->isCursorModify())
+                {
+                    enc_aerGUI->setCursorModify(MENU_PID_P_SET);
+                }
+                else
+                {
+                    enc_aerGUI->clearCursorModify();
+                    enc_am->webUpdatePID(true);
+                }
+                enc_aerGUI->updateMenu();
+                return;
+            }
+        }
+        else if (enc_aerGUI->getMenuProps()->menuIndex == MENU_PID_I)
+        {
+            if (enc_aerGUI->getMenuProps()->menuLevelVal == MENU_PID_I_SET)
+            {
+                if (!enc_aerGUI->isCursorModify())
+                {
+                    enc_aerGUI->setCursorModify(MENU_PID_I_SET);
+                }
+                else
+                {
+                    enc_aerGUI->clearCursorModify();
+                    enc_am->webUpdatePID(true);
+                }
+                enc_aerGUI->updateMenu();
+                return;
+            }
+        }
+        else if (enc_aerGUI->getMenuProps()->menuIndex == MENU_PID_D)
+        {
+            if (enc_aerGUI->getMenuProps()->menuLevelVal == MENU_PID_D_SET)
+            {
+                if (!enc_aerGUI->isCursorModify())
+                {
+                    enc_aerGUI->setCursorModify(MENU_PID_D_SET);
+                }
+                else
+                {
+                    enc_aerGUI->clearCursorModify();
+                    enc_am->webUpdatePID(true);
+                }
+                enc_aerGUI->updateMenu();
+                return;
+            }
+        }
         else if (enc_aerGUI->getMenuProps()->menuIndex == MENU_PID_AUTO)
         {
             if (enc_aerGUI->getMenuProps()->menuLevelVal == MENU_PID_AUTO_TOGGLE)
             {
                 uint8_t elementIndex = enc_aerGUI->getElementIndex();
-                enc_am->getAerPID(elementIndex)->AUTO_TUNE_ACTIVE = !enc_am->getAerPID(elementIndex)->AUTO_TUNE_ACTIVE;
+                enc_am->getAerPID(elementIndex)->setAutoTuneActive(!enc_am->getAerPID(elementIndex)->isAutoTuneActive());
                 enc_am->getAerPID(elementIndex)->pwm_saved = false;
                 enc_am->webUpdatePID(true);
                 enc_am->setPressTick(100);
@@ -2499,7 +2550,7 @@ void onEb1Encoder(EncoderButton &eb)
         dir = -1;
     }
 
-    if (enc_aerGUI->getMenuProps()->menuIndex == MENU_PID_P)
+    if (enc_aerGUI->getMenuProps()->menuIndex == MENU_PID_P && enc_aerGUI->isCursorModify())
     {
         if (eb.increment() > 0)
         {
@@ -2515,7 +2566,7 @@ void onEb1Encoder(EncoderButton &eb)
         enc_am->webUpdatePID(true);
         return;
     }
-    else if (enc_aerGUI->getMenuProps()->menuIndex == MENU_PID_I)
+    else if (enc_aerGUI->getMenuProps()->menuIndex == MENU_PID_I && enc_aerGUI->isCursorModify())
     {
         if (eb.increment() > 0)
         {
@@ -2531,7 +2582,7 @@ void onEb1Encoder(EncoderButton &eb)
         enc_am->webUpdatePID(true);
         return;
     }
-    else if (enc_aerGUI->getMenuProps()->menuIndex == MENU_PID_D)
+    else if (enc_aerGUI->getMenuProps()->menuIndex == MENU_PID_D && enc_aerGUI->isCursorModify())
     {
         if (eb.increment() > 0)
         {

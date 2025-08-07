@@ -117,7 +117,7 @@ void save_task(void *pvParameters)
                 freq = 200;
             }
 
-            am->getAerPID(0)->AUTO_TUNE_ACTIVE = autoTune;
+            am->getAerPID(0)->setAutoTuneActive(autoTune);
             am->getAerPID(0)->setPwmFreq(freq);
             am->getAerPID(0)->setPwmScaler(factor);
             am->getAerPID(0)->setPidTime(cycleTime);
@@ -183,7 +183,7 @@ void save_task(void *pvParameters)
             // load PWM settings from flash
             pwmStor.load_pwm_2(freq, factor, cycleTime, autoTune, bias, windup, pwmRes, pidRes);
 
-            am->getAerPID(1)->AUTO_TUNE_ACTIVE = autoTune;
+            am->getAerPID(1)->setAutoTuneActive(autoTune);
             am->getAerPID(1)->setPwmFreq(freq);
             am->getAerPID(1)->setPwmScaler(factor);
             am->getAerPID(1)->setPidTime(cycleTime);
@@ -367,7 +367,7 @@ void save_task(void *pvParameters)
                 if (xSemaphoreTake(spi1_mutex, 50) == pdTRUE)
                 {
                     AerPID *aerpid = am->getAerPID(0);
-                    pwmStor.save_pwm(aerpid->getPwmFreq(), aerpid->getPwmScaler(), aerpid->getPidTime(), aerpid->AUTO_TUNE_ACTIVE, aerpid->getOutputBias(), aerpid->getWindupLimit(), aerpid->getPwmResolution(), aerpid->getOutputLimit());
+                    pwmStor.save_pwm(aerpid->getPwmFreq(), aerpid->getPwmScaler(), aerpid->getPidTime(), aerpid->isAutoTuneActive(), aerpid->getOutputBias(), aerpid->getWindupLimit(), aerpid->getPwmResolution(), aerpid->getOutputLimit());
                     am->getAerPID(0)->pwm_saved = true;
                     xSemaphoreGive(spi1_mutex);
                 }
@@ -382,7 +382,7 @@ void save_task(void *pvParameters)
                 if (xSemaphoreTake(spi1_mutex, 50) == pdTRUE)
                 {
                     AerPID *aerpid = am->getAerPID(1);
-                    pwmStor.save_pwm_2(aerpid->getPwmFreq(), aerpid->getPwmScaler(), aerpid->getPidTime(), aerpid->AUTO_TUNE_ACTIVE, aerpid->getOutputBias(), aerpid->getWindupLimit(), aerpid->getPwmResolution(), aerpid->getOutputLimit());
+                    pwmStor.save_pwm_2(aerpid->getPwmFreq(), aerpid->getPwmScaler(), aerpid->getPidTime(), aerpid->isAutoTuneActive(), aerpid->getOutputBias(), aerpid->getWindupLimit(), aerpid->getPwmResolution(), aerpid->getOutputLimit());
                     am->getAerPID(1)->pwm_saved = true;
                     xSemaphoreGive(spi1_mutex);
                 }

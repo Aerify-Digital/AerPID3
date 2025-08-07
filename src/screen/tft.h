@@ -91,9 +91,7 @@ namespace AerTftUI
     void showTempSection(AerManager *am, bool updatescreen, ThermalUnitsType unitType);
     void showMainMenu(AerGUI *gui, bool indexupdate, bool menuChange);
     void showPIDMenu(AerGUI *gui, bool indexupdate, bool change);
-    void showPIDMenuP(AerGUI *gui, float kP, bool indexupdate);
-    void showPIDMenuI(AerGUI *gui, float kI, bool indexupdate);
-    void showPIDMenuD(AerGUI *gui, float kD, bool indexupdate);
+    void showPIDMenuSet(AerGUI *gui,  bool indexupdate, bool change, float kValue, const char *title, const char *label, const uint menuLevel);
     void showPIDTuneMenu(AerManager *am, bool indexupdate, bool change);
     void showPIDAutoMenu(AerManager *am, bool indexupdate, bool change);
     void showPIDMeasureModeMenu(AerManager *am, bool indexupdate, bool change);
@@ -158,6 +156,7 @@ namespace AerTftUI
     void showBacklightDimTimeout(AerManager *am, bool update, bool change);
     void printSelectedChar(AerGUI *gui, TFT_eSprite *spr, uint type = 0);
     void printSelectedNumber(AerGUI *gui, TFT_eSprite *spr);
+    int getGraphAxisScale(double low, double high);
     void showGraphTemperature(AerManager *am, bool update, bool change, uint8_t elementIndex);
     void showGraphTemperatureZoom(AerManager *am, bool update, bool change, uint8_t elementIndex);
     void showGraphTemperatureLong(AerManager *am, bool update, bool change, uint8_t elementIndex);

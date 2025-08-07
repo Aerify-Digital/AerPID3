@@ -445,9 +445,9 @@ bool AerGUI::buildMenuDefinitions()
     menus.push_back(AerMenu(MENU_MAIN_VERSION, MENU_ROOT_MAIN, {}));
     // PID
     menus.push_back(AerMenu(MENU_MAIN_PID, MENU_ROOT_MAIN, menus_pid));
-    menus.push_back(AerMenu(MENU_PID_P, MENU_MAIN_PID, {}));
-    menus.push_back(AerMenu(MENU_PID_I, MENU_MAIN_PID, {}));
-    menus.push_back(AerMenu(MENU_PID_D, MENU_MAIN_PID, {}));
+    menus.push_back(AerMenu(MENU_PID_P, MENU_MAIN_PID, {MENU_PID_P_SET}));
+    menus.push_back(AerMenu(MENU_PID_I, MENU_MAIN_PID, {MENU_PID_I_SET}));
+    menus.push_back(AerMenu(MENU_PID_D, MENU_MAIN_PID, {MENU_PID_D_SET}));
     // PID Tuning
     menus.push_back(AerMenu(MENU_PID_TUNING, MENU_MAIN_PID, menus_pid_tuning));
     menus.push_back(AerMenu(MENU_PID_AUTO, MENU_PID_TUNING, {MENU_PID_AUTO_TOGGLE}));
@@ -2043,6 +2043,16 @@ void AerGUI::printIcon(TFT_eSprite *spr, uint x, uint y, uint16_t menuIndex, boo
     case MENU_PID_I:
     case MENU_PID_D:
         spr->fillCircle(x + 14, y + 14, 6, TFT_BLUE);
+        break;
+    case MENU_PID_P_SET:
+    case MENU_PID_I_SET:
+    case MENU_PID_D_SET:
+        if (selected) {
+            spr->fillCircle(x + 14, y + 14, 7, TFT_RED);
+            spr->fillCircle(x + 14, y + 14, 6, TFT_ORANGE);
+        } else {
+            spr->fillCircle(x + 14, y + 14, 6, TFT_GOLD);
+        }
         break;
     case MENU_MAIN_FAVS:
         spr->pushImage(x, y, 28, 28, image_data_favs_sel);
