@@ -28,15 +28,11 @@ bool AerGUI::buildMenuDefinitions()
         MENU_PID_D,
         MENU_PID_TUNING,
         MENU_PID_MEASURE_MODE,
-        // MENU_PID_AUTO,
-        // MENU_PID_PWM_FACTOR,
-        // MENU_PID_PWM_CYCLE,
-        // MENU_PID_PWM_FREQ,
     };
     std::vector<uint16_t> menus_pid_tuning = {
         // MENU_PID_AUTO,
-        // MENU_PID_PWM_BIAS,
-        // MENU_PID_PWM_FACTOR,
+        MENU_PID_PWM_BIAS,
+        MENU_PID_PWM_FACTOR,
         // MENU_PID_WINDUP_LIMIT,
         MENU_PID_PWM_CYCLE,
         MENU_PID_PWM_FREQ,
