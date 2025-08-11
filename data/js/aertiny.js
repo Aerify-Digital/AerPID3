@@ -827,7 +827,11 @@ const initPageData = async (initData) => {
   if (document.getElementById('aoff_time'))
     document.getElementById('aoff_time').value = `${state.AUTO_OFF.length}`;
 
-  emit_websocket([SerialCommand.PID2, Operation.GET, ParamPid.PARAM_PID]);
+  if (state.MODEL == 2) {
+    emit_websocket([SerialCommand.PID2, Operation.GET, ParamPid.PARAM_PID]);
+  }
+
+  updateTempUnits();
 };
 
 const initPageData2 = async (initData) => {
