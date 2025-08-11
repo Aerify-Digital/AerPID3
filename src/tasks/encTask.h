@@ -1302,7 +1302,7 @@ void onEb1Clicked(EncoderButton &eb)
                     commstor.setSSIDSet(true);
                     commstor.setWifiEn(true);
                     enc_am->webUpdateWIFI(true);
-                    enc_am->setPressTick(200);
+                    enc_am->setPressTick(100);
                     enc_aerGUI->gotoMenu(MENU_WIFI_PASSWORD_NETWORK_JOIN);
                 }
                 else
@@ -1377,7 +1377,7 @@ void onEb1Clicked(EncoderButton &eb)
             {
                 commstor.setPSK(enc_aerGUI->getMenuProps()->menuItemSelStr.c_str());
                 enc_am->webUpdateWIFI(true);
-                enc_am->setPressTick(200);
+                enc_am->setPressTick(60);
                 enc_aerGUI->gotoMenu(MENU_MAIN_WIFI);
                 return;
             }
@@ -1424,7 +1424,7 @@ void onEb1Clicked(EncoderButton &eb)
                 // save and update hostname
                 enc_am->getNet()->setHostname(enc_aerGUI->getMenuProps()->menuItemSelStr.c_str());
                 enc_am->webUpdateWIFI(true);
-                enc_am->setPressTick(200);
+                enc_am->setPressTick(100);
                 enc_aerGUI->gotoMenu(MENU_MAIN_WIFI);
                 return;
             }
