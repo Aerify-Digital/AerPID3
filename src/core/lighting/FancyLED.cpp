@@ -31,7 +31,7 @@ void FancyLED::tickFancyLED(AerManager *am, LightsStor *lights)
     if (lights->isEnabled()) //(LEDstate)
     {
 
-        if (lights->statusEnabled() && am->getAerPID(0)->PID_ON)
+        if (lights->statusEnabled() && am->getAerPID(0)->isPidOn())
         {
             // Serial.println("Status!");
             if (led_tick > 1)

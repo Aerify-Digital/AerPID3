@@ -394,3 +394,6 @@ __pycache__/
 .conf_wifi.h
 
 .webpack/
+
+# Tensorflow training
+tinyML/

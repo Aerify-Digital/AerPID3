@@ -1,4 +1,4 @@
-# AerPID-Lite - Control software for the AerTiny Temperature Controller
+# AerPID3 - Control software for the AerTiny Temperature Controller
 
 Dedicated [ESP32](https://www.espressif.com/en/products/modules/esp32) Based PID Controller for a high-power Heating Element. Allows stable temperature management of a heating element.
 
@@ -27,11 +27,12 @@ For Purchase: https://aerify.digital/product/aertiny3-2/
 
 ## Libraries Used
 
+- TFT_eSPI - https://github.com/Bodmer/TFT_eSPI
 - SerialFlash - https://github.com/Aerify-Digital/SerialFlash
-- AsyncTCP - https://github.com/Aerify-Digital/AsyncTCP
-- Arduino PID (PID_v1) - https://playground.arduino.cc/Code/PIDLibrary/
+- FastLED - https://github.com/FastLED/FastLED
 - Adafruit_GFX - https://github.com/adafruit/Adafruit-GFX-Library
 - Adafruit_NeoPixel - https://github.com/adafruit/Adafruit_NeoPixel
-- ESPAsyncWebServer - https://github.com/me-no-dev/ESPAsyncWebServer
+- AsyncTCP - https://github.com/ESP32Async/AsyncTCP
+- ESPAsyncWebServer - https://github.com/ESP32Async/ESPAsyncWebServer
 - extEEPROM - https://github.com/JChristensen/extEEPROM
 - LM75 - https://github.com/thefekete/LM75

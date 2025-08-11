@@ -33,7 +33,7 @@ void Display::setPID(double p, double i, double d)
   Display::kD = d;
 }
 
-void Display::display_main(bool USE_CEL, bool PID_ON, bool EN_BUMP, double TEMP_M, double TEMP_S)
+void Display::display_main(bool USE_CEL, bool pidOn, bool EN_BUMP, double TEMP_M, double TEMP_S)
 {
   Display::oled->OLED_clear(true);
 
@@ -61,7 +61,7 @@ void Display::display_main(bool USE_CEL, bool PID_ON, bool EN_BUMP, double TEMP_
     Display::oled->display_t_f(108, 3);
   }
 
-  if (PID_ON)
+  if (pidOn)
   {
     Display::oled->display_power_on(5, 7);
   }

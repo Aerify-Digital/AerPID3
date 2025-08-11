@@ -156,8 +156,10 @@ bool EepromStorage::write(int index, byte buf)
  */
 void EepromStorage::writeEnable()
 {
-  digitalWrite(EEP_PIN_EN, LOW);
-  delayMicroseconds(500);
+  if (EEP_PIN_EN > 0) {
+    digitalWrite(EEP_PIN_EN, LOW);
+    delayMicroseconds(500);
+  }
 }
 
 /**
@@ -166,8 +168,10 @@ void EepromStorage::writeEnable()
  */
 void EepromStorage::writeDisable()
 {
-  delayMicroseconds(200);
-  digitalWrite(EEP_PIN_EN, HIGH);
+  if (EEP_PIN_EN > 0) {
+    delayMicroseconds(200);
+    digitalWrite(EEP_PIN_EN, HIGH);
+  }
 }
 
 // =============================================================

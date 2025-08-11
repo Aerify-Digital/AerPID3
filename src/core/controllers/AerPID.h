@@ -1,5 +1,5 @@
 /* =============================================================================
- * Copyright (c) 2015-2024 AerifyDigital LLC.  All rights reserved.
+ * Copyright (c) 2015-2025 AerifyDigital LLC.  All rights reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -34,9 +34,12 @@
 #include "sigma.h"
 
 // *************************************
+
 // Toggle verbose debug output.
 // Set to 1 to enabled, 0 for disabled.
 #define VERBOSE_DEBUG 1
+// Show PID function debug output.
+#define OUTPUT_DEBUG_PID 0
 
 // *************************************
 
@@ -47,12 +50,14 @@
 
 // *************************************
 
-// PWM frequency and resolution
-#define FREQ_PWM_Hz 200 // 150hz
+// PWM frequency in Hz for PWM output
+#define FREQ_PWM_Hz 200 // default 200hz
+// PWM resolution bits for PWM Duty Cycle
+// Expected Duty Cycle range is `0` to `2^PWM_RESOLUTION`
 #define PWM_RESOLUTION 11
 
 // Output value range limit
-#define PID_OUTPUT_LIMIT 4095
+#define PID_OUTPUT_LIMIT 2047
 
 // 'PID_OUTPUT_LIMIT' based on 'PWM_RESOLUTION' bit
 /* 8 bit  - 256   - 255
@@ -83,23 +88,41 @@
 // Tick time overshoot amount for PID compute
 #define PID_TIME_OVERSHOOT 70
 
-// Tick max for PID - sample time scaler
-#define PID_TICK_MAX (PID_SAMPLE_TIME_MS / PID_SLEEP_TIME_MS) * 0.67
-// Measure Freqeuncy counter max
-#define PID_MEAS_COUNTER 15
-
 // *************************************
-
-// set sensor bit resolution
-#define MEASURE_BIT_PRECISION 10
 
 // Measure sample array sizes
 #define MEASURES_SIZE 128
-#define MEASURES_AVG_TOTAL 120 // must be smaller than MEASURES_SIZE
-#define MES_TEMP_SIZE 3
-
+// Measure rolling average size
+#define MEASURES_AVG_TOTAL 40 // must be smaller than MEASURES_SIZE
 // Rolling average measure max size
 #define MEAS_TICK_MAX_C ((1000 / PID_SLEEP_TIME_MS) * 3)
+
+// Sensor bit resolution - higher value takes longer
+#define MEASURE_BIT_PRECISION 11
+
+#if MEASURE_BIT_PRECISION == 9
+#define MEASURE_TIME_COST 94
+#define MES_TEMP_SIZE 7
+#endif
+#if MEASURE_BIT_PRECISION == 10
+#define MEASURE_TIME_COST 190
+#define MES_TEMP_SIZE 5
+#endif
+#if MEASURE_BIT_PRECISION == 11
+#define MEASURE_TIME_COST 375
+#define MES_TEMP_SIZE 3
+#endif
+#if MEASURE_BIT_PRECISION == 12
+#define MEASURE_TIME_COST 750
+#define MES_TEMP_SIZE 2
+#endif
+
+#if MEASURE_BIT_PRECISION <= 8
+#error "MEASURE_BIT_PRECISION must be greater than or equal to 9"
+#endif
+#if MEASURE_BIT_PRECISION >= 13
+#error "MEASURE_BIT_PRECISION must be less than or equal to 12"
+#endif
 
 // *************************************
 // *************************************
@@ -135,13 +158,14 @@
 #define TEMP_MSB 1        //!< Temperature MSB byte location
 #define HIGH_ALARM_TEMP 2 //!< High alarm temp byte location
 #define LOW_ALARM_TEMP 3  //!< Low alarm temp byte location
-#define CONFIGURATION \
-    4                   //!< DS18S20: store for CRC. DS18B20 & DS1822: configuration register
-#define INTERNAL_BYTE 5 //!< Internal use & CRC
-#define COUNT_REMAIN \
-    6                    //!< DS18S20: COUNT_REMAIN, DS18B20 & DS1822: store for CRC
-#define COUNT_PER_C 7    //!< DS18S20: COUNT_PER_C. DS18B20 & DS1822: store for crc
-#define SCRATCHPAD_CRC 8 //!< Scratchpad CRC
+#define CONFIGURATION 4   //!< DS18S20: store for CRC. DS18B20 & DS1822: configuration register
+#define INTERNAL_BYTE 5   //!< Internal use & CRC
+#define COUNT_REMAIN 6    //!< DS18S20: COUNT_REMAIN, DS18B20 & DS1822: store for CRC
+#define COUNT_PER_C 7     //!< DS18S20: COUNT_PER_C. DS18B20 & DS1822: store for crc
+#define SCRATCHPAD_CRC 8  //!< Scratchpad CRC
+
+// Timeout for measurement fault reset
+#define FAULT_TIMEOUT 2000
 
 // *************************************
 // *************************************
@@ -159,12 +183,31 @@
 // *************************************
 // *************************************
 
-// AerPID - PID Functions
+/**
+ * AerPID Object Class
+ * @brief - This class is used to control the AerPID Temperature Controller Module. 
+ * @author squidicuzz
+ * @details Functions include: 
+ * - Reading of the thermocouple temperature.
+ * - Adjustment and setting of the PID tuning values.
+ * - Control of the PID function sample timing (bit resolution).
+ * - Control of the SSR state (on/off).
+ * - Control of the PWM duty cycle.
+ * - Control of the PWM frequency.
+ */
 class AerPID
 {
 public:
-    // Constructor
+    /**
+     * @brief Construct a new AerPID object
+     *
+     * @param pin OneWire pin
+     * @param ssrPin SSR Control pin
+     * @param ssrChan SSR PWM Channel
+     * @param index Element Index
+     */
     AerPID(uint8_t owPin, uint8_t ssrPin, uint8_t ssrChan, uint8_t index = 0);
+    // dispose
     ~AerPID() {};
 
     // *********************************
@@ -172,14 +215,14 @@ public:
     bool init();
 
     // *************************
-    // Measure temperature var  (in celsius)
-    double MES_TEMP = 0.0;
-    double AVG_TEMP = 0.0;
-    // Set temperature vars
-    double SET_TEMP = 260.0;
-    double SET_TEMP_OLD = 260.0;
-    double SET_TEMP_LAST = 260.0;
-    double SET_TEMP_BUMP = 37.7778;
+    // Temperature variables  (in celsius)
+    double MES_TEMP = 0.0;          // Measured temperature
+    double AVG_TEMP = 0.0;          // Averga temperature
+    double SET_TEMP = 260.0;        // Set temperature
+    double SET_TEMP_OLD = 260.0;    // Set temperature (old)
+    double SET_TEMP_LAST = 260.0;   // Set temperature (last)
+    double SET_TEMP_BUMP = 37.7778; // Bump set temperature
+    // Set temperature max value
     double SET_TEMP_MAX = TEMPERATURE_MAX;
     // Offset temperature
     double OFFSET_TEMP = TEMPERATURE_OFFSET;
@@ -192,10 +235,12 @@ public:
     bool temp_saved = true;
     bool temp_changed = true;
 
-    // State for PID enable/running toggle
-    bool PID_ON = false;
+    // Set PID enable/running toggle
+    void setPidOn(bool on) { pidEnabled = on; }
+    // Get PID enabled/running state
+    bool isPidOn() { return pidEnabled; }
 
-    // Usage detection auto off..
+    // Usage detection auto off.
     bool USAGE_DETECT = true;
     bool AUTO_OFF_ENB = false;
     long AUTO_OFF_TIME = 900;
@@ -205,19 +250,17 @@ public:
 
     // *************************
     // PID variable values
-    double kP;
-    double kI;
-    double kD;
-
-    // PID auto tuning enabled flag
-    boolean AUTO_TUNE_ACTIVE = false;
+    double kP; // Function P value
+    double kI; // Function I value
+    double kD; // Function D value
 
     // *************************
     // Do work tick
     void tick();
 
-    // get measures array
+    // Measurements array
     double *getMeasures();
+    // Measurements array long
     double *getMeasuresLong();
 
     // Average mesasures
@@ -231,8 +274,11 @@ public:
     double maxMeasuresLong();
     double avgMeasuresLong();
 
-    // Adjust PID tunings..
+    // Adjust PID tunings
     void setTunings(bool reset);
+
+    void setAutoTuneActive(bool on) { _autoTuneActive = on; }
+    bool isAutoTuneActive() { return _autoTuneActive; }
 
     // Interal var accessors
     int getPwmFreq();
@@ -260,10 +306,7 @@ public:
     double getOutput();
     double getSigma();
 
-    void setMeasMode(uint8_t mode)
-    {
-        _measMode = mode;
-    }
+    void setMeasMode(uint8_t mode) { _measMode = mode; }
 
     bool hasFaultError();
     bool hasFaultErrorAlerted();
@@ -276,7 +319,7 @@ private:
     bool _loaded = false;
 
     // 1Wire pin and object
-    uint8_t ow_pin;
+    uint8_t owPin;
     OneWire *oneWire;
 
     // SSR pin and channel
@@ -294,6 +337,12 @@ private:
     // PID compute output
     double output = 0;
     double xOutput = 0;
+
+    // State for PID enable/running toggle
+    bool pidEnabled = false;
+
+    // PID auto tuning enabled flag
+    bool _autoTuneActive = false;
 
     // PWM power scaler value
     double _pwmScaleFactor = PWM_SCALE_FACTOR;
@@ -334,19 +383,24 @@ private:
     bool auto_off_active = false;
 
     /* ============================ */
-    /* Counters */
+    /* Timers */
 
-    int16_t meas_counter = 0;
-    int16_t meas_ticker = 8;
-    int16_t meas_ticker_c = 0;
-    uint16_t meas_ticker_max = 3; // MEAS_TICK_MAX;
-    uint16_t sys_temp_counter = 0;
+    // Last time measurement was taken for short tracking
+    long _measLastTime = 0;
+    // How often to take measurement
+    long _measLastTimeMax = MEASURE_TIME_COST * 2 + 50;
+    // Last time measurement was taken for long tracking
+    long _measLastTimeLong = 0;
+    // Sensor measure time tracker
+    long _measureTimeMs = 0;
+
+    // Last PID compute timestamp
+    long _lastPidTimeMs = 0;
+
+    /* ============================ */
 
     // PID compute tick counter
     int16_t _tick = 0;
-
-    // Last PID compute timestamp
-    long _last_time_ms = 0;
 
     /* ============================ */
     /* Function Ticks */
@@ -393,11 +447,13 @@ private:
         MAX3185X_NO_REPLY = 4,
     } Max3185xState;
 
+    // Measure result codes
     typedef enum
     {
         NACK = 0,
         ACK = 1,
         FAULT = 2,
+        PENDING = 3,
     } MeasureResult;
 
     // Measure Temperature

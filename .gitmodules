@@ -1,12 +1,6 @@
 [submodule "libs/SerialFlash"]
 	path = libs/SerialFlash
 	url = https://github.com/Aerify-Digital/SerialFlash.git
-[submodule "libs/AsyncTCP"]
-	path = libs/AsyncTCP
-	url = https://github.com/Aerify-Digital/AsyncTCP.git
 [submodule "app/electron"]
 	path = app/electron
 	url = https://github.com/Aerify-Digital/aerpid_suite.git
-[submodule "libs/ESPAsyncWebServer"]
-	path = libs/ESPAsyncWebServer
-	url = https://github.com/Aerify-Digital/ESPAsyncWebServer.git

@@ -56,7 +56,7 @@ void SerialCom::enPackFill(MessagePack *messagePack)
   // auto_off_enb, coil_enb, lights_enb, unused, wifi_enb, unused, bt_enb, unused
   byte bitmap = 0b00000000;
   bitWrite(bitmap, 7, aerManager->getAerPID(0)->AUTO_OFF_ENB);
-  bitWrite(bitmap, 6, aerManager->getAerPID(0)->PID_ON);
+  bitWrite(bitmap, 6, aerManager->getAerPID(0)->isPidOn());
   bitWrite(bitmap, 5, aerManager->getLights()->isEnabled());
   bitWrite(bitmap, 4, aerManager->getBump()->getEnabled(0)); // get bump enabled status
   bitWrite(bitmap, 3, aerManager->getComms()->getWifiEn());  // get status of wifi
@@ -1033,7 +1033,7 @@ void SerialCom::handleCoilCmd(char param, char op)
 {
   if (op == Operation::OP_GET)
   {
-    bool en = aerManager->getAerPID(0)->PID_ON;
+    bool en = aerManager->getAerPID(0)->isPidOn();
     SerialCmdOp *sco = new SerialCmdOp(COIL_TOGGLE);
     sco->Val(en);
     sco->build();
@@ -1042,7 +1042,8 @@ void SerialCom::handleCoilCmd(char param, char op)
   }
   else if (op == Operation::OP_SET)
   {
-    bool enb = aerManager->getAerPID(0)->PID_ON = param > 0;
+    aerManager->getAerPID(0)->setPidOn(param > 0);
+    bool enb = aerManager->getAerPID(0)->isPidOn();
     SerialCmdOp *sco = (new SerialCmdOp(COIL_TOGGLE));
     sco->Val(enb);
     sco->build();
@@ -1062,7 +1063,7 @@ void SerialCom::updateClients()
 {
   SerialCmdOp *cmd = new SerialCmdOp(SerialCommand::CMD_STATUS);
   cmd->Op(Operation::OP_GET);
-  cmd->Val(xAerPID1.PID_ON);
+  cmd->Val(xAerPID1.isPidOn());
   cmd->Val(static_cast<uint16_t>(10.0 * xAerPID1.MES_TEMP));
   cmd->Val(static_cast<uint16_t>(10.0 * xAerPID1.AVG_TEMP));
   cmd->Val(static_cast<uint16_t>(10.0 * xAerPID1.SET_TEMP));

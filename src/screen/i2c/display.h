@@ -15,7 +15,7 @@ public:
 
   void display_blank(int i, int j);
   void display_blank(int i, int j, int a);
-  void display_main(bool USE_CEL, bool PID_ON, bool EN_BUMP, double TEMP_M, double TEMP_S);
+  void display_main(bool USE_CEL, bool pidOn, bool EN_BUMP, double TEMP_M, double TEMP_S);
   void display_menu_pid(uint8_t i);
   void display_menu_pid_kP();
   void display_menu_pid_kI();

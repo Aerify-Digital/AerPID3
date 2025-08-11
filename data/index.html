@@ -157,22 +157,22 @@
   </nav>
 
   <!-- Navbar on small screens (Hidden on medium and large screens) -->
-  <div class="w3-top w3-hide-large w3-hide-medium" id="myNavbar">
+  <div class="w3-top w3-hide-large w3-hide-medium w3-hide-large navbar-mobile" id="mobileNavbar">
    <div class="w3-bar w3-black w3-opacity w3-hover-opacity-off w3-center w3-small">
-    <a href="#home" class="w3-bar-item w3-button" style="width: 16.5% !important"><i class="fa fa-home w3-xlarge"></i></a>
-    <a href="#heater" class="w3-bar-item w3-button" style="width: 16.5% !important"><i class="fa fa-fire-alt w3-xlarge"></i></a>
-    <a href="#graph" class="w3-bar-item w3-button" style="width: 16.5% !important"><i class="fa fa-chart-simple w3-xxlarge"></i></a>
-    <a href="#lights" class="w3-bar-item w3-button" style="width: 16.5% !important"><i class="far fa-lightbulb w3-xlarge"></i></a>
-    <a href="#comms" class="w3-bar-item w3-button" style="width: 16.5% !important"><i class="fa fa-satellite-dish w3-xlarge"></i></a>
-    <a href="#settings" class="w3-bar-item w3-button" style="width: 16.55% !important"><i class="fa fa-sliders-h w3-xlarge"></i></a>
-    <a href="#contact" class="w3-bar-item w3-button" style="width: 16.5% !important"><i class="fa fa-envelope w3-xlarge"></i></a>
+    <a href="#home" class="w3-bar-item w3-button" style="width: 14.25% !important"><i class="fa fa-home w3-xlarge"></i></a>
+    <a href="#heater" class="w3-bar-item w3-button" style="width: 14.25% !important"><i class="fa fa-fire-alt w3-xlarge"></i></a>
+    <a href="#graph" class="w3-bar-item w3-button" style="width: 14.25% !important"><i class="fa fa-chart-simple w3-xxlarge"></i></a>
+    <a href="#lights" class="w3-bar-item w3-button" style="width: 14.25% !important"><i class="far fa-lightbulb w3-xlarge"></i></a>
+    <a href="#comms" class="w3-bar-item w3-button" style="width: 14.25% !important"><i class="fa fa-satellite-dish w3-xlarge"></i></a>
+    <a href="#settings" class="w3-bar-item w3-button" style="width: 14.25% !important"><i class="fa fa-sliders-h w3-xlarge"></i></a>
+    <a href="#contact" class="w3-bar-item w3-button" style="width: 14.25% !important"><i class="fa fa-envelope w3-xlarge"></i></a>
    </div>
   </div>
 
   <!-- Page Content -->
   <div class="" id="main">
    <!-- Header -->
-   <div class="navbar nav-sticky">
+   <div class="navbar nav-sticky w3-hide-small">
     <!-- Wifi Alert -->
     <div id="wifi_setup_alert" class="w3-panel w3-pale-red w3-display-topleft" style="margin: 0; padding: 0px; width: 60%; display: none">
      <button onclick="openWifiWarningModal()" class="w3-button w3-amber w3-text-red" style="font-weight: 600">
@@ -190,13 +190,25 @@
      </h4>
     </header>
    </div>
+   <div class="w3-hide-medium w3-hide-large" style="height: 3em;"></div>
 
-   <div id="sockets-modal" class="" style="z-index: 100">
+   <div id="sockets-modal" class="w3-hide-small" style="z-index: 100">
     <div class="w3-border w3-border-black">
-     <div class="w3-amber w3-center" style="padding: 20px">
+     <div class="w3-amber w3-center" style="padding: 10px">
       <i class="fa-solid fa-spinner fa-spin-pulse w3-text-white w3-xxlarge"></i>
+      <div style="margin-top: 5px">Socket Server</div>
       <div id="sockets-modal-text">...Connecting...</div>
-      <button onclick="initWebSocket()">Connect</button>
+      <button id="sockets-modal-connect-btn" onclick="initWebSocket()">Connect</button>
+     </div>
+    </div>
+   </div>
+   <div id="sockets-modal-mobile" class="w3-hide-medium w3-hide-large" style="z-index: 100">
+    <div class="w3-border w3-border-black">
+     <div class="w3-amber w3-center" style="padding: 10px">
+      <i class="fa-solid fa-spinner fa-spin-pulse w3-text-white w3-xxlarge"></i>
+      <div style="margin-top: 5px">Socket Server</div>
+      <div id="sockets-modal-text">...Connecting...</div>
+      <button id="sockets-modal-connect-btn" onclick="initWebSocket()">Connect</button>
      </div>
     </div>
    </div>
@@ -210,7 +222,7 @@
        <ul class="w3-ul w3-white w3-center">
         <li class="w3-dark-grey w3-xlarge" style="position: relative; height: 98px; padding-top: 4px; overflow: hidden">
          <div style="position: absolute; right: 0px; left: 0px; top: 0px">
-          <div class="w3-top w3-hide-large w3-hide-medium" style="position: relative">
+          <div class="w3-top w3-hide-large w3-hide-medium w3-hide-large" style="position: relative">
            <h1 style="padding-top: 10px">Temp</h1>
           </div>
           <div class="w3-top w3-hide-small" style="position: relative">
@@ -229,20 +241,28 @@
           <br />
           <span style="font-size: 28px; font-weight: bold; position: relative; bottom: 80%">
            <span id="meas_temp">0.0</span>
-           &deg;&nbsp;F
+           <span class="temp_unit">&deg;C</span>
           </span>
          </div>
         </li>
         <li class="w3-light-grey w3-padding-24">
          <div class="settemp" style="--step: 150; --min: 0; --max: 1200">
-          <input type="number" id="temp_setting" name="temp_setting" min="3" max="1200" step="0.1" value="32" style="background-color: transparent; border: none; font-size: 24px; font-weight: bold; padding: 14px" />
+          <input type="number" id="temp_setting" class="w3-hide-small" name="temp_setting" min="3" max="1200" step="0.1" value="32" style="background-color: transparent; border: none; font-size: 24px; font-weight: bold; padding: 14px" />
+          <input type="number" id="temp_setting" class="w3-hide-medium w3-hide-large" name="temp_setting" min="3" max="1200" step="0.1" value="32" style="background-color: transparent; border: none; font-size: 24px; font-weight: bold; padding: 10px" />
           <br />
-          <div class="slider-square-ticks"></div>
-          <span style="font-size: 24px; font-weight: bold">&nbsp;&nbsp;&nbsp;0&nbsp;</span>
-          <input class="slider slider-square" type="range" id="temp_slider" name="temp_slider" list="values" step="1" min="32" max="1200" value="32.0" style="width: 260px" />
-          <span style="font-size: 24px; font-weight: bold">&nbsp;1200</span>
+          <div class="w3-hide-small">
+            <div class="slider-square-ticks"></div>
+            <span style="font-size: 24px; font-weight: bold">&nbsp;&nbsp;&nbsp;0&nbsp;</span>
+            <input class="slider slider-square" type="range" id="temp_slider" name="temp_slider" list="values" step="1" min="32" max="1200" value="32.0" style="width: 260px" />
+            <span style="font-size: 24px; font-weight: bold">&nbsp;1200</span>
+          </div>
+          <div class="w3-hide-medium w3-hide-large">
+            <span style="font-size: 18px; font-weight: bold">&nbsp;&nbsp;&nbsp;0&nbsp;</span>
+            <input class="slider slider-square" type="range" id="temp_slider" name="temp_slider" list="values" step="1" min="32" max="1200" value="32.0" style="max-width: 120px; margin-bottom: -4px;" />
+            <span style="font-size: 18px; font-weight: bold;">&nbsp;1200</span>
+          </div>
 
-          <datalist id="values" style="padding-left: 8px; padding-right: 25px; max-width: 310px">
+          <datalist id="values" class="w3-hide-small" style="padding-left: 8px; padding-right: 25px; max-width: 310px">
            <option value="32" label=" "></option>
            <option value="150" label="150"></option>
            <option value="300" label="300"></option>
@@ -279,7 +299,8 @@
      <!-- Favorites Panel -->
      <div class="w3-row w3-center w3-padding-8 w3-section w3-light-grey w3-opacity-min w3-hover-opacity-off">
       <div class="w3-quarter w3-section">
-       <span id="fav1q_n" class="w3-xlarge">505&deg;F</span>
+       <span id="fav1q_n" class="w3-xlarge">505</span>
+       <span class="temp_unit w3-xlarge">&deg;C</span>
        <br />
        <button id="fav1_b" class="w3-button w3-light-grey w3-section">
         <i class="fa fa-star"></i>
@@ -288,7 +309,8 @@
        </button>
       </div>
       <div class="w3-quarter w3-section">
-       <span id="fav2q_n" class="w3-xlarge">525&deg;F</span>
+       <span id="fav2q_n" class="w3-xlarge">525</span>
+       <span class="temp_unit w3-xlarge">&deg;C</span>
        <br />
        <button id="fav2_b" class="w3-button w3-light-grey w3-section">
         <i class="fa fa-star"></i>
@@ -297,7 +319,8 @@
        </button>
       </div>
       <div class="w3-quarter w3-section">
-       <span id="fav3q_n" class="w3-xlarge">495&deg;F</span>
+       <span id="fav3q_n" class="w3-xlarge">495</span>
+       <span class="temp_unit w3-xlarge">&deg;C</span>
        <br />
        <button id="fav3_b" class="w3-button w3-light-grey w3-section">
         <i class="fa fa-star"></i>
@@ -306,7 +329,8 @@
        </button>
       </div>
       <div class="w3-quarter w3-section">
-       <span id="fav4q_n" class="w3-xlarge">550&deg;F</span>
+       <span id="fav4q_n" class="w3-xlarge">550</span>
+       <span class="temp_unit w3-xlarge">&deg;C</span>
        <br />
        <button id="fav4_b" class="w3-button w3-light-grey w3-section">
         <i class="fa fa-star"></i>
@@ -587,7 +611,7 @@
           <ul class="w3-ul w3-white w3-center colrow-even">
            <li class="w3-dark-grey w3-xlarge" style="position: relative; height: 98px; padding-top: 4px; overflow: hidden">
             <div style="position: absolute; right: 0px; left: 0px; top: 0px">
-             <div class="w3-top w3-hide-large w3-hide-medium" style="position: relative">
+             <div class="w3-top w3-hide-large w3-hide-medium w3-hide-large" style="position: relative">
               <h1 style="padding-top: 14px">Temp1</h1>
              </div>
              <div class="w3-top w3-hide-small" style="position: relative">
@@ -606,7 +630,7 @@
              <br />
              <span style="font-size: 28px; font-weight: bold; position: relative; bottom: 80%">
               <span id="meas_temp_1">0.0</span>
-              &deg;&nbsp;F
+              <span class="temp_unit">&deg;C</span>
              </span>
             </div>
            </li>
@@ -732,7 +756,7 @@
             </li>
             <li class="w3-padding-16">
              <div class="adv-width">
-              Run Time
+              Sample Time
               <span title="How often the PID function calculates the output, in milliseconds" style="cursor: help">(ms)</span>
               :
               <input type="number" id="pid1_set_time" name="pid1_set_time" class="pid-sets" min="0" max="10000" step="1" value="0" />
@@ -857,7 +881,7 @@
              <br />
              <span style="font-size: 28px; font-weight: bold; position: relative; bottom: 80%">
               <span id="meas_temp_2">0.0</span>
-              &deg;&nbsp;F
+              <span class="temp_unit">&deg;C</span>
              </span>
             </div>
            </li>
@@ -983,7 +1007,7 @@
             </li>
             <li class="w3-padding-16">
              <div class="adv-width">
-              Run Time
+              Sample Time
               <span title="How often the PID function calculates the output, in milliseconds" style="cursor: help">(ms)</span>
               :
               <input type="number" id="pid2_set_time" name="pid2_set_time" class="pid-sets" min="0" max="10000" step="1" value="0" />

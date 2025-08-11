@@ -101,8 +101,10 @@ void setup()
   pinMode(PIN_LED_B, OUTPUT);    // RED or ORANGE
   digitalWrite(PIN_LED_B, HIGH); // ENABLE
 
-  pinMode(PIN_EEPROM_EN, OUTPUT);
-  digitalWrite(PIN_EEPROM_EN, HIGH);
+  if (PIN_EEPROM_EN > 0) {
+    pinMode(PIN_EEPROM_EN, OUTPUT);
+    digitalWrite(PIN_EEPROM_EN, HIGH);
+  }
 
   delay(50);
 

@@ -122,7 +122,7 @@ void AerST7789::showSplashPost()
     yt = (TFT_WIDTH - 16) / 2;
     tft->setTextSize(2);
     tft->setCursor(xt, yt + 28);
-    tft->println("(C)2024");
+    tft->println("(C)2025");
 
     delay(1000);
 }

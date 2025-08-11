@@ -26,12 +26,12 @@
   color = plotted trace colour
 */
 
-void AerChart::Graph(AerGUI *gui, double x, double y, byte dp,
+void AerChart::Graph(AerGUI *gui, double x, double y1, double y2, byte dp,
                      double gx, double gy, double w, double h,
                      double xlo, double xhi, double xinc,
                      double ylo, double yhi, double yinc,
                      const char *title, const char *xlabel, const char *ylabel,
-                     bool &redraw, unsigned int color, unsigned int bcolor)
+                     bool &redraw, unsigned int color1, unsigned int color2, unsigned int bcolor)
 {
     TFT_eSPI *tft = gui->getTFT();
     TFT_eSprite *spr = gui->getSpriteBuffer(0);
@@ -48,7 +48,8 @@ void AerChart::Graph(AerGUI *gui, double x, double y, byte dp,
     // bcolor = background color
     unsigned int gcolor = DKBLUE;
     unsigned int acolor = RED;
-    unsigned int pcolor = color;
+    unsigned int pcolor1 = color1;
+    unsigned int pcolor2 = color2;
     unsigned int tcolor = WHITE;
     // unsigned int bcolor = BLACK;
 
@@ -90,6 +91,26 @@ void AerChart::Graph(AerGUI *gui, double x, double y, byte dp,
             temp = (i - ylo) * (10 - h - 10) / (yhi - ylo) + h;
             // precision is default Arduino--this could really use some format control
             spr->drawFloat(i, dp, 36, temp, 1);
+        }
+
+        /*if (yhi > 0) 
+        {
+            spr->setTextColor(tcolor, bcolor);
+            double yp1 =  (yhi - ylo) * (10 - h - 10) / (yhi - ylo) + h;
+            spr->drawFloat(yhi, dp, 36, yp1, 1);
+        }*/
+
+        if (y1 > 0) 
+        {
+            spr->setTextColor(pcolor1, bcolor);
+            double yp1 =  (y1 - ylo) * (10 - h - 10) / (yhi - ylo) + h;
+            spr->drawFloat(y1, dp, 36, yp1, 1);
+        }
+        if (y2 > 0) 
+        {
+            spr->setTextColor(pcolor2, bcolor);
+            double yp2 =  (y2 - ylo) * (10 - h - 10) / (yhi - ylo) + h;
+            spr->drawFloat(y2, dp, 36, yp2, 1);
         }
 
         spr->pushSprite(gx - 40, gy - h);
@@ -253,24 +274,23 @@ void AerChart::Trace(TFT_eSprite *spr, double x, double y1, double y2, byte dp,
         update1 = true;
         return;
     }
-    if ((y1 < gy - h) || (y1 > gy))
+    // draw y1
+    if ((y1 > gy - h) && (y1 < gy))
     {
-        // update1 = true;
-        return;
+        spr->drawLine(ox, oy1, x, y1, pcolor1);
+        oy1 = y1;
     }
-    spr->drawLine(ox, oy1, x, y1, pcolor1);
-    ox = x;
-    oy1 = y1;
-    if ((y2 < gy - h) || (y2 > gy))
+    // draw y2
+    if ((y2 > gy - h) && (y2 < gy))
     {
-        // update1 = true;
-        return;
+        spr->drawLine(ox, oy2, x, y2, pcolor2);
+        oy2 = y2;
     }
-    spr->drawLine(ox, oy2, x, y2, pcolor2);
     // it's up to you but drawing 2 more lines to give the graph some thickness
     // spr->drawLine(ox, oy1 + 1, x, y + 1, pcolor);
     // spr->drawLine(ox, oy1 - 1, x, y - 1, pcolor);
-    oy2 = y2;
+    
+    ox = x;
 }
 
 void AerChart::Trace(TFT_eSprite *spr, double x, double y1, double y2, double y3, double y4,

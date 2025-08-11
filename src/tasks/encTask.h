@@ -178,11 +178,11 @@ void onBt1Clicked(EncoderButton &eb)
     if (enc_aerGUI->getMenuProps()->menuIndex <= 1)
     {
         SerialCmdOp *sco = new SerialCmdOp(COIL_TOGGLE);
-        sco->Val(!enc_am->getAerPID(elementIndex)->PID_ON);
+        sco->Val(!enc_am->getAerPID(elementIndex)->isPidOn());
         sco->build();
         sco->emit();
         delayMicroseconds(250);
-        enc_am->getAerPID(elementIndex)->PID_ON = !enc_am->getAerPID(elementIndex)->PID_ON;
+        enc_am->getAerPID(elementIndex)->setPidOn(!enc_am->getAerPID(elementIndex)->isPidOn());
     }
 }
 
@@ -1265,13 +1265,13 @@ void onEb1Clicked(EncoderButton &eb)
             {
                 if (commstor.getWifiEn())
                 {
-                    if (enc_am->getAerPID(0)->PID_ON)
+                    if (enc_am->getAerPID(0)->isPidOn())
                     {
                         // ignore if pid on...
                         return;
                     }
 #if AERPID_COUNT == 2
-                    if (enc_am->getAerPID(1)->PID_ON)
+                    if (enc_am->getAerPID(1)->isPidOn())
                     {
                         // ignore if pid on...
                         return;
@@ -1302,7 +1302,7 @@ void onEb1Clicked(EncoderButton &eb)
                     commstor.setSSIDSet(true);
                     commstor.setWifiEn(true);
                     enc_am->webUpdateWIFI(true);
-                    enc_am->setPressTick(200);
+                    enc_am->setPressTick(100);
                     enc_aerGUI->gotoMenu(MENU_WIFI_PASSWORD_NETWORK_JOIN);
                 }
                 else
@@ -1377,7 +1377,7 @@ void onEb1Clicked(EncoderButton &eb)
             {
                 commstor.setPSK(enc_aerGUI->getMenuProps()->menuItemSelStr.c_str());
                 enc_am->webUpdateWIFI(true);
-                enc_am->setPressTick(200);
+                enc_am->setPressTick(60);
                 enc_aerGUI->gotoMenu(MENU_MAIN_WIFI);
                 return;
             }
@@ -1424,8 +1424,59 @@ void onEb1Clicked(EncoderButton &eb)
                 // save and update hostname
                 enc_am->getNet()->setHostname(enc_aerGUI->getMenuProps()->menuItemSelStr.c_str());
                 enc_am->webUpdateWIFI(true);
-                enc_am->setPressTick(200);
+                enc_am->setPressTick(100);
                 enc_aerGUI->gotoMenu(MENU_MAIN_WIFI);
+                return;
+            }
+        }
+        else if (enc_aerGUI->getMenuProps()->menuIndex == MENU_PID_P)
+        {
+            if (enc_aerGUI->getMenuProps()->menuLevelVal == MENU_PID_P_SET)
+            {
+                if (!enc_aerGUI->isCursorModify())
+                {
+                    enc_aerGUI->setCursorModify(MENU_PID_P_SET);
+                }
+                else
+                {
+                    enc_aerGUI->clearCursorModify();
+                    enc_am->webUpdatePID(true);
+                }
+                enc_aerGUI->updateMenu();
+                return;
+            }
+        }
+        else if (enc_aerGUI->getMenuProps()->menuIndex == MENU_PID_I)
+        {
+            if (enc_aerGUI->getMenuProps()->menuLevelVal == MENU_PID_I_SET)
+            {
+                if (!enc_aerGUI->isCursorModify())
+                {
+                    enc_aerGUI->setCursorModify(MENU_PID_I_SET);
+                }
+                else
+                {
+                    enc_aerGUI->clearCursorModify();
+                    enc_am->webUpdatePID(true);
+                }
+                enc_aerGUI->updateMenu();
+                return;
+            }
+        }
+        else if (enc_aerGUI->getMenuProps()->menuIndex == MENU_PID_D)
+        {
+            if (enc_aerGUI->getMenuProps()->menuLevelVal == MENU_PID_D_SET)
+            {
+                if (!enc_aerGUI->isCursorModify())
+                {
+                    enc_aerGUI->setCursorModify(MENU_PID_D_SET);
+                }
+                else
+                {
+                    enc_aerGUI->clearCursorModify();
+                    enc_am->webUpdatePID(true);
+                }
+                enc_aerGUI->updateMenu();
                 return;
             }
         }
@@ -1434,7 +1485,7 @@ void onEb1Clicked(EncoderButton &eb)
             if (enc_aerGUI->getMenuProps()->menuLevelVal == MENU_PID_AUTO_TOGGLE)
             {
                 uint8_t elementIndex = enc_aerGUI->getElementIndex();
-                enc_am->getAerPID(elementIndex)->AUTO_TUNE_ACTIVE = !enc_am->getAerPID(elementIndex)->AUTO_TUNE_ACTIVE;
+                enc_am->getAerPID(elementIndex)->setAutoTuneActive(!enc_am->getAerPID(elementIndex)->isAutoTuneActive());
                 enc_am->getAerPID(elementIndex)->pwm_saved = false;
                 enc_am->webUpdatePID(true);
                 enc_am->setPressTick(100);
@@ -2499,7 +2550,7 @@ void onEb1Encoder(EncoderButton &eb)
         dir = -1;
     }
 
-    if (enc_aerGUI->getMenuProps()->menuIndex == MENU_PID_P)
+    if (enc_aerGUI->getMenuProps()->menuIndex == MENU_PID_P && enc_aerGUI->isCursorModify())
     {
         if (eb.increment() > 0)
         {
@@ -2515,7 +2566,7 @@ void onEb1Encoder(EncoderButton &eb)
         enc_am->webUpdatePID(true);
         return;
     }
-    else if (enc_aerGUI->getMenuProps()->menuIndex == MENU_PID_I)
+    else if (enc_aerGUI->getMenuProps()->menuIndex == MENU_PID_I && enc_aerGUI->isCursorModify())
     {
         if (eb.increment() > 0)
         {
@@ -2531,7 +2582,7 @@ void onEb1Encoder(EncoderButton &eb)
         enc_am->webUpdatePID(true);
         return;
     }
-    else if (enc_aerGUI->getMenuProps()->menuIndex == MENU_PID_D)
+    else if (enc_aerGUI->getMenuProps()->menuIndex == MENU_PID_D && enc_aerGUI->isCursorModify())
     {
         if (eb.increment() > 0)
         {
