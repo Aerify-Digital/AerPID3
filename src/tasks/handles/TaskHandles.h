@@ -8,6 +8,7 @@
 // =======================
 // Task Handles
 
+TaskHandle_t pfMonTask;
 TaskHandle_t btTask;
 TaskHandle_t tftTask;
 TaskHandle_t wrkTask;
