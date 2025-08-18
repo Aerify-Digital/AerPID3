@@ -71,8 +71,7 @@ uint8_t AerManager::getCpu1() { return cpu1_usage; }
  */
 void AerManager::addCpu0(uint8_t v)
 {
-    shiftArrDown(cpu0_usages);
-    cpu0_usages[0] = v;
+    shiftArrDownThenAdd(cpu0_usages, cpu_usages_size, v);
 }
 
 /**
@@ -89,8 +88,7 @@ uint8_t *AerManager::getCpu0s() { return cpu0_usages; }
  */
 void AerManager::addCpu1(uint8_t v)
 {
-    shiftArrDown(cpu1_usages);
-    cpu1_usages[0] = v;
+    shiftArrDownThenAdd(cpu1_usages, cpu_usages_size, v);
 }
 
 /**
@@ -367,6 +365,16 @@ void AerManager::lastSensorFault(uint8_t ei, bool faulted)
     lastFault[ei] = faulted;
 }
 
+bool AerManager::isCpuMonitorCalibrating()
+{
+    return cpuMonitorCalibrating;
+}
+
+void AerManager::setCpuMonitorCalibrating(bool cal)
+{
+    cpuMonitorCalibrating = cal;
+}
+
 // ===========================================================
 
 void AerManager::setOpEP(_elm_prot_op_code_t *op)
@@ -394,27 +402,4 @@ void AerManager::init()
         cpu0_usages[i] = 0;
         cpu1_usages[i] = 0;
     }
-}
-
-// ===========================================================
-// Private Methods and Functions
-// =============================
-
-// Shifts elements in array down by one index, leaving index 0 empty.
-void AerManager::shiftArrDown(uint8_t *arr)
-{
-    // int32_t new_arr[cpu_usages_size];
-    uint8_t *new_arr = (uint8_t *)malloc(sizeof(uint8_t) * cpu_usages_size);
-    uint siz = cpu_usages_size - 1;
-    uint j = 0;
-    new_arr[j++] = 0;
-    for (uint i = 0; i < siz; i++)
-    {
-        new_arr[j++] = arr[i];
-    }
-    for (j = 0; j < cpu_usages_size; j++)
-    {
-        arr[j] = new_arr[j];
-    }
-    free(new_arr);
 }

@@ -29,7 +29,7 @@
 
 // =======================
 // EEPROM Storage
-extEEPROM myEEPROM(kbits_64, 1, 32, EEPROM_ADDRESS);
+extEEPROM myEEPROM(EEPROM_SIZE, 1, EEPROM_PAGE_SIZE, EEPROM_ADDRESS);
 
 // Serial communications handler
 SerialCom serialComm;
@@ -51,17 +51,9 @@ AerGUI aerGUI;
 WebServer webServer(AerSetup::verbose_d, &aerManager);
 
 // =======================
-// Misc Variables..
-// =======================
-
-// Display Options
-boolean SHOW_SPLASH = true; // Show splash screen on loading
-uint16_t SCROLL_SPEED = 6;  // Scrolling Speed Adjust
-
-uint16_t running_time = 0;
-double RUN_TIME_MAX = 100;
-
+// Device uptime string variable
 String uptime = "";
+// uptime tick for interval calculate of system uptime string
 uint32_t uptimeTick = 0;
 
 // *******************************************************************************************
@@ -71,42 +63,22 @@ AppVersion web_version = AppVersion(VER_WEB_MAJOR, VER_WEB_MINOR, VER_WEB_BUILD)
 String version = app_version.get();
 String webui_version = web_version.get();
 
-/**
- * @brief Prints fre mem to the serial console.
- *
- */
-void printFreeMem()
-{
-  if (Serial)
-  {
-    Serial.print("[init] ");
-    Serial.print("heap free: ");
-    Serial.print(ESP.getFreeHeap(), 10);
-    Serial.println(" bytes");
-    delay(10);
-  }
-}
-
 // ===========================================================================================
 // ===========================================================================================
 // SETUP
 // ===========================================================================================
 void setup()
 {
-  // CPU Freq: 240 mhz
-  setCpuFrequencyMhz(240);
-
   pinMode(PIN_LED_C, OUTPUT);    // BLUE
   digitalWrite(PIN_LED_C, HIGH); // ENABLE
   pinMode(PIN_LED_B, OUTPUT);    // RED or ORANGE
   digitalWrite(PIN_LED_B, HIGH); // ENABLE
 
-  if (PIN_EEPROM_EN > 0) {
+  if (PIN_EEPROM_EN > 0)
+  {
     pinMode(PIN_EEPROM_EN, OUTPUT);
     digitalWrite(PIN_EEPROM_EN, HIGH);
   }
-
-  delay(50);
 
   // ----------------------------
   // Begin Serial handler (and debug).
@@ -118,7 +90,7 @@ void setup()
   Serial.println(F("System Starting ..."));
   Serial.print(F(">> Version "));
   Serial.println(app_version.get());
-  printFreeMem();
+  // printFreeMem();
 
   // ----------------------------
   // Begin i2c Master
@@ -197,7 +169,7 @@ void setup()
     Serial.print(myEEPROM.length() / 1024 / 8);
     Serial.print(F(" kB"));
     Serial.println(F(" "));
-    delay(50);
+    delay(5);
   }
 
   // init storage object
@@ -218,21 +190,39 @@ void setup()
   // setup screen and show app version
   aerGUI.getST7789()->setupISP();
   aerGUI.getST7789()->showVersion(app_version.get());
-  delay(250);
+  delay(300);
 
-  printFreeMem();
+  // printFreeMem();
 
   // Init the EEPROM storage
   eepromStor.init(&myEEPROM, PIN_EEPROM_EN);
 
-  if (SHOW_SPLASH)
-  {
-    // Load the logo splash image
-    aerGUI.getST7789()->showSplashInit();
-    delay(620);
-  }
+#if SHOW_SPLASH == true
+  // Load the logo splash image
+  aerGUI.getST7789()->showSplashInit();
+  delay(420);
+#endif
 
-  printFreeMem();
+  // =============================
+  // Setup mutex locks
+  i2c1_mutex = xSemaphoreCreateMutex();
+  spi1_mutex = xSemaphoreCreateMutex();
+  sys1_mutex = xSemaphoreCreateMutex();
+
+  // =============================
+  // initalize the task stack sizes
+  _initThreadStackSizes();
+  uint32_t stackTotal = 0;
+  for (int t = 0; t < taskCount; t++)
+  {
+    stackTotal += taskStackSize[t] * 4;
+  }
+  Serial.print("[init] projected task stack size max: ");
+  Serial.print(stackTotal, 10);
+  Serial.println(" bytes\n");
+  delay(20);
+
+  // printFreeMem();
 
   // ----------------------------
   aerGUI.getST7789()->showLoadingStorMessage();
@@ -282,7 +272,9 @@ void setup()
   aerManager.setupStorageObjects(&favstor, &commstor, &lightstor, &bumpStor, &tempStor, &settingsStorage, &networkingStorage);
   Serial.println(F(" ... "));
 
-  printFreeMem();
+  // performance monitor task
+  perfmon_start(&aerManager, taskStackSize[9], &pfMonTask);
+  // printFreeMem();
 
   // ----------------------------
   aerGUI.getST7789()->showLoadingAppMessage();
@@ -294,64 +286,53 @@ void setup()
   Serial.println(F(" "));
   digitalWrite(PIN_LED_C, LOW);
   digitalWrite(PIN_LED_B, LOW);
-  delay(200);
+  delay(300);
+  digitalWrite(PIN_LED_C, HIGH);
+  digitalWrite(PIN_LED_B, HIGH);
   Serial.println(F("[init] Completed Setup."));
   Serial.println(F(" "));
 
-  printFreeMem();
+  // Now start all the tasks...
+  startAllWorkerThreads();
+
+  digitalWrite(PIN_LED_C, LOW);
+  digitalWrite(PIN_LED_B, LOW);
   delay(100);
-
-  // =============================
-
-  // Setup mutex locks
-  i2c1_mutex = xSemaphoreCreateMutex();
-  spi1_mutex = xSemaphoreCreateMutex();
-  sys1_mutex = xSemaphoreCreateMutex();
-
-  _initThreadStackSizes();
-  uint32_t stackTotal = 0;
-  for (int t = 0; t < taskCount; t++)
-  {
-    stackTotal += taskStackSize[t] * 4;
-  }
-  Serial.print("[init] projected task stack size max: ");
-  Serial.print(stackTotal, 10);
-  Serial.println(" bytes\n");
-  delay(20);
-
   printFreeMem();
-  Serial.println(F("[init] Starting task threads...\n\n"));
-  delay(100);
+}
 
-  // =============================
+// ===========================================================================================
+// Thread start managers...
+
+void startAllWorkerThreads()
+{
+  // ==========================================================
   // Setup Tasks
-
-  // performance monitor task
-  perfmon_start(&aerManager, taskStackSize[9]);
-  delay(50);
-
-  if (commstor.getBTEn())
-  { // Bluetooth Task
-    // NOT USED!!!
-    // xTaskCreatePinnedToCore(bleUpdateTask, "BleTask", taskStackSize[0], (void *)&aerManager, 8, &btTask, 0);
-  }
+  Serial.println(F("[init] Starting task threads...\n\n"));
 
   // Encoder knob task handler
-  xTaskCreatePinnedToCore(enc_task, "Encoder_Task", taskStackSize[1], (void *)&aerManager, 2, &encTask, 1);
+  // xTaskCreatePinnedToCore(enc_task, "Encoder_Task", taskStackSize[1], (void *)&aerManager, 2, &encTask, 0);
+  xTaskCreate(enc_task, "Encoder_Task", taskStackSize[1], (void *)&aerManager, 2, &encTask);
 
   // Link task for element monitor
-  xTaskCreatePinnedToCore(link_task, "Link_Task", taskStackSize[3], (void *)&aerManager, 5, &linkTask, 0);
+  // xTaskCreatePinnedToCore(link_task, "Link_Task", taskStackSize[3], (void *)&aerManager, 5, &linkTask, 0);
+  xTaskCreate(link_task, "Link_Task", taskStackSize[3], (void *)&aerManager, 5, &linkTask);
 
   // Worker task for generics. Runs RTC and Onboard Temperature sensors.
-  xTaskCreatePinnedToCore(worker_task, "Worker_Task", taskStackSize[2], (void *)&aerManager, 6, &wrkTask, 1);
+  // xTaskCreatePinnedToCore(worker_task, "Worker_Task", taskStackSize[2], (void *)&aerManager, 6, &wrkTask, 1);
+  xTaskCreate(worker_task, "Worker_Task", taskStackSize[2], (void *)&aerManager, 6, &wrkTask);
 
-  // PID task
-  xTaskCreatePinnedToCore(pid_task_1, "PID_Task_1", taskStackSize[5], NULL, 3, &pidTask1, 1);
+  // PID task (first port)
+  // xTaskCreatePinnedToCore(pid_task_1, "PID_Task_1", taskStackSize[5], NULL, 3, &pidTask1, 1);
+  xTaskCreate(pid_task_1, "PID_Task_1", taskStackSize[5], NULL, 1, &pidTask1);
 #if AERPID_COUNT == 2
-  xTaskCreatePinnedToCore(pid_task_2, "PID_Task_2", taskStackSize[5], NULL, 3, &pidTask2, 1);
+  // PID task (second port - if available)
+  // xTaskCreatePinnedToCore(pid_task_2, "PID_Task_2", taskStackSize[5], NULL, 3, &pidTask2, 1);
+  xTaskCreate(pid_task_2, "PID_Task_2", taskStackSize[5], NULL, 1, &pidTask2);
 #endif
 
-  xTaskCreatePinnedToCore(element_task, "Element_Task", taskStackSize[12], (void *)&aerManager, 8, &elementTask, 0);
+  // xTaskCreatePinnedToCore(element_task, "Element_Task", taskStackSize[12], (void *)&aerManager, 8, &elementTask, 1);
+  xTaskCreate(element_task, "Element_Task", taskStackSize[12], (void *)&aerManager, 8, &elementTask);
 
   if (commstor.getUSBEn())
   {
@@ -359,33 +340,38 @@ void setup()
     serialTaskParams.am = &aerManager;
     serialTaskParams.sc = &serialComm;
     // Serial communications handler
-    xTaskCreatePinnedToCore(serial_task, "Serial_Task", taskStackSize[6], (void *)&serialTaskParams, 5, &serialTask, 1);
+    xTaskCreatePinnedToCore(serial_task, "Serial_Task", taskStackSize[6], (void *)&serialTaskParams, 5, &serialTask, 0);
   }
 
   // Screen UI task handler
-  xTaskCreatePinnedToCore(tft_task, "TFT_Task", taskStackSize[7], (void *)&aerManager, 4, &tftTask, 1);
-  // Fancy LED task.
-  xTaskCreatePinnedToCore(led_task, "LED_Task", taskStackSize[8], (void *)&aerManager, 7, &ledTask, 1);
+  // xTaskCreatePinnedToCore(tft_task, "TFT_Task", taskStackSize[7], (void *)&aerManager, 4, &tftTask, 0);
+  xTaskCreate(tft_task, "TFT_Task", taskStackSize[7], (void *)&aerManager, 4, &tftTask);
 
-  if (commstor.getWifiEn())
-  {
-    // web server task
-    xTaskCreatePinnedToCore(taskWebWorker, "WebServer_Task", taskStackSize[10], NULL, 5, &webTask, 1);
-  }
+  // Fancy LED task.
+  // xTaskCreatePinnedToCore(led_task, "LED_Task", taskStackSize[8], (void *)&aerManager, 7, &ledTask, 0);
+  xTaskCreate(led_task, "LED_Task", taskStackSize[8], (void *)&aerManager, 7, &ledTask);
 
   SaveTaskParams saveTaskParams;
   saveTaskParams.am = &aerManager;
   saveTaskParams.flash = &flash;
   saveTaskParams.eeprom = &eepromStor;
   // storage saves task
-  xTaskCreatePinnedToCore(save_task, "Save_Task", taskStackSize[11], (void *)&saveTaskParams, 9, &saveTask, 1);
+  // xTaskCreatePinnedToCore(save_task, "Save_Task", taskStackSize[11], (void *)&saveTaskParams, 9, &saveTask, 0);
+  xTaskCreate(save_task, "Save_Task", taskStackSize[11], (void *)&saveTaskParams, 9, &saveTask);
 
-  delay(100);
-  printFreeMem();
+  if (commstor.getWifiEn())
+  {
+    while (aerManager.isCpuMonitorCalibrating())
+    {
+      delay(250);
+    }
+    // web server task
+    // xTaskCreatePinnedToCore(taskWebWorker, "WebServer_Task", taskStackSize[10], NULL, 5, &webTask, 1);
+    xTaskCreate(taskWebWorker, "WebServer_Task", taskStackSize[10], NULL, 10, &webTask);
+  }
+
+  Serial.println(F("[init] All task threads started!\n\n"));
 }
-
-// ===========================================================================================
-// Thread start managers...
 
 void startSerialTask()
 {

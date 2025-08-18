@@ -12,6 +12,7 @@
 #include "common/datatypes/Version.h"
 #include "common/enum/ThermalUnitsType.h"
 #include "common/enum/ElementProtectOpCodes.h"
+#include "common/util/ArrayManipulator.h"
 
 #include "screen/gui/gui.h"
 #include "core/lighting/FancyLED.h"
@@ -262,6 +263,9 @@ public:
     bool lastSensorFault(uint8_t ei);
     void lastSensorFault(uint8_t ei, bool faulted);
 
+    bool isCpuMonitorCalibrating();
+    void setCpuMonitorCalibrating(bool cal);
+
 protected:
     void init();
 
@@ -338,6 +342,8 @@ private:
 
     bool enabled_dtr = false;
 
+    bool cpuMonitorCalibrating = false;
+
     uint64_t btn_press_tick = 100;
 
     bool lastFault[2] = {false, false};
@@ -350,7 +356,6 @@ private:
     uint8_t cpu0_usages[cpu_usages_size];
     uint8_t cpu1_usages[cpu_usages_size];
 
-    void shiftArrDown(uint8_t *cpu0_usages);
 };
 
 extern AerManager aerManager;
