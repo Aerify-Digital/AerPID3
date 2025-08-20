@@ -333,12 +333,12 @@ double AerPID::deltaScaleOutput(const double delta, const double output)
     // Scale PWM output based on the scaling factor
     double _output = output * _pwmScaleFactor;
 
-    if (delta < -3.8)
+    if (delta < -8.8)
     {
         // When over temp, set output power to 0
         return 0;
     }
-    else if (delta <= -1.7)
+    else if (delta <= -2.7)
     {
         return _output * resolution * 0.7;
     }
