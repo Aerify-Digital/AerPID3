@@ -55,11 +55,20 @@
 // Adafruit BusIO serial debug
 #define DEBUG_SERIAL 0
 
+// Show splash screen on loading
+#define SHOW_SPLASH true
+
 // =========================
 // Addressable LED setup
 #define NUM_LEDS 6      // number of addressable LEDs
 #define CHIPSET WS2812B // addressable LED chipset
 #define COLOR_ORDER GRB // addressable LED color order
+
+// =========================
+// Size of EEPROM in kb
+#define EEPROM_SIZE kbits_64
+// Page size of EEPROM
+#define EEPROM_PAGE_SIZE 32
 
 // =========================
 // port for http web server

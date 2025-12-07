@@ -1,6 +1,6 @@
 /* =============================================================================
  * Main Application Software for 'AerPID-Lite' or the 'AerTiny' device module.
- * Copyright (c) 2015-2024 AerifyDigital LLC.  All rights reserved.
+ * Copyright (c) 2015-2025 AerifyDigital LLC.  All rights reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -69,7 +69,6 @@
 
 #include "tasks/monitor/perfmon.h"
 #include "tasks/workerTask.h"
-// #include "tasks/pidTask.h"
 #include "tasks/pidTask_1.h"
 #if AERPID_COUNT == 2
 #include "tasks/pidTask_2.h"
@@ -82,24 +81,6 @@
 #include "tasks/ledTask.h"
 #include "tasks/webServerTask.h"
 #include "tasks/saveTask.h"
-
-// #include "tasks/bleTask.h"
-
-// BLE Imports
-/*#include <BLEDevice.h>
-#include <BLEServer.h>
-#include <BLEUtils.h>
-#include <BLE2902.h>
-#include "esp_gap_ble_api.h"
-#include "esp_gatts_api.h"
-#include "esp_bt_defs.h"*/
-// =======================
-// Bluetooth LE Objects
-// Check if Bluetooth configs are enabled
-#if !defined(CONFIG_BT_ENABLED) || !defined(CONFIG_BLUEDROID_ENABLED)
-// #error Bluetooth is not enabled! Please run `make menuconfig` to and enable it
-#endif
-// #include "tasks/bleTask.h"
 
 // ===============================================================
 // ===============================================================
@@ -144,6 +125,9 @@ void _initThreadStackSizes()
 // ===============================================================
 // main function definitions
 
+/// @brief Starts all worker threads
+void startAllWorkerThreads();
+
 void startSerialTask();
 void startTftDemoTask();
 
@@ -151,3 +135,15 @@ void tickSystemCounters();
 void tickMainLoop();
 
 void sysTime();
+
+/// @brief Prints free memory to the serial console.
+void printFreeMem()
+{
+    if (Serial)
+    {
+        Serial.print("[init] ");
+        Serial.print("heap free: ");
+        Serial.print(ESP.getFreeHeap(), 10);
+        Serial.println(" bytes");
+    }
+}

@@ -29,6 +29,7 @@
 
 #include <SPI.h>
 #include <TFT_eSPI.h> // Hardware-specific library
+#include <version.h>
 
 #include "img/ad_icon.h"
 #include "img/splash.h"

@@ -5,13 +5,16 @@ void AerST7789::setupISP()
     pinMode(TFT_CS, OUTPUT);
     digitalWrite(TFT_CS, HIGH);
     pinMode(TFT_BL, OUTPUT);
-    digitalWrite(TFT_BL, HIGH);
+    digitalWrite(TFT_BL, LOW);
+    delay(2);
 
     tft->init();
     tft->setRotation(1);
 
     tft->fillScreen(TFT_BLACK);
+    delay(50);
     testdrawtext((char *)"Starting AerPID Controls for ST7789V...", (uint16_t)TFT_BLUE);
+    digitalWrite(TFT_BL, HIGH);
     delay(200);
 }
 
@@ -115,14 +118,16 @@ void AerST7789::showSplashPost()
     tft->setCursor(xt, yt);
     tft->println("AerifyDigital");
 
-    delay(700); // animation delay
+    delay(500); // animation delay
 
     tft->setTextColor(TFT_GREY, TFT_BLACK);
     xt = (TFT_HEIGHT - 8 * 12) / 2;
     yt = (TFT_WIDTH - 16) / 2;
     tft->setTextSize(2);
     tft->setCursor(xt, yt + 28);
-    tft->println("(C)2025");
+    tft->print("(C)");
+    const char *year = (const char *)VER_BUILD_YEAR;
+    tft->println(year);
 
     delay(1000);
 }
