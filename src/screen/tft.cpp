@@ -742,9 +742,9 @@ namespace AerTftUI
         TFT_eSPI *lcd = gui->getTFT();
         if (update)
         {
-            //lcd->fillScreen(0x0841);
+            lcd->fillRect(0, 134, 71, 105, TFT_BLACK);
             lcd->fillRoundRect(2, 138, 64, 98, 3, bgColor);
-            lcd->drawRoundRect(0, 140, 66, 100, 3, brdColor);
+            //lcd->drawRoundRect(0, 140, 66, 100, 3, brdColor);
             graph = new AerChart();
         }
         /*lcd->setTextWrap(false);
@@ -761,10 +761,10 @@ namespace AerTftUI
         double x, y1, y2 = 0;
 
         uint8_t dp = 1;   // datapoint flag
-        double gx = 2;   // x graph location (lower left)
+        double gx = 2;    // x graph location (lower left)
         double gy = 238;  // y graph location (lower left)
-        double w = 64;   // width of graph
-        double h = 98;   // height of graph
+        double w = 64;    // width of graph
+        double h = 98;    // height of graph
         double xlo = 0;   // lower bound of x axis
         double xhi = 64;  // upper bound of x asis
         double xinc = 16; // division of x axis (distance not count)
@@ -903,18 +903,6 @@ namespace AerTftUI
 
         update1 = false;
         lastindex = mindex;
-
-
-        /*
-        uint tWidth = 64;
-        uint tHeight = 98;
-        uint siz = 64;
-        uint width = (uint)((float)tWidth / siz);
-        for (uint i = 0; i < siz; i++)
-        {
-            showTempMeasureBar(am, i, width, tHeight);
-        }
-        */
     }
 
     void showTempMeasureBar(AerManager *am, uint i, uint width, uint height)
@@ -922,57 +910,8 @@ namespace AerTftUI
         AerGUI *gui = am->getGUI();
         TFT_eSprite *spr = gui->getSpriteBuffer(0);
 
-
+        // TODO: remove?
     }
-
-        /*AerGUI *gui = am->getGUI();
-        TFT_eSPI *lcd = gui->getTFT();
-
-        // slot % usage for cpu 0
-        double _tmp1 = am->getAerPID(0)->getMeasuresLong()[i];
-#if AERPID_COUNT == 2
-        double _tmp2 = am->getAerPID(1)->getMeasuresLong()[i];
-#endif
-
-        uint32_t color1 = TFT_GREENYELLOW;      // used ticks
-        uint32_t color2 = color565(28, 64, 32); // free ticks
-
-        int r = std::min(255, 90 + (int)(_tmp1 * (_tmp1 > 64 ? _tmp1 > 90 ? 3.0 : 2.15 : 1)));
-        int g = std::max(10, 255 - (int)(_tmp1 * (_tmp1 > 47 ? _tmp1 > 75 ? 2.5 : 1.20 : 1)));
-        int b = std::max(0, 150 - (int)(_tmp1 * 1.5));
-        uint32_t color3 = color565(r, g, b); // scaled color ticks
-
-        int x1 = 2 + (i * width); // cpu0 loc x
-        int x1l = 2 + ((i+1) * width); // cpu0 loc x
-        int y = 140;              // loc y
-        int w = width;            // width (30)
-        int h = height;           // height
-
-        int tmp1 = (_tmp1 / 300.f) * h; // convert to bounds
-        int tmp1l = (yLastMeasure / 300.f) * h;
-
-        int h1_0 = std::max(0, std::min(tmp1, h));
-        int h2_0 = std::max(0, std::min(h - tmp1, h));
-
-        int h1_0l = std::max(0, std::min(tmp1l, h));
-        int h2_0l = std::max(0, std::min(h - tmp1l, h));
-
-        if (h2_0l <= 0) {
-            h2_0l = h2_0;
-        }
-
-        // lcd->fillRect(x1, h2_0 + y, w, h1_0, _tmp1 < 20 ? color1 : color3);
-        // lcd->fillRect(x1, y, w, h2_0, color2);
-
-        lcd->fillRect(x1, y, w, h, color2);
-        // lcd->drawPixel(x1, y + h2_0, color3);
-        lcd->drawLine(x1l, y + h2_0l, x1, y + h2_0, color3);
-
-        // lcd->drawRect(2 - 1, y - 1, 60 + 2, h + 2, color565(16, 33, 30));
-
-        xLastPos = x1;
-        yLastMeasure = _tmp1;
-    }*/
 
     void showMemorySection(AerManager *am)
     {
