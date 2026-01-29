@@ -786,10 +786,10 @@ namespace AerTftUI
         double sett = am->getAerPID(elementIndex)->SET_TEMP;
 
         // rescale the y axis based on the measured
-        yhi = am->getAerPID(elementIndex)->maxMeasures() + 15;
-        ylo = am->getAerPID(elementIndex)->minMeasuresLong() - 25;
+        yhi = am->getAerPID(elementIndex)->maxMeasures() + 25;
+        ylo = am->getAerPID(elementIndex)->minMeasuresLong() - 20;
 
-        if (ylo < 100)
+        if (ylo < 10)
         {
             ylo = 0;
         }
