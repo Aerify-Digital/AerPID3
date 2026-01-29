@@ -1124,6 +1124,10 @@ void onEb1Clicked(EncoderButton &eb)
                 }
                 else if (opt == 1)
                 {
+                    opt = 2;
+                }
+                else if (opt == 2)
+                {
                     opt = 0;
                 }
                 else
@@ -2509,6 +2513,10 @@ void onEb1Clicked(EncoderButton &eb)
                 opt = 1;
             }
             else if (opt == 1)
+            {
+                opt = 2;
+            }
+            else if (opt == 2)
             {
                 opt = 0;
             }

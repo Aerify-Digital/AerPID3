@@ -17,6 +17,13 @@ namespace AerTftUI
 
     int bar_index[2] = {0, 0};
 
+    // charting vars
+    double l_yhi = 0;
+    double l_ylo = 0;
+
+    bool display1 = true;
+    bool update1 = true;
+
     // charting object for graphs
     AerChart *graph;
 
@@ -439,27 +446,17 @@ namespace AerTftUI
             }
         }
 
-        if (update)
+        if (settings->getDispTypeOptions() == 0)
         {
-            if (settings->getDispTypeOptions() == 0)
-            {
-                showSysInfoSection(am, true);
-            }
-            else if (settings->getDispTypeOptions() == 1)
-            {
-                showSysIconsSection(am, true);
-            }
+            showSysInfoSection(am, update);
         }
-        else
+        else if (settings->getDispTypeOptions() == 1)
         {
-            if (settings->getDispTypeOptions() == 0)
-            {
-                showSysInfoSection(am, false);
-            }
-            if (settings->getDispTypeOptions() == 1)
-            {
-                showSysIconsSection(am, false);
-            }
+            showSysIconsSection(am, update);
+        }
+        else if (settings->getDispTypeOptions() == 2)
+        {
+            showSysMeasureSection(am, update);
         }
 
         if (!modalOpen)
@@ -723,6 +720,259 @@ namespace AerTftUI
         lcd->setCursor(37, 170);
         lcd->print("CPU1");
     }
+
+    int xLastPos = 0;
+    double yLastMeasure = 0;
+
+    void showSysMeasureSection(AerManager *am, bool update)
+    {
+        const uint16_t bgColor = color565(2, 3, 4);
+        const uint16_t brdColor = color565(15, 202, 213);
+
+        AerGUI *gui = am->getGUI();
+        PropsMenu *props = gui->getMenuProps();
+        uint16_t mindex = props->menuLevelVal;
+        if (lastindex == mindex && !update)
+        {
+            // Indexes match and update is false; return
+            // return;
+        }
+        uint16_t mlvl = props->menuIndex;
+        AerMenu menu = gui->getSelectedMenu(mlvl);
+        TFT_eSPI *lcd = gui->getTFT();
+        if (update)
+        {
+            //lcd->fillScreen(0x0841);
+            lcd->fillRoundRect(2, 138, 64, 98, 3, bgColor);
+            lcd->drawRoundRect(0, 140, 66, 100, 3, brdColor);
+            graph = new AerChart();
+        }
+        /*lcd->setTextWrap(false);
+        lcd->setTextColor(TFT_WHITE, bgColor);
+        lcd->setTextSize(2);
+        lcd->setCursor(64, 20);
+        lcd->print("Temperature Graph");
+        lcd->setTextSize(1);*/
+
+        // size of datapoints array...
+        uint data_size = 64;
+
+        /* datapoint variables x,y */
+        double x, y1, y2 = 0;
+
+        uint8_t dp = 1;   // datapoint flag
+        double gx = 2;   // x graph location (lower left)
+        double gy = 238;  // y graph location (lower left)
+        double w = 64;   // width of graph
+        double h = 98;   // height of graph
+        double xlo = 0;   // lower bound of x axis
+        double xhi = 64;  // upper bound of x asis
+        double xinc = 16; // division of x axis (distance not count)
+        double ylo = 0;   // lower bound of y axis
+        double yhi = 500; // upper bound of y asis
+        double yinc = 50; // division of y axis (distance not count)
+
+        // labels are not used!
+        const char *title = "T(x)";   // title of graph
+        const char *xlabel = "x";     // x asis label
+        const char *ylabel = "fn(x)"; // y asis label
+
+        uint16_t seriesColor = color565(8, 255, 32);
+
+        int elementIndex = 0;
+
+        // get the measured data to display
+        double *mes = am->getAerPID(elementIndex)->getMeasures();
+        double sett = am->getAerPID(elementIndex)->SET_TEMP;
+
+        // rescale the y axis based on the measured
+        yhi = am->getAerPID(elementIndex)->maxMeasures() + 15;
+        ylo = am->getAerPID(elementIndex)->minMeasuresLong() - 25;
+
+        if (ylo < 100)
+        {
+            ylo = 0;
+        }
+
+        // rescale increment for y axis
+        yinc = getGraphScaleAxisY(ylo, yhi);
+
+        // changed flag for redrawing axises
+        bool chngd = l_yhi != yhi;
+        l_yhi = yhi;
+
+        // adjust based on reading type
+        if (am->getReadingType() == ThermalUnitsType::FAHRENHEIT)
+        {
+            ylo = toFahrenheit(ylo);
+            yhi = toFahrenheit(yhi);
+        }
+        else if (am->getReadingType() == ThermalUnitsType::KELVIN)
+        {
+            ylo = toKelvin(ylo);
+            yhi = toKelvin(yhi);
+        }
+
+        double mY = y1;
+        if (am->getReadingType() == ThermalUnitsType::FAHRENHEIT)
+        {
+            mY = toFahrenheit(mes[0]);
+        }
+        else if (am->getReadingType() == ThermalUnitsType::CELSIUS)
+        {
+            mY = mes[0];
+        }
+        else if (am->getReadingType() == ThermalUnitsType::KELVIN)
+        {
+            mY = toKelvin(mes[0]);
+        }
+
+        // draw the basic graph canvas
+        display1 = update || chngd;
+        graph->Graph(gui, x, mY, 0, dp, gx - 1, gy, w + 5, h, xlo, xhi, xinc, ylo, yhi, yinc, "", "", "", display1, seriesColor, seriesColor, bgColor);
+
+        // sprite buffer
+        TFT_eSprite *spr = gui->getSpriteBuffer(0);
+
+        // chunked sprite count
+        const uint chnk = 8;
+
+        uint t_x;              // index pointer for x datapoint
+        double t_xlo = 0;      // lower bound of x axis
+        double t_xhi = 8;      // upper bound of x axis
+        double t_xinc = 4;     // division of x axis
+        double t_w = w / chnk; // graph chunk width
+        double t_gx = 0;       // x graph location (lower left)
+        double t_gy = h;       // y graph location (lower left)
+
+        // iterate over sprite data, build chart series
+        for (int z = 0; z < 8; z++)
+        {
+            spr->createSprite(8, h);
+            spr->fillRect(0, 0, 8, h, bgColor);
+            update1 = true;
+
+            for (x = 0; x <= chnk; x++)
+            {
+                t_x = x + chnk * z;
+                if (t_x >= data_size)
+                {
+                    break;
+                }
+                if (am->getReadingType() == ThermalUnitsType::FAHRENHEIT)
+                {
+                    y1 = toFahrenheit(mes[t_x]);
+                    y2 = toFahrenheit(sett);
+                }
+                else if (am->getReadingType() == ThermalUnitsType::CELSIUS)
+                {
+                    y1 = mes[t_x];
+                    y2 = sett;
+                }
+                else if (am->getReadingType() == ThermalUnitsType::KELVIN)
+                {
+                    y1 = toKelvin(mes[t_x]);
+                    y2 = toKelvin(sett);
+                }
+                graph->Trace(spr,
+                             x /* datapoint x */,
+                             y1 /* datapoint y1 */,
+                             y2 /* datapoint y2 */,
+                             dp,
+                             t_gx /* location x */,
+                             t_gy /* location y */,
+                             t_w /* graph width */,
+                             h /* graph height */,
+                             t_xlo,
+                             t_xhi,
+                             t_xinc,
+                             ylo,
+                             yhi,
+                             yinc,
+                             title,
+                             xlabel,
+                             ylabel,
+                             update1,
+                             seriesColor,
+                             bgColor);
+            }
+
+            spr->pushSprite(gx + (8 * z), gy - h);
+            spr->deleteSprite();
+        }
+
+        update1 = false;
+        lastindex = mindex;
+
+
+        /*
+        uint tWidth = 64;
+        uint tHeight = 98;
+        uint siz = 64;
+        uint width = (uint)((float)tWidth / siz);
+        for (uint i = 0; i < siz; i++)
+        {
+            showTempMeasureBar(am, i, width, tHeight);
+        }
+        */
+    }
+
+    void showTempMeasureBar(AerManager *am, uint i, uint width, uint height)
+    {
+        AerGUI *gui = am->getGUI();
+        TFT_eSprite *spr = gui->getSpriteBuffer(0);
+
+
+    }
+
+        /*AerGUI *gui = am->getGUI();
+        TFT_eSPI *lcd = gui->getTFT();
+
+        // slot % usage for cpu 0
+        double _tmp1 = am->getAerPID(0)->getMeasuresLong()[i];
+#if AERPID_COUNT == 2
+        double _tmp2 = am->getAerPID(1)->getMeasuresLong()[i];
+#endif
+
+        uint32_t color1 = TFT_GREENYELLOW;      // used ticks
+        uint32_t color2 = color565(28, 64, 32); // free ticks
+
+        int r = std::min(255, 90 + (int)(_tmp1 * (_tmp1 > 64 ? _tmp1 > 90 ? 3.0 : 2.15 : 1)));
+        int g = std::max(10, 255 - (int)(_tmp1 * (_tmp1 > 47 ? _tmp1 > 75 ? 2.5 : 1.20 : 1)));
+        int b = std::max(0, 150 - (int)(_tmp1 * 1.5));
+        uint32_t color3 = color565(r, g, b); // scaled color ticks
+
+        int x1 = 2 + (i * width); // cpu0 loc x
+        int x1l = 2 + ((i+1) * width); // cpu0 loc x
+        int y = 140;              // loc y
+        int w = width;            // width (30)
+        int h = height;           // height
+
+        int tmp1 = (_tmp1 / 300.f) * h; // convert to bounds
+        int tmp1l = (yLastMeasure / 300.f) * h;
+
+        int h1_0 = std::max(0, std::min(tmp1, h));
+        int h2_0 = std::max(0, std::min(h - tmp1, h));
+
+        int h1_0l = std::max(0, std::min(tmp1l, h));
+        int h2_0l = std::max(0, std::min(h - tmp1l, h));
+
+        if (h2_0l <= 0) {
+            h2_0l = h2_0;
+        }
+
+        // lcd->fillRect(x1, h2_0 + y, w, h1_0, _tmp1 < 20 ? color1 : color3);
+        // lcd->fillRect(x1, y, w, h2_0, color2);
+
+        lcd->fillRect(x1, y, w, h, color2);
+        // lcd->drawPixel(x1, y + h2_0, color3);
+        lcd->drawLine(x1l, y + h2_0l, x1, y + h2_0, color3);
+
+        // lcd->drawRect(2 - 1, y - 1, 60 + 2, h + 2, color565(16, 33, 30));
+
+        xLastPos = x1;
+        yLastMeasure = _tmp1;
+    }*/
 
     void showMemorySection(AerManager *am)
     {
@@ -4981,6 +5231,11 @@ namespace AerTftUI
                     spr->setTextColor(TFT_GREEN, TFT_DARKGREY);
                     spr->print("INF");
                 }
+                else if (am->getSettings()->getDispTypeOptions() == 2)
+                {
+                    spr->setTextColor(TFT_GREEN, TFT_DARKGREY);
+                    spr->print("TMP");
+                }
                 spr->pushSprite(xt, yt + (offset * i));
                 spr->deleteSprite();
                 continue;
@@ -7072,13 +7327,6 @@ namespace AerTftUI
         }
         return 50;
     }
-
-    // charting vars
-    double l_yhi = 0;
-    double l_ylo = 0;
-
-    bool display1 = true;
-    bool update1 = true;
 
     void showGraphTemperature(AerManager *am, bool update, bool change, uint8_t elementIndex)
     {

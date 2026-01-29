@@ -83,6 +83,8 @@ namespace AerTftUI
     void drawBarColorScroll(TFT_eSprite *spr, uint t, uint speed = 1);
     void showSysIconsSection(AerManager *am, bool update);
     void showSysInfoSection(AerManager *am, bool update);
+    void showSysMeasureSection(AerManager *am, bool update);
+    void showTempMeasureBar(AerManager *am, uint i, uint width, uint height);
     void showMemorySection(AerManager *am);
     void showCPUSection(AerManager *am);
     void showCPUSections(AerManager *am);
