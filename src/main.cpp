@@ -95,6 +95,8 @@ void setup()
   // ----------------------------
   // Begin i2c Master
   Wire.begin();
+  Wire.setClock(400000);
+  Wire.setTimeOut(50);
   delay(50);
 
   if (AerSetup::verbose_d)
