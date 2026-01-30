@@ -72,6 +72,7 @@ void worker_task(void *pvParameters)
 
     if (xSemaphoreTake(i2c1_mutex, 1000) == pdTRUE)
     {
+        rtc->readTime();
         if (rtc->getYear() < 20 || rtc->getYear() > 2100)
         {
             rtc->reset();
