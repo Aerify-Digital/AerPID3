@@ -734,12 +734,15 @@ void AerPID::updateSampleTime(int pidTickMax)
  */
 AerPID::MeasureResult AerPID::measureElementTemperature()
 {
+    // async & sync modes
     if (_measMode > 0)
     {
+        // async
         if (_measMode == 1)
         {
             return measureElementTemperatureAsync();
         }
+        // sync
         if (_measMode == 2)
         {
             if (pidEnabled)
@@ -760,6 +763,9 @@ AerPID::MeasureResult AerPID::measureElementTemperature()
         }
         return MeasureResult::NACK;
     }
+
+    // auto mode
+    // defaults to async, swaps to sync if too many fault.
 
     bool useAsync = !_faultError;
     bool measSuccess = false;
@@ -784,7 +790,7 @@ AerPID::MeasureResult AerPID::measureElementTemperature()
         _faultsTotal--;
     }
 
-    if (_faultsTotal >= 20)
+    if (_faultsTotal >= 50)
     {
         useAsync = false;
         if (!_faultError)
@@ -818,7 +824,7 @@ AerPID::MeasureResult AerPID::measureElementTemperature()
 
     if (_faultError && recentFault && _faultsRecent > 5)
     {
-        delay(500);
+        delay(250);
     }
 
     // Firstly, disable the power to the element if in safe mode.
