@@ -779,7 +779,7 @@ namespace AerTftUI
 
         uint16_t seriesColor = color565(8, 255, 32);
 
-        int elementIndex = 0;
+        uint8_t elementIndex = gui->getElementIndex();
 
         // get the measured data to display
         double *mes = am->getAerPID(elementIndex)->getMeasures();
