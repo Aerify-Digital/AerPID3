@@ -905,14 +905,6 @@ namespace AerTftUI
         lastindex = mindex;
     }
 
-    void showTempMeasureBar(AerManager *am, uint i, uint width, uint height)
-    {
-        AerGUI *gui = am->getGUI();
-        TFT_eSprite *spr = gui->getSpriteBuffer(0);
-
-        // TODO: remove?
-    }
-
     void showMemorySection(AerManager *am)
     {
         if (millis() - lastMonitorUpdateTime < 400 || millis() < 3600)
