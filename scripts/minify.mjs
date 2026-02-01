@@ -3,7 +3,7 @@ import { minify } from 'terser';
 import { minify as minifyHtml } from 'html-minifier-terser';
 
 // Import fs so we can read/write files
-import { readFileSync, writeFileSync } from 'fs';
+import { readdirSync, readFileSync, existsSync, rmSync, writeFileSync } from 'fs';
 
 // Define the config for how Terser should minify the code
 const jsConfig = {
@@ -44,11 +44,40 @@ const loc = process.argv[2];
 const dataLoc = 'data/';
 const fileTree = {
   index: 'index.html',
-  js: ['js/aertiny.js', 'js/charting.js']
+  js: ['js/aertiny.js', 'js/charting.js', 'js/sha256.js']
+};
+
+const cleanupOldFiles = async (dir, subdir) => {
+  const filesToDelete = [];
+  const files = readdirSync(dir + subdir);
+  // Iterate over each file and directory path listed in the fileTree.js array
+  for (const filePath of files) {
+    // Check if a match exists for the pattern `.min-*.js` in the current filePath
+    const regexMatch = filePath.match(/^.*\.min-[0-9a-f]{8,10}\.js$/);
+    if (regexMatch) {
+      const fullPath = `${dir}${subdir}${regexMatch[0]}`;
+      // If the file exists, add it to the filesToDelete array for deletion later
+      if (existsSync(fullPath)) {
+        filesToDelete.push(fullPath);
+      }
+    }
+  }
+  // Delete each found file using fs's rmSync method
+  for (const filePath of filesToDelete) {
+    console.log('Deleting old minified file:', filePath);
+    rmSync(filePath);
+  }
 };
 
 const minifyChecksumTree = async () => {
   const dir = loc + dataLoc;
+  // Clean up old files first
+  await cleanupOldFiles(dir, 'js/');
+  const minHtmlFile = `${dir}${fileTree.index}`.replace('.html', '.min.html');
+  if (existsSync(minHtmlFile)) {
+    console.log('Deleting old minified file:', minHtmlFile);
+    rmSync(minHtmlFile);
+  }
   // Load in your code to minify
   const parContent = readFileSync(`${dir}${fileTree.index}`, 'utf8');
   let contentOut = parContent;
