@@ -53,7 +53,7 @@ const cleanupOldFiles = async (dir, subdir) => {
   // Iterate over each file and directory path listed in the fileTree.js array
   for (const filePath of files) {
     // Check if a match exists for the pattern `.min-*.js` in the current filePath
-    const regexMatch = filePath.match(/^.*\.min-[0-9a-f]{8,10}\.js$/);
+    const regexMatch = filePath.match(/^.*\.min-[0-9a-f]{4,10}\.js$/);
     if (regexMatch) {
       const fullPath = `${dir}${subdir}${regexMatch[0]}`;
       // If the file exists, add it to the filesToDelete array for deletion later
