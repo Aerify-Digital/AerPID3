@@ -12,6 +12,6 @@
 #define VER_WEB_MINOR 3
 #define VER_WEB_BUILD 86
 
-#define VER_BUILD_YEAR "2026"
+#define VER_BUILD_YEAR 2026
 
 #endif
