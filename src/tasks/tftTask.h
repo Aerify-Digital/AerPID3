@@ -570,6 +570,14 @@ void tft_task(void *pvParameters)
                         showNearbyNetworks(_aerGUI, false, "NULL");
                     }
                     break;*/
+
+                case MENU_WIFI_AUTH: /* Basic Auth */
+                {
+                    AerTftUI::showKeyboardMenu(_am, _aerGUI, _menu->menuUpdate, _menu->menuChange);
+                    _menu->menuUpdate = false;
+                    _menu->menuChange = false;
+                    break;
+                }
                 case MENU_SYSTEM_LOCAL_TEMPERATURE: /* System Temperature */
                 {
                     AerTftUI::showSystemTemperature(_am, _aerGUI, _menu->menuUpdate, _menu->menuChange);

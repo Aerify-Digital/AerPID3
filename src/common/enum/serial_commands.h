@@ -12,6 +12,8 @@
 
 enum SerialCommand
 {
+    CMD_AUTH = 0x07,
+    CMD_VALIDATE = 0x08,
     CMD_INIT = 0x20,
     CMD_INIT_ADV = 0x2A,
     CMD_STATUS = 0x21,
@@ -50,6 +52,14 @@ enum Operation
 {
     OP_GET = 0x00,
     OP_SET = 0x01,
+};
+
+enum Authentication
+{
+    AUTH_NACK = 0x00,
+    AUTH_ACK = 0x01,
+    AUTH_CHECK = 0x02,
+    AUTH_SETUP = 0x03,
 };
 
 enum LED

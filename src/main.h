@@ -55,6 +55,7 @@
 #include "storage/lights.h"
 #include "storage/networkStor.h"
 #include "storage/wifiStor.h"
+#include "storage/webAuthStor.h"
 #include "storage/uiSettingsStor.h"
 #include "storage/chartsStor.h"
 #if AERPID_COUNT == 2

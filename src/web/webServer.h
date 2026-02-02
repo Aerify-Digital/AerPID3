@@ -34,11 +34,14 @@
 
 #include "SocketCmdOp.h"
 #include "common/enum/serial_commands.h"
+#include "common/sha256/sha256.h"
+#include "common/util/HexHelper.h"
 
 #include "serial/messagePack.h"
 
 #include "storage/networkStor.h"
 #include "storage/wifiStor.h"
+#include "storage/webAuthStor.h"
 #include "core/controllers/AerManager.h"
 #include "core/controllers/AerPID.h"
 
@@ -105,6 +108,7 @@ private:
     const char *sap_ssid = "AerTiny-Setup";
     const char *sap_pass = "AerTiny123";
 
+    // wifi join ticker
     int wificnt = 0;
 
     // tick counter
@@ -144,7 +148,7 @@ private:
     static void enPackFill(MessagePack *messagePack);
 
     // Web Sockets
-    void initWebSocket();
+    void initWebSocket(AsyncAuthenticationMiddleware *middleware);
     static void _onEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len);
     static void handleSocketMessage(void *arg, uint8_t *data, size_t len, AsyncWebSocketClient *client);
     static void processSocketData(char *data, AsyncWebSocketClient *client);

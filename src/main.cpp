@@ -260,6 +260,8 @@ void setup()
   networkingStorage.init(&flash);
   Serial.println(F("[BOOT] Initializing WiFi Storage (wifiStorage)"));
   wifiStorage.init(&flash);
+  Serial.println(F("[BOOT] Initializing Web Auth Storage (webAuthStorage)"));
+  webAuthStorage.init(&flash);
   Serial.println(F("[BOOT] Initializing Charting Storage (chartingStorage)"));
   chartingStorage.init(&flash);
 #if AERPID_COUNT == 2

@@ -342,6 +342,7 @@ bool AerGUI::buildMenuDefinitions()
         MENU_WIFI_IP_ADDR,
         MENU_WIFI_MAC_ADDR,
         MENU_WIFI_STATIC_ADDR,
+        MENU_WIFI_AUTH,
     };
     std::vector<uint16_t> menus_static_addr = {
         MENU_WIFI_STATIC_ENABLED,
@@ -350,6 +351,10 @@ bool AerGUI::buildMenuDefinitions()
         MENU_WIFI_STATIC_NETMASK,
         MENU_WIFI_STATIC_DNS1,
         MENU_WIFI_STATIC_DNS2,
+    };
+    std::vector<uint16_t> menus_wifi_auth = {
+        MENU_WIFI_AUTH_EDIT,
+        MENU_WIFI_AUTH_SAVE,
     };
     std::vector<uint16_t> menus_wifi_password = {
         MENU_WIFI_PASSWORD_EDIT,
@@ -547,6 +552,7 @@ bool AerGUI::buildMenuDefinitions()
     menus.push_back(AerMenu(MENU_WIFI_IP_ADDR, MENU_MAIN_WIFI, {}));
     menus.push_back(AerMenu(MENU_WIFI_MAC_ADDR, MENU_MAIN_WIFI, {}));
     menus.push_back(AerMenu(MENU_WIFI_STATIC_ADDR, MENU_MAIN_WIFI, menus_static_addr));
+    menus.push_back(AerMenu(MENU_WIFI_AUTH, MENU_MAIN_WIFI, menus_wifi_auth));
     // Static IPAddress
     menus.push_back(AerMenu(MENU_WIFI_STATIC_ENABLED, MENU_WIFI_STATIC_ADDR, {MENU_WIFI_STATIC_ENABLED_VAR}));
     menus.push_back(AerMenu(MENU_WIFI_STATIC_IP, MENU_WIFI_STATIC_ADDR, {MENU_WIFI_STATIC_IP_EDIT, MENU_WIFI_STATIC_IP_SAVE}));
@@ -852,6 +858,9 @@ bool AerGUI::buildMenuDefinitions()
     menuNames.insert(std::pair<int, String>(MENU_WIFI_STATIC_NETMASK, "NetMask"));
     menuNames.insert(std::pair<int, String>(MENU_WIFI_STATIC_DNS1, "DNS 1"));
     menuNames.insert(std::pair<int, String>(MENU_WIFI_STATIC_DNS2, "DNS 2"));
+    menuNames.insert(std::pair<int, String>(MENU_WIFI_AUTH, "Basic WebAuth"));
+    menuNames.insert(std::pair<int, String>(MENU_WIFI_AUTH_EDIT, "Edit"));
+    menuNames.insert(std::pair<int, String>(MENU_WIFI_AUTH_SAVE, "Save"));
     menuNames.insert(std::pair<int, String>(MENU_BLE_ENABLE, "Enabled"));
     menuNames.insert(std::pair<int, String>(MENU_BLE_MONITOR, "Monitor"));
     menuNames.insert(std::pair<int, String>(MENU_USB_ENABLE, "Enabled"));
@@ -1284,6 +1293,9 @@ void AerGUI::printIcon(uint x, uint y, uint16_t menuIndex, bool selected)
         break;
     case MENU_MAIN_WIFI:
         tft->pushImage(x, y, 28, 28, image_data_wifi, 0xffff);
+        break;
+    case MENU_WIFI_AUTH:
+        tft->pushImage(x, y, 28, 28, image_data_lock1, 0xffff);
         break;
     case MENU_MAIN_BLE:
     case MENU_BLE_ENABLE:
@@ -2043,10 +2055,13 @@ void AerGUI::printIcon(TFT_eSprite *spr, uint x, uint y, uint16_t menuIndex, boo
     case MENU_PID_P_SET:
     case MENU_PID_I_SET:
     case MENU_PID_D_SET:
-        if (selected) {
+        if (selected)
+        {
             spr->fillCircle(x + 14, y + 14, 7, TFT_RED);
             spr->fillCircle(x + 14, y + 14, 6, TFT_ORANGE);
-        } else {
+        }
+        else
+        {
             spr->fillCircle(x + 14, y + 14, 6, TFT_GOLD);
         }
         break;
@@ -2102,6 +2117,9 @@ void AerGUI::printIcon(TFT_eSprite *spr, uint x, uint y, uint16_t menuIndex, boo
         break;
     case MENU_MAIN_WIFI:
         spr->pushImage(x, y, 28, 28, image_data_wifi);
+        break;
+    case MENU_WIFI_AUTH:
+        spr->pushImage(x, y, 28, 28, image_data_lock1);
         break;
     case MENU_MAIN_BLE:
     case MENU_BLE_ENABLE:

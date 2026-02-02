@@ -73,6 +73,7 @@
 // =========================
 // port for http web server
 #define HTTP_ADDRESS 80 // http server port
+// #define HTTPS_ADDRESS 443 // https server port
 
 // ===============================================================
 /**

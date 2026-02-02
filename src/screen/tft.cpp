@@ -744,7 +744,7 @@ namespace AerTftUI
         {
             lcd->fillRect(0, 134, 71, 105, TFT_BLACK);
             lcd->fillRoundRect(2, 138, 64, 98, 3, bgColor);
-            //lcd->drawRoundRect(0, 140, 66, 100, 3, brdColor);
+            // lcd->drawRoundRect(0, 140, 66, 100, 3, brdColor);
             graph = new AerChart();
         }
         /*lcd->setTextWrap(false);
@@ -4164,9 +4164,84 @@ namespace AerTftUI
             lcd->setTextColor(TFT_WHITE, TFT_DARKGREY);
             break;
         }
+        case MENU_WIFI_AUTH: /* basic auth password */
+        {
+            TFT_eSprite *spr = gui->getSpriteBuffer(0);
+
+            if (update && change)
+            {
+                lcd->fillScreen(0x0841);
+                lcd->fillRoundRect(20, 20, 280, 200, 7, TFT_DARKGREY);
+                lcd->drawRoundRect(18, 18, 284, 204, 7, TFT_BLACK);
+            }
+
+            spr->createSprite(250, 30);
+            spr->fillRect(0, 0, 250, 30, TFT_DARKGREY);
+            spr->setTextWrap(false);
+            spr->setTextColor(TFT_WHITE, TFT_DARKGREY);
+            spr->setTextSize(4);
+            spr->setCursor(5, 0);
+            spr->print("PASSPHRASE");
+            spr->pushSprite(40, 24);
+            spr->deleteSprite();
+
+            if (update && change)
+            {
+                spr->createSprite(250, 76);
+                spr->fillRect(0, 0, 250, 76, TFT_BLACK);
+                spr->fillRect(2, 2, 246, 70, 0x5aeb);
+                spr->pushSprite(35, 64);
+                spr->deleteSprite();
+            }
+
+            spr->createSprite(236, 60);
+            spr->fillRect(0, 0, 236, 60, 0x5aeb);
+            spr->setTextSize(3);
+            spr->setTextColor(0xC69D);
+            spr->setTextWrap(true);
+            if (update && change)
+            {
+                gui->getMenuProps()->menuItemSelStr = std::string(webAuthStorage.getPass());
+            }
+            spr->print(gui->getMenuProps()->menuItemSelStr.c_str());
+            spr->pushSprite(45, 74);
+            spr->deleteSprite();
+
+            spr->createSprite(250, 46);
+            spr->setTextWrap(false);
+            spr->fillRect(0, 0, 250, 46, TFT_BLACK);
+            spr->fillRect(2, 2, 246, 42, 0x5aeb);
+            printSelectedChar(gui, spr, 1);
+            spr->pushSprite(35, 140);
+            spr->deleteSprite();
+
+            spr->createSprite(250, 20);
+            spr->fillRect(0, 0, 250, 20, TFT_DARKGREY);
+            spr->setTextSize(2);
+            spr->setCursor(0, 0);
+            bool mod = gui->isCursorModify();
+            spr->setTextColor(mod ? TFT_LIGHTGREY : (mindex == MENU_MAIN_WIFI ? TFT_CYAN : TFT_WHITE));
+            spr->print("Back");
+            spr->setCursor(70, 0);
+            spr->setTextColor(mindex == MENU_WIFI_AUTH_EDIT ? mod ? TFT_RED : TFT_CYAN : TFT_WHITE);
+            spr->print("Edit");
+            spr->setCursor(180, 0);
+            spr->setTextColor(mod ? TFT_LIGHTGREY : (mindex == MENU_WIFI_AUTH_SAVE ? TFT_RED : TFT_WHITE));
+            spr->print("Save");
+            spr->pushSprite(40, 197);
+            spr->deleteSprite();
+            break;
+        }
         case MENU_WIFI_PASSWORD: /* code */
         {
             TFT_eSprite *spr = gui->getSpriteBuffer(0);
+
+            if (update && change)
+            {
+                lcd->fillScreen(0x0841);
+                lcd->fillRoundRect(20, 20, 280, 200, 7, TFT_DARKGREY);
+                lcd->drawRoundRect(18, 18, 284, 204, 7, TFT_BLACK);
+            }
 
             spr->createSprite(250, 30);
             spr->fillRect(0, 0, 250, 30, TFT_DARKGREY);
@@ -4175,12 +4250,11 @@ namespace AerTftUI
             spr->setTextSize(4);
             spr->setCursor(15, 0);
             spr->print("PASSWORD");
-            spr->pushSprite(45, 24);
+            spr->pushSprite(40, 24);
             spr->deleteSprite();
 
             if (update && change)
             {
-                lcd->fillScreen(0x0841);
                 spr->createSprite(250, 76);
                 spr->fillRect(0, 0, 250, 76, TFT_BLACK);
                 spr->fillRect(2, 2, 246, 70, 0x5aeb);

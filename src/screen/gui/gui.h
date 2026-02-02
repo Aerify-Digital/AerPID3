@@ -71,6 +71,7 @@
 #include "screen/img/icon/temp_c_l2.h"
 #include "screen/img/icon/temp_f_l2.h"
 #include "screen/img/icon/temp_k_l2.h"
+#include "screen/img/icon/lock1.h"
 #include "screen/img/icon/wifi_on.h"
 #include "screen/img/icon/wifi_off.h"
 #include "screen/img/icon/wifi_act.h"

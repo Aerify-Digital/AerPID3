@@ -599,6 +599,18 @@ void save_task(void *pvParameters)
                 xSemaphoreGive(sys1_mutex);
             }
         }
+        if (am->isPressTickReady() && webAuthStorage.needSave())
+        {
+            if (xSemaphoreTake(sys1_mutex, 500) == pdTRUE)
+            {
+                if (xSemaphoreTake(spi1_mutex, 50) == pdTRUE)
+                {
+                    webAuthStorage.saveWebAuth();
+                    xSemaphoreGive(spi1_mutex);
+                }
+                xSemaphoreGive(sys1_mutex);
+            }
+        }
 
         // tick press tick...
         am->tickPressTick();

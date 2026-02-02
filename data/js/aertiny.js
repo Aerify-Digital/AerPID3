@@ -51,6 +51,8 @@ const ParamAdv = {
 };
 
 const SerialCommand = {
+  AUTH: 0x07,
+  VALIDATE: 0x08,
   INIT: 0x20,
   INIT_ADV: 0x2a,
   INIT2: 0x22,
@@ -90,6 +92,13 @@ const Operation = {
   SET: 0x01
 };
 
+const Authentication = {
+  AUTH_NACK: 0x00,
+  AUTH_ACK: 0x01,
+  AUTH_CHECK: 0x02,
+  AUTH_SETUP: 0x03
+};
+
 const WiFi = {
   ENABLE: 0,
   JOIN: 1,
@@ -120,6 +129,10 @@ let state = {
   INITIALIZED: false,
   VERSION: '-',
   NET_VERSION: '-',
+  AUTH_TOKEN: '',
+  AUTH_KEY: '',
+  AUTH_STEP: 0,
+  AUTHENTICATED: false,
   HOSTNAME: '-',
   UPTIME: 0,
   UNIT: TemperatureUnit.CELSIUS,
@@ -532,21 +545,36 @@ function initWebSocket() {
   if (connecting || connected) {
     return;
   }
+  if (state.AUTH_STEP < 1) {
+    socketWaitForAuth();
+    return;
+  }
   console.log('Attempting to open WebSocket connection...');
   connecting = true;
+  state.AUTH_STEP = 2;
+  state.AUTHENTICATED = false;
   document.getElementById('sockets-modal-connect-btn').disabled = true;
   document.getElementById('sockets-modal').style.display = 'block';
   document.getElementById('sockets-modal-mobile').style.display = 'block';
   document.getElementById('sockets-modal-text').innerHTML = '...Connecting...';
-  websocket = new WebSocket(gateway);
-  websocket.onopen = onOpen;
-  websocket.onclose = onClose;
-  websocket.onmessage = onMessage;
+  try {
+    websocket = new WebSocket(gateway, state.AUTH_KEY);
+    websocket.onopen = onOpen;
+    websocket.onclose = onClose;
+    websocket.onmessage = onMessage;
+    websocket.onerror = onError;
+  } catch (e) {
+    console.log(e);
+    onError(undefined);
+  }
 }
 function onOpen(event) {
   console.log('Connection to host opened!');
   connecting = false;
   connected = true;
+  state.AUTH_STEP = 3;
+  state.AUTHENTICATED = true;
+  document.getElementById('aer-auth-modal').style.display = 'none';
   document.getElementById('sockets-modal-text').innerHTML = 'Connected!';
   document.getElementById('sockets-modal').style.display = 'none';
   document.getElementById('sockets-modal-mobile').style.display = 'none';
@@ -555,11 +583,33 @@ function onClose(event) {
   console.log('Connection to host closed!');
   connecting = false;
   connected = false;
+  state.AUTH_STEP = 0;
+  state.AUTHENTICATED = false;
+  document.getElementById('aer-auth-modal').style.display = 'block';
+  document.getElementById('aer-auth-pending').style.display = 'none';
+  document.getElementById('aer-auth-validate').style.display = 'none';
+  document.getElementById('aer-auth-form').style.display = 'block';
   document.getElementById('sockets-modal-connect-btn').disabled = false;
   document.getElementById('sockets-modal-text').innerHTML = 'Connection Error!';
   document.getElementById('sockets-modal').style.display = 'block';
   document.getElementById('sockets-modal-mobile').style.display = 'block';
   //setTimeout(initWebSocket, 3000);
+}
+function onError(event) {
+  console.log('Connection to host faulted!');
+  connecting = false;
+  connected = false;
+  state.AUTH_STEP = 0;
+  state.AUTHENTICATED = false;
+  document.getElementById('aer-auth-modal').style.display = 'block';
+  document.getElementById('aer-auth-pending').style.display = 'none';
+  document.getElementById('aer-auth-validate').style.display = 'none';
+  document.getElementById('aer-auth-form').style.display = 'none';
+  document.getElementById('aer-auth-error').style.display = 'block';
+  document.getElementById('sockets-modal-connect-btn').disabled = false;
+  document.getElementById('sockets-modal-text').innerHTML = 'Connection Error!';
+  document.getElementById('sockets-modal').style.display = 'block';
+  document.getElementById('sockets-modal-mobile').style.display = 'block';
 }
 
 const initPageData = async (initData) => {
@@ -686,16 +736,16 @@ const initPageData = async (initData) => {
       state.UNIT == TemperatureUnit.FAHRENHEIT
         ? cToF(state.FAV_1.temp)
         : state.UNIT == TemperatureUnit.KELVIN
-        ? cToK(state.FAV_1.temp)
-        : cToC(state.FAV_1.temp);
+          ? cToK(state.FAV_1.temp)
+          : cToC(state.FAV_1.temp);
   }
   if (document.getElementById('fav1q_n')) {
     document.getElementById('fav1q_n').innerHTML =
       state.UNIT == TemperatureUnit.FAHRENHEIT
         ? cToF(state.FAV_1.temp)
         : state.UNIT == TemperatureUnit.KELVIN
-        ? cToK(state.FAV_1.temp)
-        : cToC(state.FAV_1.temp) + '';
+          ? cToK(state.FAV_1.temp)
+          : cToC(state.FAV_1.temp) + '';
   }
   if (document.getElementById('fav1_t')) {
     document.getElementById('fav1_t').value = `${state.FAV_1.name}`;
@@ -711,16 +761,16 @@ const initPageData = async (initData) => {
       state.UNIT == TemperatureUnit.FAHRENHEIT
         ? cToF(state.FAV_2.temp)
         : state.UNIT == TemperatureUnit.KELVIN
-        ? cToK(state.FAV_2.temp)
-        : cToC(state.FAV_2.temp);
+          ? cToK(state.FAV_2.temp)
+          : cToC(state.FAV_2.temp);
   }
   if (document.getElementById('fav2q_n')) {
     document.getElementById('fav2q_n').innerHTML =
       state.UNIT == TemperatureUnit.FAHRENHEIT
         ? cToF(state.FAV_2.temp)
         : state.UNIT == TemperatureUnit.KELVIN
-        ? cToK(state.FAV_2.temp)
-        : cToC(state.FAV_2.temp) + '';
+          ? cToK(state.FAV_2.temp)
+          : cToC(state.FAV_2.temp) + '';
   }
   if (document.getElementById('fav2_t')) {
     document.getElementById('fav2_t').value = `${state.FAV_2.name}`;
@@ -736,16 +786,16 @@ const initPageData = async (initData) => {
       state.UNIT == TemperatureUnit.FAHRENHEIT
         ? cToF(state.FAV_3.temp)
         : state.UNIT == TemperatureUnit.KELVIN
-        ? cToK(state.FAV_3.temp)
-        : cToC(state.FAV_3.temp);
+          ? cToK(state.FAV_3.temp)
+          : cToC(state.FAV_3.temp);
   }
   if (document.getElementById('fav3q_n')) {
     document.getElementById('fav3q_n').innerHTML =
       state.UNIT == TemperatureUnit.FAHRENHEIT
         ? cToF(state.FAV_3.temp)
         : state.UNIT == TemperatureUnit.KELVIN
-        ? cToK(state.FAV_3.temp)
-        : cToC(state.FAV_3.temp) + '';
+          ? cToK(state.FAV_3.temp)
+          : cToC(state.FAV_3.temp) + '';
   }
   if (document.getElementById('fav3_t')) {
     document.getElementById('fav3_t').value = `${state.FAV_3.name}`;
@@ -761,16 +811,16 @@ const initPageData = async (initData) => {
       state.UNIT == TemperatureUnit.FAHRENHEIT
         ? cToF(state.FAV_4.temp)
         : state.UNIT == TemperatureUnit.KELVIN
-        ? cToK(state.FAV_4.temp)
-        : cToC(state.FAV_4.temp);
+          ? cToK(state.FAV_4.temp)
+          : cToC(state.FAV_4.temp);
   }
   if (document.getElementById('fav4q_n')) {
     document.getElementById('fav4q_n').innerHTML =
       state.UNIT == TemperatureUnit.FAHRENHEIT
         ? cToF(state.FAV_4.temp)
         : state.UNIT == TemperatureUnit.KELVIN
-        ? cToK(state.FAV_4.temp)
-        : cToC(state.FAV_4.temp) + '';
+          ? cToK(state.FAV_4.temp)
+          : cToC(state.FAV_4.temp) + '';
   }
   if (document.getElementById('fav4_t')) {
     document.getElementById('fav4_t').value = `${state.FAV_4.name}`;
@@ -795,16 +845,16 @@ const initPageData = async (initData) => {
       state.UNIT == TemperatureUnit.FAHRENHEIT
         ? cToF(state.TEMP).toFixed(1)
         : state.UNIT == TemperatureUnit.KELVIN
-        ? cToK(state.TEMP).toFixed(1)
-        : cToC(state.TEMP).toFixed(1);
+          ? cToK(state.TEMP).toFixed(1)
+          : cToC(state.TEMP).toFixed(1);
   state.SET_TEMP = initData.setTemp;
   if (document.getElementById('temp_setting'))
     document.getElementById('temp_setting').value =
       state.UNIT == TemperatureUnit.FAHRENHEIT
         ? cToF(state.SET_TEMP).toFixed(1)
         : state.UNIT == TemperatureUnit.KELVIN
-        ? cToK(state.SET_TEMP).toFixed(1)
-        : cToC(state.SET_TEMP).toFixed(1);
+          ? cToK(state.SET_TEMP).toFixed(1)
+          : cToC(state.SET_TEMP).toFixed(1);
 
   updateTempMeter();
   updateTempSlider();
@@ -914,14 +964,14 @@ const updateTempMeter = () => {
     state.UNIT == TemperatureUnit.FAHRENHEIT
       ? cToF(state.TEMP).toFixed(1)
       : state.UNIT == TemperatureUnit.KELVIN
-      ? cToK(state.TEMP).toFixed(1)
-      : cToC(state.TEMP).toFixed(1);
+        ? cToK(state.TEMP).toFixed(1)
+        : cToC(state.TEMP).toFixed(1);
   const temp_setting =
     state.UNIT == TemperatureUnit.FAHRENHEIT
       ? cToF(state.SET_TEMP).toFixed(1)
       : state.UNIT == TemperatureUnit.KELVIN
-      ? cToK(state.SET_TEMP).toFixed(1)
-      : cToC(state.SET_TEMP).toFixed(1);
+        ? cToK(state.SET_TEMP).toFixed(1)
+        : cToC(state.SET_TEMP).toFixed(1);
   bar.style.transform = 'rotate(' + (45 + temp * 0.15) + 'deg)';
   var color = 'black';
   if (temp >= temp_setting - 7 && temp <= temp_setting + 7) {
@@ -949,14 +999,14 @@ const updateTempMeter_1 = () => {
     state.UNIT == TemperatureUnit.FAHRENHEIT
       ? cToF(state.TEMP).toFixed(1)
       : state.UNIT == TemperatureUnit.KELVIN
-      ? cToK(state.TEMP).toFixed(1)
-      : cToC(state.TEMP).toFixed(1);
+        ? cToK(state.TEMP).toFixed(1)
+        : cToC(state.TEMP).toFixed(1);
   const temp_setting =
     state.UNIT == TemperatureUnit.FAHRENHEIT
       ? cToF(state.SET_TEMP).toFixed(1)
       : state.UNIT == TemperatureUnit.KELVIN
-      ? cToK(state.SET_TEMP).toFixed(1)
-      : cToC(state.SET_TEMP).toFixed(1);
+        ? cToK(state.SET_TEMP).toFixed(1)
+        : cToC(state.SET_TEMP).toFixed(1);
   bar.style.transform = 'rotate(' + (45 + temp * 0.15) + 'deg)';
   var color = 'black';
   if (temp >= temp_setting - 7 && temp <= temp_setting + 7) {
@@ -984,14 +1034,14 @@ const updateTempMeter_2 = () => {
     state.UNIT == TemperatureUnit.FAHRENHEIT
       ? cToF(state.TEMP2).toFixed(1)
       : state.UNIT == TemperatureUnit.KELVIN
-      ? cToK(state.TEMP2).toFixed(1)
-      : cToC(state.TEMP2).toFixed(1);
+        ? cToK(state.TEMP2).toFixed(1)
+        : cToC(state.TEMP2).toFixed(1);
   const temp_setting =
     state.UNIT == TemperatureUnit.FAHRENHEIT
       ? cToF(state.SET_TEMP2).toFixed(1)
       : state.UNIT == TemperatureUnit.KELVIN
-      ? cToK(state.SET_TEMP2).toFixed(1)
-      : cToC(state.SET_TEMP2).toFixed(1);
+        ? cToK(state.SET_TEMP2).toFixed(1)
+        : cToC(state.SET_TEMP2).toFixed(1);
   bar.style.transform = 'rotate(' + (45 + temp * 0.15) + 'deg)';
   var color = 'black';
   if (temp >= temp_setting - 7 && temp <= temp_setting + 7) {
@@ -1023,8 +1073,8 @@ function updateTempSlider() {
     state.UNIT == TemperatureUnit.FAHRENHEIT
       ? cToF(state.SET_TEMP).toFixed(1)
       : state.UNIT == TemperatureUnit.KELVIN
-      ? cToK(state.SET_TEMP).toFixed(1)
-      : cToC(state.SET_TEMP).toFixed(1);
+        ? cToK(state.SET_TEMP).toFixed(1)
+        : cToC(state.SET_TEMP).toFixed(1);
 }
 
 function updateTempSlider_1() {
@@ -1037,8 +1087,8 @@ function updateTempSlider_1() {
     state.UNIT == TemperatureUnit.FAHRENHEIT
       ? cToF(state.SET_TEMP).toFixed(1)
       : state.UNIT == TemperatureUnit.KELVIN
-      ? cToK(state.SET_TEMP).toFixed(1)
-      : cToC(state.SET_TEMP).toFixed(1);
+        ? cToK(state.SET_TEMP).toFixed(1)
+        : cToC(state.SET_TEMP).toFixed(1);
 }
 
 function updateTempSlider_2() {
@@ -1051,8 +1101,8 @@ function updateTempSlider_2() {
     state.UNIT == TemperatureUnit.FAHRENHEIT
       ? cToF(state.SET_TEMP2).toFixed(1)
       : state.UNIT == TemperatureUnit.KELVIN
-      ? cToK(state.SET_TEMP2).toFixed(1)
-      : cToC(state.SET_TEMP2).toFixed(1);
+        ? cToK(state.SET_TEMP2).toFixed(1)
+        : cToC(state.SET_TEMP2).toFixed(1);
 }
 
 const initPageMessage = async (initData) => {
@@ -1075,6 +1125,17 @@ const handleMessage = (dat) => {
   let pid_enb;
   let param;
   switch (cmd) {
+    case SerialCommand.AUTH:
+      var op = dat.slice(1, 2);
+      if (op == Authentication.AUTH_SETUP) {
+        state.AUTH_TOKEN = dat.slice(2);
+      } else if (op == Authentication.AUTH_CHECK) {
+      } else if (op == Authentication.AUTH_ACK) {
+        state.AUTHENTICATED = true;
+      } else if (op == Authentication.AUTH_NACK) {
+        state.AUTHENTICATED = false;
+      }
+      break;
     case SerialCommand.INIT:
       const initMsg = parseInitMessage(dat.slice(1));
       //console.log(initMsg);
@@ -1098,18 +1159,18 @@ const handleMessage = (dat) => {
         state.UNIT == TemperatureUnit.FAHRENHEIT
           ? cToF(mes_temp).toFixed(1)
           : state.UNIT == TemperatureUnit.KELVIN
-          ? cToK(mes_temp).toFixed(1)
-          : cToC(mes_temp).toFixed(1),
+            ? cToK(mes_temp).toFixed(1)
+            : cToC(mes_temp).toFixed(1),
         state.UNIT == TemperatureUnit.FAHRENHEIT
           ? cToF(avg_temp).toFixed(1)
           : state.UNIT == TemperatureUnit.KELVIN
-          ? cToK(avg_temp).toFixed(1)
-          : cToC(avg_temp).toFixed(1),
+            ? cToK(avg_temp).toFixed(1)
+            : cToC(avg_temp).toFixed(1),
         state.UNIT == TemperatureUnit.FAHRENHEIT
           ? cToF(set_temp).toFixed(1)
           : state.UNIT == TemperatureUnit.KELVIN
-          ? cToK(set_temp).toFixed(1)
-          : cToC(set_temp).toFixed(1),
+            ? cToK(set_temp).toFixed(1)
+            : cToC(set_temp).toFixed(1),
         output / 10,
         sigma / 10
       );
@@ -1142,15 +1203,15 @@ const handleMessage = (dat) => {
           state.UNIT == TemperatureUnit.FAHRENHEIT
             ? cToF(state.TEMP).toFixed(1)
             : state.UNIT == TemperatureUnit.KELVIN
-            ? cToK(state.TEMP).toFixed(1)
-            : cToC(state.TEMP).toFixed(1);
+              ? cToK(state.TEMP).toFixed(1)
+              : cToC(state.TEMP).toFixed(1);
       if (document.getElementById('meas_temp_1'))
         document.getElementById('meas_temp_1').innerHTML =
           state.UNIT == TemperatureUnit.FAHRENHEIT
             ? cToF(state.TEMP).toFixed(1)
             : state.UNIT == TemperatureUnit.KELVIN
-            ? cToK(state.TEMP).toFixed(1)
-            : cToC(state.TEMP).toFixed(1);
+              ? cToK(state.TEMP).toFixed(1)
+              : cToC(state.TEMP).toFixed(1);
       var elm_ts = document.getElementById('temp_setting');
       var isFocused = document.activeElement === elm_ts;
       if (!isFocused && document.getElementById('temp_setting'))
@@ -1158,8 +1219,8 @@ const handleMessage = (dat) => {
           state.UNIT == TemperatureUnit.FAHRENHEIT
             ? cToF(state.SET_TEMP).toFixed(1)
             : state.UNIT == TemperatureUnit.KELVIN
-            ? cToK(state.SET_TEMP).toFixed(1)
-            : cToC(state.SET_TEMP).toFixed(1);
+              ? cToK(state.SET_TEMP).toFixed(1)
+              : cToC(state.SET_TEMP).toFixed(1);
       var elm_ts2 = document.getElementById('temp_setting_1');
       var isFocused2 = document.activeElement === elm_ts2;
       if (!isFocused2 && document.getElementById('temp_setting_1'))
@@ -1167,8 +1228,8 @@ const handleMessage = (dat) => {
           state.UNIT == TemperatureUnit.FAHRENHEIT
             ? cToF(state.SET_TEMP).toFixed(1)
             : state.UNIT == TemperatureUnit.KELVIN
-            ? cToK(state.SET_TEMP).toFixed(1)
-            : cToC(state.SET_TEMP).toFixed(1);
+              ? cToK(state.SET_TEMP).toFixed(1)
+              : cToC(state.SET_TEMP).toFixed(1);
       updateTempMeter();
       updateTempMeter_1();
       updateTempSlider();
@@ -1186,18 +1247,18 @@ const handleMessage = (dat) => {
         state.UNIT == TemperatureUnit.FAHRENHEIT
           ? cToF(mes_temp).toFixed(1)
           : state.UNIT == TemperatureUnit.KELVIN
-          ? cToK(mes_temp).toFixed(1)
-          : cToC(mes_temp).toFixed(1),
+            ? cToK(mes_temp).toFixed(1)
+            : cToC(mes_temp).toFixed(1),
         state.UNIT == TemperatureUnit.FAHRENHEIT
           ? cToF(avg_temp).toFixed(1)
           : state.UNIT == TemperatureUnit.KELVIN
-          ? cToK(avg_temp).toFixed(1)
-          : cToC(avg_temp).toFixed(1),
+            ? cToK(avg_temp).toFixed(1)
+            : cToC(avg_temp).toFixed(1),
         state.UNIT == TemperatureUnit.FAHRENHEIT
           ? cToF(set_temp).toFixed(1)
           : state.UNIT == TemperatureUnit.KELVIN
-          ? cToK(set_temp).toFixed(1)
-          : cToC(set_temp).toFixed(1),
+            ? cToK(set_temp).toFixed(1)
+            : cToC(set_temp).toFixed(1),
         output / 10,
         sigma / 10
       );
@@ -1220,8 +1281,8 @@ const handleMessage = (dat) => {
           state.UNIT == TemperatureUnit.FAHRENHEIT
             ? cToF(state.TEMP2).toFixed(1)
             : state.UNIT == TemperatureUnit.KELVIN
-            ? cToK(state.TEMP2).toFixed(1)
-            : cToC(state.TEMP2).toFixed(1);
+              ? cToK(state.TEMP2).toFixed(1)
+              : cToC(state.TEMP2).toFixed(1);
       var elm_ts = document.getElementById('temp_setting_2');
       var isFocused = document.activeElement === elm_ts;
       if (!isFocused && document.getElementById('temp_setting_2'))
@@ -1229,8 +1290,8 @@ const handleMessage = (dat) => {
           state.UNIT == TemperatureUnit.FAHRENHEIT
             ? cToF(state.SET_TEMP2).toFixed(1)
             : state.UNIT == TemperatureUnit.KELVIN
-            ? cToK(state.SET_TEMP2).toFixed(1)
-            : cToC(state.SET_TEMP2).toFixed(1);
+              ? cToK(state.SET_TEMP2).toFixed(1)
+              : cToC(state.SET_TEMP2).toFixed(1);
       updateTempMeter_2();
       updateTempSlider_2();
       break;
@@ -1245,8 +1306,8 @@ const handleMessage = (dat) => {
           state.UNIT == TemperatureUnit.FAHRENHEIT
             ? cToF(state.SET_TEMP).toFixed(1)
             : state.UNIT == TemperatureUnit.KELVIN
-            ? cToK(state.SET_TEMP).toFixed(1)
-            : cToC(state.SET_TEMP).toFixed(1);
+              ? cToK(state.SET_TEMP).toFixed(1)
+              : cToC(state.SET_TEMP).toFixed(1);
       var elm_ts2 = document.getElementById('temp_setting_1');
       var isFocused2 = document.activeElement === elm_ts2;
       if (!isFocused2 && document.getElementById('temp_setting_1'))
@@ -1254,8 +1315,8 @@ const handleMessage = (dat) => {
           state.UNIT == TemperatureUnit.FAHRENHEIT
             ? cToF(state.SET_TEMP).toFixed(1)
             : state.UNIT == TemperatureUnit.KELVIN
-            ? cToK(state.SET_TEMP).toFixed(1)
-            : cToC(state.SET_TEMP).toFixed(1);
+              ? cToK(state.SET_TEMP).toFixed(1)
+              : cToC(state.SET_TEMP).toFixed(1);
       updateTempMeter();
       updateTempMeter_1();
       updateTempSlider();
@@ -1272,8 +1333,8 @@ const handleMessage = (dat) => {
           state.UNIT == TemperatureUnit.FAHRENHEIT
             ? cToF(state.SET_TEMP).toFixed(1)
             : state.UNIT == TemperatureUnit.KELVIN
-            ? cToK(state.SET_TEMP).toFixed(1)
-            : cToC(state.SET_TEMP).toFixed(1);
+              ? cToK(state.SET_TEMP).toFixed(1)
+              : cToC(state.SET_TEMP).toFixed(1);
       updateTempMeter_2();
       updateTempSlider_2();
       break;
@@ -1513,9 +1574,8 @@ const handleMessage = (dat) => {
           console.log('Setup WiFi');
           if (document.getElementById('join_wifi')) {
             document.getElementById('join_wifi').classList.remove('w3-pale-green');
-            document.getElementById(
-              'join_wifi'
-            ).innerHTML = `<div><i class="fas fa-check"></i> Joining Network</div>`;
+            document.getElementById('join_wifi').innerHTML =
+              `<div><i class="fas fa-check"></i> Joining Network</div>`;
           }
           if (document.getElementById('save_wifi_alert')) {
             document.getElementById('save_wifi_alert').style.display = 'block';
@@ -1533,9 +1593,8 @@ const handleMessage = (dat) => {
             document.getElementById('save_wifi_alert').style.display = 'block';
           }
           if (document.getElementById('join_wifi')) {
-            document.getElementById(
-              'join_wifi'
-            ).innerHTML = `<div><i class="fas fa-link"></i> Join Network</div>`;
+            document.getElementById('join_wifi').innerHTML =
+              `<div><i class="fas fa-link"></i> Join Network</div>`;
             document.getElementById('join_wifi').classList.add('w3-pale-green');
           }
           break;
@@ -1707,16 +1766,16 @@ const handleMessage = (dat) => {
               state.UNIT == TemperatureUnit.FAHRENHEIT
                 ? cToF(state.FAV_1.temp)
                 : state.UNIT == TemperatureUnit.KELVIN
-                ? cToK(state.FAV_1.temp)
-                : cToC(state.FAV_1.temp);
+                  ? cToK(state.FAV_1.temp)
+                  : cToC(state.FAV_1.temp);
           }
           if (document.getElementById('fav1q_n')) {
             document.getElementById('fav1q_n').innerHTML =
               state.UNIT == TemperatureUnit.FAHRENHEIT
                 ? cToF(state.FAV_1.temp)
                 : state.UNIT == TemperatureUnit.KELVIN
-                ? cToK(state.FAV_1.temp)
-                : cToC(state.FAV_1.temp) + '&deg;';
+                  ? cToK(state.FAV_1.temp)
+                  : cToC(state.FAV_1.temp) + '&deg;';
           }
           break;
 
@@ -1752,16 +1811,16 @@ const handleMessage = (dat) => {
               state.UNIT == TemperatureUnit.FAHRENHEIT
                 ? cToF(state.FAV_2.temp)
                 : state.UNIT == TemperatureUnit.KELVIN
-                ? cToK(state.FAV_2.temp)
-                : cToC(state.FAV_2.temp);
+                  ? cToK(state.FAV_2.temp)
+                  : cToC(state.FAV_2.temp);
           }
           if (document.getElementById('fav2q_n')) {
             document.getElementById('fav2q_n').innerHTML =
               state.UNIT == TemperatureUnit.FAHRENHEIT
                 ? cToF(state.FAV_2.temp)
                 : state.UNIT == TemperatureUnit.KELVIN
-                ? cToK(state.FAV_2.temp)
-                : cToC(state.FAV_2.temp) + '&deg;';
+                  ? cToK(state.FAV_2.temp)
+                  : cToC(state.FAV_2.temp) + '&deg;';
           }
           break;
 
@@ -1797,16 +1856,16 @@ const handleMessage = (dat) => {
               state.UNIT == TemperatureUnit.FAHRENHEIT
                 ? cToF(state.FAV_3.temp)
                 : state.UNIT == TemperatureUnit.KELVIN
-                ? cToK(state.FAV_3.temp)
-                : cToC(state.FAV_3.temp);
+                  ? cToK(state.FAV_3.temp)
+                  : cToC(state.FAV_3.temp);
           }
           if (document.getElementById('fav3q_n')) {
             document.getElementById('fav3q_n').innerHTML =
               state.UNIT == TemperatureUnit.FAHRENHEIT
                 ? cToF(state.FAV_3.temp)
                 : state.UNIT == TemperatureUnit.KELVIN
-                ? cToK(state.FAV_3.temp)
-                : cToC(state.FAV_3.temp) + '&deg;';
+                  ? cToK(state.FAV_3.temp)
+                  : cToC(state.FAV_3.temp) + '&deg;';
           }
           break;
 
@@ -1842,16 +1901,16 @@ const handleMessage = (dat) => {
               state.UNIT == TemperatureUnit.FAHRENHEIT
                 ? cToF(state.FAV_4.temp)
                 : state.UNIT == TemperatureUnit.KELVIN
-                ? cToK(state.FAV_4.temp)
-                : cToC(state.FAV_4.temp);
+                  ? cToK(state.FAV_4.temp)
+                  : cToC(state.FAV_4.temp);
           }
           if (document.getElementById('fav4q_n')) {
             document.getElementById('fav4q_n').innerHTML =
               state.UNIT == TemperatureUnit.FAHRENHEIT
                 ? cToF(state.FAV_4.temp)
                 : state.UNIT == TemperatureUnit.KELVIN
-                ? cToK(state.FAV_4.temp)
-                : cToC(state.FAV_4.temp) + '&deg;';
+                  ? cToK(state.FAV_4.temp)
+                  : cToC(state.FAV_4.temp) + '&deg;';
           }
           break;
 
@@ -1982,6 +2041,73 @@ function pidButtonInit() {
   document.getElementById('d_qset2b').addEventListener('change', function () {
     qd2bChanged = true;
   });
+}
+
+function triggerAuthStep() {
+  const user = document.getElementById('ausername').value;
+  const pass = document.getElementById('apassword').value;
+  let hash = '';
+  const hpass = sha256(pass).toUpperCase();
+  for (let i = 0; i < 64; i += 2) {
+    const var1 = hpass[i];
+    const var2 = hpass[i + 1];
+    hash += `${var1}${var2}`;
+    if (i < 64 - 2) {
+      hash += '-';
+    }
+  }
+  state.AUTH_KEY = hash.trim();
+  state.AUTH_STEP = 1;
+
+  document.getElementById('ausername').value = "";
+  document.getElementById('apassword').value = "";
+  document.getElementById('apassword').disabled = true;
+
+  setTimeout(()=>{
+    if (state.AUTHENTICATED) {
+      return
+    }
+    console.log("Auth error timout failure!")
+    document.getElementById("aer-auth-form").style.display = "none";
+    document.getElementById("aer-auth-pending").style.display = "block";
+    document.getElementById("aer-auth-validate").style.display = "none";
+    document.getElementById("aer-auth-error").style.display = "block";
+    document.getElementById("aer-auth-alert").style.display = "none";
+     setTimeout(() => {
+      console.log("Reloading page...")
+      document.getElementById("aer-auth-pending").style.display = "none";
+      location.reload()
+     }, 3300)
+  }, 3000)
+}
+
+function sendAuthCmd() {
+  const user = document.getElementById('ausername').value;
+  const pass = document.getElementById('apassword').value;
+  //const huser = sha256(sha256(user) + sha256(state.AUTH_TOKEN));
+  //const hpass = sha256(sha256(pass) + sha256(state.AUTH_TOKEN));
+
+  let hash = '';
+  const hpass = sha256(pass).toUpperCase();
+  for (let i = 0; i < 64; i += 2) {
+    const var1 = hpass[i];
+    const var2 = hpass[i + 1];
+    hash += `${var1}${var2}`;
+    if (i < 64 - 2) {
+      hash += '-';
+    }
+  }
+
+  state.AUTH_KEY = hash.trim();
+  state.AUTH_STEP = 1;
+
+  /*emit_websocket([
+    SerialCommand.AUTH,
+    Operation.GET,
+    Authentication.AUTH_CHECK,
+    ...Array.from(huser),
+    ...Array.from(hpass)
+  ]);*/
 }
 
 function sendPidSettings() {
@@ -3004,6 +3130,18 @@ function openChartTab(evt, tabName) {
 // ==================================================
 // ==================================================
 
+const socketWaitForAuth = () => {
+  if (state.AUTH_STEP == 0) {
+    setTimeout(() => {
+      socketWaitForAuth();
+    }, 1000);
+    return;
+  }
+  document.getElementById('aer-auth-pending').style.display = 'none';
+  document.getElementById('aer-auth-validate').style.display = 'block';
+  initWebSocket();
+};
+
 // init load
 const init = () => {
   pidButtonInit();
@@ -3011,7 +3149,7 @@ const init = () => {
   advButtonInit();
   window.addEventListener('load', onLoad);
   function onLoad(event) {
-    initWebSocket();
+    socketWaitForAuth();
   }
   document.getElementById('element1').click();
 };

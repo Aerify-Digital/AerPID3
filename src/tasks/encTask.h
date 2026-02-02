@@ -1426,13 +1426,61 @@ void onEb1Clicked(EncoderButton &eb)
             else if (enc_aerGUI->getMenuProps()->menuLevelVal == MENU_WIFI_HOSTNAME_SAVE)
             {
                 // save and update hostname
-                enc_am->getNet()->setHostname(enc_aerGUI->getMenuProps()->menuItemSelStr.c_str());
+                commstor.setPSK(enc_aerGUI->getMenuProps()->menuItemSelStr.c_str());
                 enc_am->webUpdateWIFI(true);
                 enc_am->setPressTick(100);
                 enc_aerGUI->gotoMenu(MENU_MAIN_WIFI);
                 return;
             }
         }
+        else if (enc_aerGUI->getMenuProps()->menuIndex == MENU_WIFI_AUTH)
+        {
+            // basic auth password edit
+            if (enc_aerGUI->getMenuProps()->menuLevelVal == MENU_WIFI_AUTH_EDIT)
+            {
+                if (!enc_aerGUI->isCursorModify())
+                {
+                    enc_aerGUI->setCursorModify(MENU_WIFI_AUTH_EDIT);
+                    enc_aerGUI->updateMenu();
+                }
+                else if (enc_aerGUI->getMenuProps()->menuItemId >= 0)
+                {
+                    enc_aerGUI->getMenuProps()->menuItemSelStr += enc_aerGUI->getCharFromIndex(enc_aerGUI->getMenuProps()->menuItemId, 1);
+                    enc_aerGUI->updateMenu();
+                }
+                else if (enc_aerGUI->getMenuProps()->menuItemId == -1)
+                {
+                    uint len = strlen(enc_aerGUI->getMenuProps()->menuItemSelStr.c_str());
+                    if (len < 33)
+                    {
+                        enc_aerGUI->getMenuProps()->menuItemSelStr = enc_aerGUI->getMenuProps()->menuItemSelStr.substr(0, len - 1);
+                        enc_aerGUI->updateMenu();
+                    }
+                }
+                else if (enc_aerGUI->getMenuProps()->menuItemId == -2)
+                {
+                    enc_aerGUI->getMenuProps()->menuItemSelStr = "";
+                    enc_aerGUI->updateMenu();
+                }
+                else if (enc_aerGUI->getMenuProps()->menuItemId == -3)
+                {
+                    enc_aerGUI->getMenuProps()->menuItemId = 0;
+                    enc_aerGUI->clearCursorModify();
+                    enc_aerGUI->updateMenu();
+                }
+                return;
+            }
+            else if (enc_aerGUI->getMenuProps()->menuLevelVal == MENU_WIFI_AUTH_SAVE)
+            {
+                webAuthStorage.setPass(enc_aerGUI->getMenuProps()->menuItemSelStr.c_str());
+                webAuthStorage.hashPass();
+                enc_am->setPressTick(60);
+                enc_aerGUI->gotoMenu(MENU_MAIN_WIFI);
+                return;
+            }
+        }
+
+        /* PID setting handles */
         else if (enc_aerGUI->getMenuProps()->menuIndex == MENU_PID_P)
         {
             if (enc_aerGUI->getMenuProps()->menuLevelVal == MENU_PID_P_SET)
@@ -2864,6 +2912,30 @@ void onEb1Encoder(EncoderButton &eb)
                 enc_aerGUI->getMenuProps()->menuItemId = -4;
             }
             else if (enc_aerGUI->getMenuProps()->menuItemId + chng >= -4 && enc_aerGUI->getMenuProps()->menuItemId + chng < 256)
+            {
+                enc_aerGUI->getMenuProps()->menuItemId += chng;
+            }
+            enc_aerGUI->updateMenu();
+            break;
+        }
+        case MENU_WIFI_AUTH:
+        case MENU_WIFI_AUTH_EDIT:
+        {
+            int chng = 0;
+            if (eb.increment() > 0)
+            {
+                chng -= 1 * dir;
+            }
+            else if (eb.increment() < 0)
+            {
+                chng += 1 * dir;
+            }
+            int adv = 0;
+            if (enc_aerGUI->getMenuProps()->menuIndex == MENU_WIFI_AUTH)
+            {
+                adv = 21;
+            }
+            if (enc_aerGUI->getMenuProps()->menuItemId + chng >= -3 && enc_aerGUI->getMenuProps()->menuItemId + chng < (26 * 2) + 10 + 2 + adv)
             {
                 enc_aerGUI->getMenuProps()->menuItemId += chng;
             }

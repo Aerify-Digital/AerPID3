@@ -462,6 +462,7 @@ enum MENU_WIFI_SETUP
     MENU_WIFI_IP_ADDR = 184,         // IP Address
     MENU_WIFI_MAC_ADDR = 199,        // IP Address
     MENU_WIFI_STATIC_ADDR = 198,     // Static IP
+    MENU_WIFI_AUTH = 197,            // Basic Auth
 };
 
 enum MENU_WIFI_STATIC
@@ -489,6 +490,12 @@ enum MENU_WIFI_HOSTNAME_EDIT
 {
     MENU_WIFI_HOSTNAME_EDIT = 188,
     MENU_WIFI_HOSTNAME_SAVE = 189,
+};
+
+enum MENU_WIFI_AUTH_EDIT
+{
+    MENU_WIFI_AUTH_EDIT = 201,
+    MENU_WIFI_AUTH_SAVE = 202,
 };
 
 enum MENU_WIFI_PASSWORD
