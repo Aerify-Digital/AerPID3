@@ -123,16 +123,13 @@ void save_task(void *pvParameters)
             am->getAerPID(0)->setPidTime(cycleTime);
             am->getAerPID(0)->setPWMResolution(pwmRes);
             am->getAerPID(0)->setOutputLimit(pidRes);
+            am->getAerPID(0)->setWindupLimit(windup);
 
             if (bias < 16384)
             {
                 am->getAerPID(0)->setOutputBias(bias);
             }
-            if (windup < 16384)
-            {
-                // am->getAerPID(0)->setWindupLimit(windup);
-            }
-
+            
             if (am->getAerPID(0)->getPwmScaler() <= 0)
             {
                 Serial.println(F("Invalid PWM 1 Factor: "));
@@ -189,14 +186,11 @@ void save_task(void *pvParameters)
             am->getAerPID(1)->setPidTime(cycleTime);
             am->getAerPID(1)->setPWMResolution(pwmRes);
             am->getAerPID(1)->setOutputLimit(pidRes);
+            am->getAerPID(1)->setWindupLimit(windup);
 
             if (bias < 16384)
             {
                 am->getAerPID(1)->setOutputBias(bias);
-            }
-            if (windup < 16384)
-            {
-                // am->getAerPID(1)->setWindupLimit(windup);
             }
 
             if (am->getAerPID(1)->getPwmScaler() <= 0)

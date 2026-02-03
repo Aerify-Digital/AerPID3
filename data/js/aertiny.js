@@ -47,7 +47,8 @@ const ParamAdv = {
   PARAM_ADV_PWM_RES: 2,
   PARAM_ADV_PID_BIAS: 3,
   PARAM_ADV_PID_TIME: 4,
-  PARAM_ADV_PID_RES: 5
+  PARAM_ADV_PID_RES: 5,
+  PARAM_ADV_PID_WINDUP: 6
 };
 
 const SerialCommand = {
@@ -157,30 +158,32 @@ let state = {
   },
   COIL1: {
     enabled: false,
-    P: 0.0,
-    I: 0.0,
-    D: 0.0,
+    kP: 0.0,
+    kI: 0.0,
+    kD: 0.0,
     adv: {
       pwm_factor: 0,
       pwm_freq: 0,
       pwm_res: 0,
       pid_bias: 0,
       pid_time: 0,
-      pid_res: 0
+      pid_res: 0,
+      pid_windup: 0
     }
   },
   COIL2: {
     enabled: false,
-    P: 0.0,
-    I: 0.0,
-    D: 0.0,
+    kP: 0.0,
+    kI: 0.0,
+    kD: 0.0,
     adv: {
       pwm_factor: 0,
       pwm_freq: 0,
       pwm_res: 0,
       pid_bias: 0,
       pid_time: 0,
-      pid_res: 0
+      pid_res: 0,
+      pid_windup: 0
     }
   },
   LED: {
@@ -443,9 +446,9 @@ const parseInitMessage = (data) => {
   const temp = getNumber(data.slice(577, 579));
   const setTemp = getNumber(data.slice(579, 581));
   const avgTemp = getNumber(data.slice(581, 583));
-  const P = bytesToDouble(Uint8Array.from(data.slice(583, 591)));
-  const I = bytesToDouble(Uint8Array.from(data.slice(591, 599)));
-  const D = bytesToDouble(Uint8Array.from(data.slice(599, 607)));
+  const kP = bytesToDouble(Uint8Array.from(data.slice(583, 591)));
+  const kI = bytesToDouble(Uint8Array.from(data.slice(591, 599)));
+  const kD = bytesToDouble(Uint8Array.from(data.slice(599, 607)));
   const unitType = data.slice(607, 608)[0];
   const booleanMap = [...Array(8)].map((_, i) => Boolean(data.slice(608, 609)[0] & (1 << (7 - i))));
   const [
@@ -488,9 +491,9 @@ const parseInitMessage = (data) => {
     temp,
     setTemp,
     avgTemp,
-    P,
-    I,
-    D,
+    kP,
+    kI,
+    kD,
     AUTO_OFF_ENABLED,
     COIL_ENABLED,
     BUMP_ENABLED,
@@ -510,7 +513,8 @@ const parseInitMessage2 = (data) => {
     const pidBias = bytesToDouble(Uint8Array.from(data.slice(i, (i += 8))));
     const pidTime = getNumber(data.slice(i, (i += 4)));
     const pidRes = getNumber(data.slice(i, (i += 4)));
-    return [{ pwmPower, pwmFreq, pwmRes, pidBias, pidTime, pidRes }];
+    const pidWindup = bytesToDouble(Uint8Array.from(data.slice(i, (i += 8))));
+    return [{ pwmPower, pwmFreq, pwmRes, pidBias, pidTime, pidRes, pidWindup }];
   } else if (state.MODEL == 2) {
     let i = 0;
     let e1, e2;
@@ -521,7 +525,8 @@ const parseInitMessage2 = (data) => {
       const pidBias = bytesToDouble(Uint8Array.from(data.slice(i, (i += 8))));
       const pidTime = getNumber(data.slice(i, (i += 4)));
       const pidRes = getNumber(data.slice(i, (i += 4)));
-      e1 = { pwmPower, pwmFreq, pwmRes, pidBias, pidTime, pidRes };
+      const pidWindup = bytesToDouble(Uint8Array.from(data.slice(i, (i += 8))));
+      e1 = { pwmPower, pwmFreq, pwmRes, pidBias, pidTime, pidRes, pidWindup };
     }
     {
       const pwmPower = bytesToDouble(Uint8Array.from(data.slice(i, (i += 8))));
@@ -530,7 +535,8 @@ const parseInitMessage2 = (data) => {
       const pidBias = bytesToDouble(Uint8Array.from(data.slice(i, (i += 8))));
       const pidTime = getNumber(data.slice(i, (i += 4)));
       const pidRes = getNumber(data.slice(i, (i += 4)));
-      e2 = { pwmPower, pwmFreq, pwmRes, pidBias, pidTime, pidRes };
+      const pidWindup = bytesToDouble(Uint8Array.from(data.slice(i, (i += 8))));
+      e2 = { pwmPower, pwmFreq, pwmRes, pidBias, pidTime, pidRes, pidWindup };
     }
     return [e1, e2];
   }
@@ -585,6 +591,7 @@ function onClose(event) {
   connected = false;
   state.AUTH_STEP = 0;
   state.AUTHENTICATED = false;
+  document.getElementById('apassword').disabled = false;
   document.getElementById('aer-auth-modal').style.display = 'block';
   document.getElementById('aer-auth-pending').style.display = 'none';
   document.getElementById('aer-auth-validate').style.display = 'none';
@@ -601,6 +608,7 @@ function onError(event) {
   connected = false;
   state.AUTH_STEP = 0;
   state.AUTHENTICATED = false;
+  document.getElementById('apassword').disabled = false;
   document.getElementById('aer-auth-modal').style.display = 'block';
   document.getElementById('aer-auth-pending').style.display = 'none';
   document.getElementById('aer-auth-validate').style.display = 'none';
@@ -689,35 +697,35 @@ const initPageData = async (initData) => {
     document.getElementById('br_qset').value = `${state.LED.brightness}`;
   }
   state.COIL1.enabled = initData.COIL_ENABLED;
-  state.COIL1.P = initData.P;
+  state.COIL1.kP = initData.kP;
   if (document.getElementById('p_set')) {
-    document.getElementById('p_set').value = `${state.COIL1.P}`;
+    document.getElementById('p_set').value = `${state.COIL1.kP}`;
   }
   if (document.getElementById('p_qset')) {
-    document.getElementById('p_qset').value = `${state.COIL1.P}`;
+    document.getElementById('p_qset').value = `${state.COIL1.kP}`;
   }
   if (document.getElementById('p_qset2')) {
-    document.getElementById('p_qset2').value = `${state.COIL1.P}`;
+    document.getElementById('p_qset2').value = `${state.COIL1.kP}`;
   }
-  state.COIL1.I = initData.I;
+  state.COIL1.kI = initData.kI;
   if (document.getElementById('i_set')) {
-    document.getElementById('i_set').value = `${state.COIL1.I}`;
+    document.getElementById('i_set').value = `${state.COIL1.kI}`;
   }
   if (document.getElementById('i_qset')) {
-    document.getElementById('i_qset').value = `${state.COIL1.I}`;
+    document.getElementById('i_qset').value = `${state.COIL1.kI}`;
   }
   if (document.getElementById('i_qset2')) {
-    document.getElementById('i_qset2').value = `${state.COIL1.I}`;
+    document.getElementById('i_qset2').value = `${state.COIL1.kI}`;
   }
-  state.COIL1.D = initData.D;
+  state.COIL1.kD = initData.kD;
   if (document.getElementById('d_set')) {
-    document.getElementById('d_set').value = `${state.COIL1.D}`;
+    document.getElementById('d_set').value = `${state.COIL1.kD}`;
   }
   if (document.getElementById('d_qset')) {
-    document.getElementById('d_qset').value = `${state.COIL1.D}`;
+    document.getElementById('d_qset').value = `${state.COIL1.kD}`;
   }
   if (document.getElementById('d_qset2')) {
-    document.getElementById('d_qset2').value = `${state.COIL1.D}`;
+    document.getElementById('d_qset2').value = `${state.COIL1.kD}`;
   }
   if (document.getElementById('toggle_heat')) {
     const element = document.getElementById('toggle_heat');
@@ -909,6 +917,10 @@ const initPageData2 = async (initData) => {
   if (document.getElementById('pid1_set_reso')) {
     document.getElementById('pid1_set_reso').value = `${state.COIL1.adv.pid_res}`;
   }
+  state.COIL1.adv.pid_windup = initData[0].pidWindup;
+  if (document.getElementById('pid1_set_windup')) {
+    document.getElementById('pid1_set_windup').value = `${state.COIL1.adv.pid_windup}`;
+  }
   document.getElementById('pwm_adv1_msg').style.display = 'none';
   document.getElementById('pid_adv1_msg').style.display = 'none';
   if (state.MODEL == 2) {
@@ -935,6 +947,10 @@ const initPageData2 = async (initData) => {
     state.COIL2.adv.pid_res = initData[1].pidRes;
     if (document.getElementById('pid2_set_reso')) {
       document.getElementById('pid2_set_reso').value = `${state.COIL2.adv.pid_res}`;
+    }
+    state.COIL2.adv.pid_windup = initData[1].pidWindup;
+    if (document.getElementById('pid2_set_windup')) {
+      document.getElementById('pid2_set_windup').value = `${state.COIL2.adv.pid_windup}`;
     }
     document.getElementById('pwm_adv2_msg').style.display = 'none';
     document.getElementById('pid_adv2_msg').style.display = 'none';
@@ -1389,35 +1405,35 @@ const handleMessage = (dat) => {
           const I = bytesToDouble(Uint8Array.from(dat.slice(10, 18)));
           const D = bytesToDouble(Uint8Array.from(dat.slice(18, 26)));
           //console.log(P, I, D);
-          state.COIL1.P = P;
+          state.COIL1.kP = P;
           if (document.getElementById('p_set')) {
-            document.getElementById('p_set').value = `${state.COIL1.P}`;
+            document.getElementById('p_set').value = `${state.COIL1.kP}`;
           }
           if (document.getElementById('p_qset')) {
-            document.getElementById('p_qset').value = `${state.COIL1.P}`;
+            document.getElementById('p_qset').value = `${state.COIL1.kP}`;
           }
           if (document.getElementById('p_qset2')) {
-            document.getElementById('p_qset2').value = `${state.COIL1.P}`;
+            document.getElementById('p_qset2').value = `${state.COIL1.kP}`;
           }
-          state.COIL1.I = I;
+          state.COIL1.kI = I;
           if (document.getElementById('i_set')) {
-            document.getElementById('i_set').value = `${state.COIL1.I}`;
+            document.getElementById('i_set').value = `${state.COIL1.kI}`;
           }
           if (document.getElementById('i_qset')) {
-            document.getElementById('i_qset').value = `${state.COIL1.I}`;
+            document.getElementById('i_qset').value = `${state.COIL1.kI}`;
           }
           if (document.getElementById('i_qset2')) {
-            document.getElementById('i_qset2').value = `${state.COIL1.I}`;
+            document.getElementById('i_qset2').value = `${state.COIL1.kI}`;
           }
-          state.COIL1.D = D;
+          state.COIL1.kD = D;
           if (document.getElementById('d_set')) {
-            document.getElementById('d_set').value = `${state.COIL1.D}`;
+            document.getElementById('d_set').value = `${state.COIL1.kD}`;
           }
           if (document.getElementById('d_qset')) {
-            document.getElementById('d_qset').value = `${state.COIL1.D}`;
+            document.getElementById('d_qset').value = `${state.COIL1.kD}`;
           }
           if (document.getElementById('d_qset2')) {
-            document.getElementById('d_qset2').value = `${state.COIL1.D}`;
+            document.getElementById('d_qset2').value = `${state.COIL1.kD}`;
           }
           break;
         default:
@@ -1428,21 +1444,21 @@ const handleMessage = (dat) => {
       param = dat[1];
       switch (param) {
         case ParamPid.PARAM_PID:
-          const P = bytesToDouble(Uint8Array.from(dat.slice(2, 10)));
-          const I = bytesToDouble(Uint8Array.from(dat.slice(10, 18)));
-          const D = bytesToDouble(Uint8Array.from(dat.slice(18, 26)));
+          const kP = bytesToDouble(Uint8Array.from(dat.slice(2, 10)));
+          const kI = bytesToDouble(Uint8Array.from(dat.slice(10, 18)));
+          const kD = bytesToDouble(Uint8Array.from(dat.slice(18, 26)));
           //console.log(P, I, D);
-          state.COIL2.P = P;
+          state.COIL2.kP = kP;
           if (document.getElementById('p_qset2b')) {
-            document.getElementById('p_qset2b').value = `${state.COIL2.P}`;
+            document.getElementById('p_qset2b').value = `${state.COIL2.kP}`;
           }
-          state.COIL2.I = I;
+          state.COIL2.kI = kI;
           if (document.getElementById('i_qset2b')) {
-            document.getElementById('i_qset2b').value = `${state.COIL2.I}`;
+            document.getElementById('i_qset2b').value = `${state.COIL2.kI}`;
           }
-          state.COIL2.D = D;
+          state.COIL2.kD = kD;
           if (document.getElementById('d_qset2b')) {
-            document.getElementById('d_qset2b').value = `${state.COIL2.D}`;
+            document.getElementById('d_qset2b').value = `${state.COIL2.kD}`;
           }
           break;
         default:
@@ -1458,6 +1474,7 @@ const handleMessage = (dat) => {
           if (document.getElementById('pwm1_set_fact')) {
             document.getElementById('pwm1_set_fact').value = `${val * 100}`;
           }
+          break;
         }
         case ParamAdv.PARAM_ADV_PWM_FREQ: {
           const val = bytesToDouble(Uint8Array.from(dat.slice(2, 10)));
@@ -1465,6 +1482,7 @@ const handleMessage = (dat) => {
           if (document.getElementById('pwm1_set_freq')) {
             document.getElementById('pwm1_set_freq').value = `${val}`;
           }
+          break;
         }
         case ParamAdv.PARAM_ADV_PWM_RES: {
           const val = bytesToDouble(Uint8Array.from(dat.slice(2, 10)));
@@ -1487,6 +1505,7 @@ const handleMessage = (dat) => {
           if (document.getElementById('pid1_set_bias')) {
             document.getElementById('pid1_set_bias').value = `${val}`;
           }
+          break;
         }
         case ParamAdv.PARAM_ADV_PID_TIME: {
           const val = bytesToDouble(Uint8Array.from(dat.slice(2, 10)));
@@ -1494,12 +1513,21 @@ const handleMessage = (dat) => {
           if (document.getElementById('pid1_set_time')) {
             document.getElementById('pid1_set_time').value = `${val}`;
           }
+          break;
         }
-        case ParamAdv.PARAM_ADV_PID_TIME: {
+        case ParamAdv.PARAM_ADV_PID_RES: {
           const val = bytesToDouble(Uint8Array.from(dat.slice(2, 10)));
           state.COIL1.adv.pid_res = val;
           if (document.getElementById('pid1_set_reso')) {
             document.getElementById('pid1_set_reso').value = `${val}`;
+          }
+          break;
+        }
+        case ParamAdv.PARAM_ADV_PID_WINDUP: {
+          const val = bytesToDouble(Uint8Array.from(dat.slice(2, 10)));
+          state.COIL1.adv.pid_windup = val;
+          if (document.getElementById('pid1_set_windup')) {
+            document.getElementById('pid1_set_windup').value = `${val}`;
           }
           break;
         }
@@ -1516,6 +1544,7 @@ const handleMessage = (dat) => {
           if (document.getElementById('pwm2_set_fact')) {
             document.getElementById('pwm2_set_fact').value = `${val * 100}`;
           }
+          break;
         }
         case ParamAdv.PARAM_ADV_PWM_FREQ: {
           const val = bytesToDouble(Uint8Array.from(dat.slice(2, 10)));
@@ -1523,6 +1552,7 @@ const handleMessage = (dat) => {
           if (document.getElementById('pwm2_set_freq')) {
             document.getElementById('pwm2_set_freq').value = `${val}`;
           }
+          break;
         }
         case ParamAdv.PARAM_ADV_PWM_RES: {
           const val = bytesToDouble(Uint8Array.from(dat.slice(2, 10)));
@@ -1545,6 +1575,7 @@ const handleMessage = (dat) => {
           if (document.getElementById('pid2_set_bias')) {
             document.getElementById('pid2_set_bias').value = `${val}`;
           }
+          break;
         }
         case ParamAdv.PARAM_ADV_PID_TIME: {
           const val = bytesToDouble(Uint8Array.from(dat.slice(2, 10)));
@@ -1552,12 +1583,21 @@ const handleMessage = (dat) => {
           if (document.getElementById('pid2_set_time')) {
             document.getElementById('pid2_set_time').value = `${val}`;
           }
+          break;
         }
-        case ParamAdv.PARAM_ADV_PID_TIME: {
+        case ParamAdv.PARAM_ADV_PID_RES: {
           const val = bytesToDouble(Uint8Array.from(dat.slice(2, 10)));
           state.COIL2.adv.pid_res = val;
           if (document.getElementById('pid2_set_reso')) {
             document.getElementById('pid2_set_reso').value = `${val}`;
+          }
+          break;
+        }
+        case ParamAdv.PARAM_ADV_PID_WINDUP: {
+          const val = bytesToDouble(Uint8Array.from(dat.slice(2, 10)));
+          state.COIL2.adv.pid_windup = val;
+          if (document.getElementById('pid2_set_windup')) {
+            document.getElementById('pid2_set_windup').value = `${val}`;
           }
           break;
         }
@@ -2059,26 +2099,26 @@ function triggerAuthStep() {
   state.AUTH_KEY = hash.trim();
   state.AUTH_STEP = 1;
 
-  document.getElementById('ausername').value = "";
-  document.getElementById('apassword').value = "";
+  document.getElementById('ausername').value = '';
+  document.getElementById('apassword').value = '';
   document.getElementById('apassword').disabled = true;
 
-  setTimeout(()=>{
+  setTimeout(() => {
     if (state.AUTHENTICATED) {
-      return
+      return;
     }
-    console.log("Auth error timout failure!")
-    document.getElementById("aer-auth-form").style.display = "none";
-    document.getElementById("aer-auth-pending").style.display = "block";
-    document.getElementById("aer-auth-validate").style.display = "none";
-    document.getElementById("aer-auth-error").style.display = "block";
-    document.getElementById("aer-auth-alert").style.display = "none";
-     setTimeout(() => {
-      console.log("Reloading page...")
-      document.getElementById("aer-auth-pending").style.display = "none";
-      location.reload()
-     }, 3300)
-  }, 3000)
+    console.log('Auth error timout failure!');
+    document.getElementById('aer-auth-form').style.display = 'none';
+    document.getElementById('aer-auth-pending').style.display = 'block';
+    document.getElementById('aer-auth-validate').style.display = 'none';
+    document.getElementById('aer-auth-error').style.display = 'block';
+    document.getElementById('aer-auth-alert').style.display = 'none';
+    setTimeout(() => {
+      console.log('Reloading page...');
+      document.getElementById('aer-auth-pending').style.display = 'none';
+      location.reload();
+    }, 3300);
+  }, 3000);
 }
 
 function sendAuthCmd() {
@@ -2462,6 +2502,35 @@ function sendPid1AdvSettings() {
       ...numberToBytes(Number(val))
     ]);
   }
+  if (true) {
+    let val = document.getElementById('pid1_set_windup').value;
+    if (val.includes('-')) {
+      document.getElementById('pid_adv1_txt').innerHTML =
+        'PID Windup Limit must be a non negative whole number!';
+      document.getElementById('pid_adv1_msg').style.display = 'block';
+      return;
+    } else if (val < 8) {
+      document.getElementById('pid_adv1_txt').innerHTML = 'PID Windup Limit must be 8 or greater!';
+      document.getElementById('pid_adv1_msg').style.display = 'block';
+      return;
+    } else if (val > 32768) {
+      document.getElementById('pid_adv1_txt').innerHTML = 'PID Windup Limit must be 32768 or less!';
+      document.getElementById('pid_adv1_msg').style.display = 'block';
+      return;
+    } else if (val.includes('.')) {
+      document.getElementById('pid_adv1_txt').innerHTML =
+        'PID Windup Limit must be a whole number!';
+      document.getElementById('pid_adv1_msg').style.display = 'block';
+      return;
+    }
+    state.COIL1.adv.pid_windup = Number(val);
+    emit_websocket([
+      SerialCommand.ADV1_PID,
+      Operation.SET,
+      ParamAdv.PARAM_ADV_PID_WINDUP,
+      ...numberToBytes(Number(val))
+    ]);
+  }
 }
 
 function sendPwm2AdvSettings() {
@@ -2629,6 +2698,35 @@ function sendPid2AdvSettings() {
       SerialCommand.ADV2_PID,
       Operation.SET,
       ParamAdv.PARAM_ADV_PID_RES,
+      ...numberToBytes(Number(val))
+    ]);
+  }
+  if (true) {
+    let val = document.getElementById('pid2_set_windup').value;
+    if (val.includes('-')) {
+      document.getElementById('pid_adv2_txt').innerHTML =
+        'PID Windup Limit must be a non negative whole number!';
+      document.getElementById('pid_adv2_msg').style.display = 'block';
+      return;
+    } else if (val < 8) {
+      document.getElementById('pid_adv2_txt').innerHTML = 'PID Windup Limit must be 8 or greater!';
+      document.getElementById('pid_adv2_msg').style.display = 'block';
+      return;
+    } else if (val > 32768) {
+      document.getElementById('pid_adv2_txt').innerHTML = 'PID Windup Limit must be 32768 or less!';
+      document.getElementById('pid_adv2_msg').style.display = 'block';
+      return;
+    } else if (val.includes('.')) {
+      document.getElementById('pid_adv2_txt').innerHTML =
+        'PID Windup Limit must be a whole number!';
+      document.getElementById('pid_adv2_msg').style.display = 'block';
+      return;
+    }
+    state.COIL2.adv.pid_windup = Number(val);
+    emit_websocket([
+      SerialCommand.ADV2_PID,
+      Operation.SET,
+      ParamAdv.PARAM_ADV_PID_WINDUP,
       ...numberToBytes(Number(val))
     ]);
   }

@@ -41,6 +41,7 @@
 // #include "screen/i2c/oled.h"   // i2c Screen
 // #include "screen/i2c/display.h"
 
+#include "storage/versionStor.h"
 #include "storage/eepromStor.h"
 #include "storage/flash.h"
 #include "storage/auth.h"

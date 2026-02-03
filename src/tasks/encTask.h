@@ -2981,13 +2981,16 @@ void onEb1Encoder(EncoderButton &eb)
             double chng = 0;
             if (eb.increment() > 0)
             {
-                chng -= 0.2 * dir;
+                chng -= 1 * dir;
             }
             else if (eb.increment() < 0)
             {
-                chng += 0.2 * dir;
+                chng += 1 * dir;
             }
             double newVal = enc_am->getAerPID(elementIndex)->getWindupLimit() + chng;
+            if (newVal < 0) {
+                newVal = 0;
+            }
             enc_am->getAerPID(elementIndex)->setWindupLimit(newVal);
             enc_aerGUI->updateMenu();
             enc_am->webUpdatePID(true);

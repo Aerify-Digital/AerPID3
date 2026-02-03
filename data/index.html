@@ -841,6 +841,14 @@
             <li class="w3-dark-grey w3-large w3-padding-8" style="font-size: 30px !important; height: 68px; padding-top: 10px !important">PID 1 - Setup</li>
             <li class="w3-padding-16">
              <div class="adv-width">
+              Windup Limit
+              <span title="Integral Windup Limit" style="cursor: help">(i)</span>
+              :
+              <input type="number" id="pid1_set_windup" name="pid1_set_windup" class="pid-sets" min="0" max="1000" step="1.0" value="0" />
+             </div>
+            </li>
+            <li class="w3-padding-16">
+             <div class="adv-width">
               Output Bias
               <span title="Bias power applied to the PID function" style="cursor: help">(p)</span>
               :
@@ -1090,6 +1098,14 @@
              <div id="pid_adv2_txt">Something went very wrong...</div>
             </div>
             <li class="w3-dark-grey w3-large w3-padding-8" style="font-size: 30px !important; height: 68px; padding-top: 10px !important">PID 2 - Setup</li>
+            <li class="w3-padding-16">
+             <div class="adv-width">
+              Windup Limit
+              <span title="Integral Windup Limit" style="cursor: help">(i)</span>
+              :
+              <input type="number" id="pid2_set_windup" name="pid2_set_windup" class="pid-sets" min="0" max="1000" step="1.0" value="0" />
+             </div>
+            </li>
             <li class="w3-padding-16">
              <div class="adv-width">
               Output Bias

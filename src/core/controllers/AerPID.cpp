@@ -71,7 +71,7 @@ bool AerPID::init()
     // Set initial PID tunings and limits
     aPID->setCoefficients(kP, kI, kD);
     aPID->setOutputLimits(0, _pidOutputLimit);
-    aPID->setWindUpLimits(-PID_WINDUP_LIMIT, PID_WINDUP_LIMIT);
+    aPID->setWindUpLimits(-windUpLimit, windUpLimit);
     aPID->setBias(_pidBias);
     aPID->reset();
 

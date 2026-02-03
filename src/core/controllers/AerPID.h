@@ -339,7 +339,7 @@ private:
     double _pidBias = PID_BIAS;
 
     // kI value wind up limitor
-    double windUpLimit = 500;
+    double windUpLimit = PID_WINDUP_LIMIT;
 
     // Array of most recent measurements
     double aMeasuresArr[MES_TEMP_SIZE];
