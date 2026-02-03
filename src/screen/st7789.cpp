@@ -126,8 +126,7 @@ void AerST7789::showSplashPost()
     tft->setTextSize(2);
     tft->setCursor(xt, yt + 28);
     tft->print("(C)");
-    const char *year = String(VER_BUILD_YEAR).c_str();
-    tft->println(year);
+    tft->println(VER_BUILD_YEAR);
 
     delay(1000);
 }
