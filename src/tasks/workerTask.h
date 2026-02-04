@@ -70,18 +70,19 @@ void worker_task(void *pvParameters)
         xSemaphoreGive(i2c1_mutex);
     }
 
-    /*if (xSemaphoreTake(i2c1_mutex, 1000) == pdTRUE)
+    if (xSemaphoreTake(i2c1_mutex, 1000) == pdTRUE)
     {
+        rtc->readTime();
         if (rtc->getYear() < 20 || rtc->getYear() > 2100)
         {
             rtc->reset();
             // (hour, minute, second)
-            rtc->setTime(4, 20, 00); // 24H mode, ex. 6:54:00
+            rtc->setTime(4, 20, 00); // 24H mode, ex. 07:10:00
             // (weekday, day, month, year)
-            rtc->setDate(6, 15, 7, 23);
+            rtc->setDate(6, 30, 1, 26);
         }
         xSemaphoreGive(i2c1_mutex);
-    }*/
+    }
 
     vTaskDelay(400);
     printf("> Starting General Worker task on core %d..\n", xPortGetCoreID());

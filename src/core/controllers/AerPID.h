@@ -50,8 +50,8 @@
 
 // *************************************
 
-// PWM frequency in Hz for PWM output
-#define FREQ_PWM_Hz 200 // default 200hz
+// PWM frequency in Hz for PWM output (default 300hz)
+#define FREQ_PWM_Hz 300
 // PWM resolution bits for PWM Duty Cycle
 // Expected Duty Cycle range is `0` to `2^PWM_RESOLUTION`
 #define PWM_RESOLUTION 11
@@ -75,7 +75,7 @@
 #define PWM_SCALE_FACTOR 0.995
 
 // Integral WindUp limit (fix for timing windup)
-#define PID_WINDUP_LIMIT 1000
+#define PID_WINDUP_LIMIT 300
 // Output Bias for PID function
 #define PID_BIAS 0
 
@@ -84,45 +84,23 @@
 // Sample Time for PID compute in milliseconds
 #define PID_SAMPLE_TIME_MS 500
 // Sleep Time for PID thread in milliseconds
-#define PID_SLEEP_TIME_MS 25
+#define PID_SLEEP_TIME_MS 10
 // Tick time overshoot amount for PID compute
-#define PID_TIME_OVERSHOOT 70
+#define PID_TIME_OVERSHOOT 5
 
 // *************************************
 
 // Measure sample array sizes
 #define MEASURES_SIZE 128
-// Measure rolling average size
-#define MEASURES_AVG_TOTAL 40 // must be smaller than MEASURES_SIZE
+// Measure rolling average size -- must be smaller than MEASURES_SIZE
+#define MEASURES_AVG_TOTAL 58
 // Rolling average measure max size
-#define MEAS_TICK_MAX_C ((1000 / PID_SLEEP_TIME_MS) * 3)
-
-// Sensor bit resolution - higher value takes longer
-#define MEASURE_BIT_PRECISION 11
-
-#if MEASURE_BIT_PRECISION == 9
-#define MEASURE_TIME_COST 94
-#define MES_TEMP_SIZE 7
-#endif
-#if MEASURE_BIT_PRECISION == 10
-#define MEASURE_TIME_COST 190
-#define MES_TEMP_SIZE 5
-#endif
-#if MEASURE_BIT_PRECISION == 11
-#define MEASURE_TIME_COST 375
-#define MES_TEMP_SIZE 3
-#endif
-#if MEASURE_BIT_PRECISION == 12
-#define MEASURE_TIME_COST 750
-#define MES_TEMP_SIZE 2
-#endif
-
-#if MEASURE_BIT_PRECISION <= 8
-#error "MEASURE_BIT_PRECISION must be greater than or equal to 9"
-#endif
-#if MEASURE_BIT_PRECISION >= 13
-#error "MEASURE_BIT_PRECISION must be less than or equal to 12"
-#endif
+#define MEAS_TICK_MAX_C ((1000 / PID_SLEEP_TIME_MS) * 1)
+ 
+// Time it takes to perform a measurement in milliseconds
+#define MEASURE_TIME_COST 100
+// Array average size for recent measurements
+#define MES_TEMP_SIZE 16
 
 // *************************************
 // *************************************
@@ -353,7 +331,7 @@ private:
 
     // PWM cycle time (vTaskDelay)
     int _pidCycleTime = PID_SAMPLE_TIME_MS;
-    int _pidTickMax = ((double)_pidCycleTime / PID_SLEEP_TIME_MS) * 0.67;
+    int _pidTickMax = ((double)_pidCycleTime / PID_SLEEP_TIME_MS) * 1;
     // pid output range limit for input to pwm
     int _pidOutputLimit = PID_OUTPUT_LIMIT;
 
@@ -361,7 +339,7 @@ private:
     double _pidBias = PID_BIAS;
 
     // kI value wind up limitor
-    double windUpLimit = 500;
+    double windUpLimit = PID_WINDUP_LIMIT;
 
     // Array of most recent measurements
     double aMeasuresArr[MES_TEMP_SIZE];

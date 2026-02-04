@@ -3,11 +3,11 @@
 // Builds the menu defintion mapping
 bool AerGUI::buildMenuDefinitions()
 {
-    std::vector<uint16_t> menus_root = {
+    const std::vector<uint16_t> menus_root = {
         MENU_ROOT_HOME,
         MENU_ROOT_MAIN,
     };
-    std::vector<uint16_t> menus_main = {
+    const std::vector<uint16_t> menus_main = {
         MENU_MAIN_PID,
         MENU_MAIN_FAVS,
         MENU_MAIN_BUMP,
@@ -22,48 +22,48 @@ bool AerGUI::buildMenuDefinitions()
         MENU_MAIN_CLOCK,
         MENU_MAIN_VERSION,
     };
-    std::vector<uint16_t> menus_pid = {
+    const std::vector<uint16_t> menus_pid = {
         MENU_PID_P,
         MENU_PID_I,
         MENU_PID_D,
         MENU_PID_TUNING,
         MENU_PID_MEASURE_MODE,
     };
-    std::vector<uint16_t> menus_pid_tuning = {
+    const std::vector<uint16_t> menus_pid_tuning = {
         // MENU_PID_AUTO,
         MENU_PID_PWM_BIAS,
         MENU_PID_PWM_FACTOR,
-        // MENU_PID_WINDUP_LIMIT,
+        MENU_PID_WINDUP_LIMIT,
         MENU_PID_PWM_CYCLE,
         MENU_PID_PWM_FREQ,
     };
-    std::vector<uint16_t> menus_favs = {
+    const std::vector<uint16_t> menus_favs = {
         MENU_FAV_1,
         MENU_FAV_2,
         MENU_FAV_3,
         MENU_FAV_4,
     };
-    std::vector<uint16_t> menus_fav1 = {
+    const std::vector<uint16_t> menus_fav1 = {
         MENU_FAV_1N,
         MENU_FAV_1T,
     };
-    std::vector<uint16_t> menus_fav2 = {
+    const std::vector<uint16_t> menus_fav2 = {
         MENU_FAV_2N,
         MENU_FAV_2T,
     };
-    std::vector<uint16_t> menus_fav3 = {
+    const std::vector<uint16_t> menus_fav3 = {
         MENU_FAV_3N,
         MENU_FAV_3T,
     };
-    std::vector<uint16_t> menus_fav4 = {
+    const std::vector<uint16_t> menus_fav4 = {
         MENU_FAV_4N,
         MENU_FAV_4T,
     };
-    std::vector<uint16_t> menus_bump = {
+    const std::vector<uint16_t> menus_bump = {
         MENU_BUMP_AMOUNT,
         MENU_BUMP_TIME,
     };
-    std::vector<uint16_t> menus_fav_names = {
+    const std::vector<uint16_t> menus_fav_names = {
         MENU_FAV_NAME_FAVORITE1,
         MENU_FAV_NAME_FAVORITE2,
         MENU_FAV_NAME_FAVORITE3,
@@ -100,7 +100,7 @@ bool AerGUI::buildMenuDefinitions()
         MENU_FAV_NAME_GREEN,
         MENU_FAV_NAME_BLUE,
     };
-    std::vector<uint16_t> menus_graphs = {
+    const std::vector<uint16_t> menus_graphs = {
 #if AERPID_COUNT == 2
         MENU_GRAPH_TEMPERATURE,
         MENU_GRAPH_TEMPERATURE_ZOOM,
@@ -118,28 +118,27 @@ bool AerGUI::buildMenuDefinitions()
         MENU_GRAPH_TEMPERATURE_LONG_0,
 #endif
     };
-    std::vector<uint16_t> menus_system = {
+    const std::vector<uint16_t> menus_system = {
         MENU_SYSTEM_LOCAL_TEMPERATURE,
         MENU_SYSTEM_KNOB_ADJUST,
         MENU_SYSTEM_TOGGLE_IDLE,
         MENU_SYSTEM_LENGTH_IDLE,
         MENU_SYSTEM_FACTORY_RESET,
-        // TODO: setup update check on local device...
-        // MENU_SYSTEM_UPDATE_CHECK,
+        MENU_SYSTEM_UPDATE_CHECK,
         MENU_SYSTEM_DISPLAY_SETTINGS,
         // TODO: setup themes??
         // MENU_SYSTEM_THEME,
     };
-    std::vector<uint16_t> menus_display_backlight = {
+    const std::vector<uint16_t> menus_display_backlight = {
         MENU_DISPLAY_BACKLIGHT_VAR,
         MENU_DISPLAY_BACKLIGHT_MIN_VAR,
     };
-    std::vector<uint16_t> menus_knob_adjust = {
+    const std::vector<uint16_t> menus_knob_adjust = {
         MENU_KNOB_ADJUST_AMOUNT,
         MENU_KNOB_ADJUST_INVERT,
         // MENU_KNOB_DIAGRAM_SHOWN,
     };
-    std::vector<uint16_t> menus_local_temp = {
+    const std::vector<uint16_t> menus_local_temp = {
         MENU_LOCAL_CELSIUS_TOGGLE,
         MENU_LOCAL_TEMPERATURE_1,
         MENU_LOCAL_TEMPERATURE_2,
@@ -148,31 +147,31 @@ bool AerGUI::buildMenuDefinitions()
         MENU_LOCAL_FAN_CONTROL,
 #endif
     };
-    std::vector<uint16_t> menus_system_display = {
+    const std::vector<uint16_t> menus_system_display = {
         MENU_DISPLAY_BACKLIGHT,
         MENU_DISPLAY_AUTO_DIM,
         MENU_DISPLAY_TIMEOUT_DIM,
         MENU_DISPLAY_SCREENSAVER,
         MENU_DISPLAY_SYS_TRAY,
     };
-    std::vector<uint16_t> menus_screen_saver = {
+    const std::vector<uint16_t> menus_screen_saver = {
         MENU_SCREENSAVER_ENABLED,
         MENU_SCREENSAVER_TIME,
         MENU_SCREENSAVER_STARS,
         MENU_SCREENSAVER_TOGGLE,
     };
-    std::vector<uint16_t> menus_led = {
+    const std::vector<uint16_t> menus_led = {
         MENU_LED_MAIN_TOGGLE,
         MENU_LED_SETUP,
         MENU_LED_STATUS,
         // MENU_LED_AMBIENT,
         MENU_LED_PRESET,
     };
-    std::vector<uint16_t> menus_led_color = {
+    const std::vector<uint16_t> menus_led_color = {
         MENU_LED_BRIGHTNESS,
         MENU_LED_COLOR,
     };
-    std::vector<uint16_t> menus_led_colorlist = {
+    const std::vector<uint16_t> menus_led_colorlist = {
         MENU_COLOR_MAROON,
         MENU_COLOR_DARK_RED,
         MENU_COLOR_BROWN,
@@ -312,7 +311,7 @@ bool AerGUI::buildMenuDefinitions()
         MENU_COLOR_GAINSBORO,
         MENU_COLOR_WHITE_SMOKE,
         MENU_COLOR_WHITE};
-    std::vector<uint16_t> menus_led_presets = {
+    const std::vector<uint16_t> menus_led_presets = {
         // MENU_LED_PRESET_TOGGLE,
         MENU_LED_RWAVE,
         MENU_LED_RAINBOW,
@@ -323,15 +322,15 @@ bool AerGUI::buildMenuDefinitions()
         MENU_LED_ABLINK,
         MENU_LED_APULSE,
     };
-    std::vector<uint16_t> menus_led_ambients = {
+    const std::vector<uint16_t> menus_led_ambients = {
         MENU_LED_AMBIENT_TOGGLE,
         MENU_LED_ABLINK,
         MENU_LED_APULSE,
     };
-    std::vector<uint16_t> menus_led_stat = {
+    const std::vector<uint16_t> menus_led_stat = {
         MENU_LED_STATUS_TOGGLE,
     };
-    std::vector<uint16_t> menus_wifi = {
+    const std::vector<uint16_t> menus_wifi = {
         MENU_WIFI_NETWORK_ENABLED,
         MENU_WIFI_NETWORK_SCAN,
         MENU_WIFI_NETWORKS_NEARBY,
@@ -342,8 +341,9 @@ bool AerGUI::buildMenuDefinitions()
         MENU_WIFI_IP_ADDR,
         MENU_WIFI_MAC_ADDR,
         MENU_WIFI_STATIC_ADDR,
+        MENU_WIFI_AUTH,
     };
-    std::vector<uint16_t> menus_static_addr = {
+    const std::vector<uint16_t> menus_static_addr = {
         MENU_WIFI_STATIC_ENABLED,
         MENU_WIFI_STATIC_IP,
         MENU_WIFI_STATIC_GATEWAY,
@@ -351,40 +351,44 @@ bool AerGUI::buildMenuDefinitions()
         MENU_WIFI_STATIC_DNS1,
         MENU_WIFI_STATIC_DNS2,
     };
-    std::vector<uint16_t> menus_wifi_password = {
+    const std::vector<uint16_t> menus_wifi_auth = {
+        MENU_WIFI_AUTH_EDIT,
+        MENU_WIFI_AUTH_SAVE,
+    };
+    const std::vector<uint16_t> menus_wifi_password = {
         MENU_WIFI_PASSWORD_EDIT,
         MENU_WIFI_PASSWORD_SAVE,
     };
-    std::vector<uint16_t> menus_wifi_hostname = {
+    const std::vector<uint16_t> menus_wifi_hostname = {
         MENU_WIFI_HOSTNAME_EDIT,
         MENU_WIFI_HOSTNAME_SAVE,
     };
-    std::vector<uint16_t> menus_ble = {
+    const std::vector<uint16_t> menus_ble = {
         MENU_BLE_ENABLE,
         // MENU_BLE_MONITOR,  // what this do?
     };
-    std::vector<uint16_t> menus_usb = {
+    const std::vector<uint16_t> menus_usb = {
         MENU_USB_ENABLE,
         // MENU_USB_MONITOR,  // we don't need this for usb?
         // MENU_USB_DISCOVER, // we don't need this for usb?
     };
-    std::vector<uint16_t> menus_power = {
+    const std::vector<uint16_t> menus_power = {
         MENU_SYS_RESET,
         // MENU_SYS_POWER_OFF, // this option is not avaiable...
     };
-    std::vector<uint16_t> menus_clock = {
+    const std::vector<uint16_t> menus_clock = {
         MENU_RTC_CURRENT,
         MENU_RTC_DATE_SET,
         MENU_RTC_TIME_SET,
         // MENU_RTC_ALARM,
         // MENU_RTC_TIMER,
     };
-    std::vector<uint16_t> menus_rtc_date = {
+    const std::vector<uint16_t> menus_rtc_date = {
         MENU_RTC_SET_DATE_YEAR,
         MENU_RTC_SET_DATE_MONTH,
         MENU_RTC_SET_DATE_DAY,
     };
-    std::vector<uint16_t> menus_rtc_time = {
+    const std::vector<uint16_t> menus_rtc_time = {
         MENU_RTC_SET_TIME_HOUR,
         MENU_RTC_SET_TIME_MINUTE,
         MENU_RTC_SET_TIME_SECOND,
@@ -494,7 +498,7 @@ bool AerGUI::buildMenuDefinitions()
     menus.push_back(AerMenu(MENU_SYSTEM_TOGGLE_IDLE, MENU_MAIN_SYSTEM, {MENU_SYSTEM_TOGGLE_IDLE_VAR}));
     menus.push_back(AerMenu(MENU_SYSTEM_LENGTH_IDLE, MENU_MAIN_SYSTEM, {MENU_SYSTEM_LENGTH_IDLE_VAR}));
     menus.push_back(AerMenu(MENU_SYSTEM_FACTORY_RESET, MENU_MAIN_SYSTEM, {MENU_SYSTEM_FACTORY_RESET_CONFIRM}));
-    menus.push_back(AerMenu(MENU_SYSTEM_UPDATE_CHECK, MENU_MAIN_SYSTEM, {}));
+    menus.push_back(AerMenu(MENU_SYSTEM_UPDATE_CHECK, MENU_MAIN_SYSTEM, {MENU_SYSTEM_UPDATE_CHECK_PERFORM}));
     menus.push_back(AerMenu(MENU_SYSTEM_THEME, MENU_MAIN_SYSTEM, {}));
     // reset confirm
     // menus.push_back(AerMenu(MENU_SYSTEM_FACTORY_RESET_CONFIRM, MENU_SYSTEM_FACTORY_RESET, {}));
@@ -547,6 +551,7 @@ bool AerGUI::buildMenuDefinitions()
     menus.push_back(AerMenu(MENU_WIFI_IP_ADDR, MENU_MAIN_WIFI, {}));
     menus.push_back(AerMenu(MENU_WIFI_MAC_ADDR, MENU_MAIN_WIFI, {}));
     menus.push_back(AerMenu(MENU_WIFI_STATIC_ADDR, MENU_MAIN_WIFI, menus_static_addr));
+    menus.push_back(AerMenu(MENU_WIFI_AUTH, MENU_MAIN_WIFI, menus_wifi_auth));
     // Static IPAddress
     menus.push_back(AerMenu(MENU_WIFI_STATIC_ENABLED, MENU_WIFI_STATIC_ADDR, {MENU_WIFI_STATIC_ENABLED_VAR}));
     menus.push_back(AerMenu(MENU_WIFI_STATIC_IP, MENU_WIFI_STATIC_ADDR, {MENU_WIFI_STATIC_IP_EDIT, MENU_WIFI_STATIC_IP_SAVE}));
@@ -633,6 +638,7 @@ bool AerGUI::buildMenuDefinitions()
     menuNames.insert(std::pair<int, String>(MENU_SYSTEM_FACTORY_RESET, "Reset Flash"));
     menuNames.insert(std::pair<int, String>(MENU_SYSTEM_FACTORY_RESET_CONFIRM, "Factory Reset"));
     menuNames.insert(std::pair<int, String>(MENU_SYSTEM_UPDATE_CHECK, "Update Check"));
+    menuNames.insert(std::pair<int, String>(MENU_SYSTEM_UPDATE_CHECK_PERFORM, "Check Now"));
     menuNames.insert(std::pair<int, String>(MENU_MAIN_DISPLAY, "Display Setup"));
     menuNames.insert(std::pair<int, String>(MENU_SYSTEM_DISPLAY_SETTINGS, "Display Setup"));
     menuNames.insert(std::pair<int, String>(MENU_SYSTEM_THEME, "Local Theme"));
@@ -852,6 +858,9 @@ bool AerGUI::buildMenuDefinitions()
     menuNames.insert(std::pair<int, String>(MENU_WIFI_STATIC_NETMASK, "NetMask"));
     menuNames.insert(std::pair<int, String>(MENU_WIFI_STATIC_DNS1, "DNS 1"));
     menuNames.insert(std::pair<int, String>(MENU_WIFI_STATIC_DNS2, "DNS 2"));
+    menuNames.insert(std::pair<int, String>(MENU_WIFI_AUTH, "Basic WebAuth"));
+    menuNames.insert(std::pair<int, String>(MENU_WIFI_AUTH_EDIT, "Edit"));
+    menuNames.insert(std::pair<int, String>(MENU_WIFI_AUTH_SAVE, "Save"));
     menuNames.insert(std::pair<int, String>(MENU_BLE_ENABLE, "Enabled"));
     menuNames.insert(std::pair<int, String>(MENU_BLE_MONITOR, "Monitor"));
     menuNames.insert(std::pair<int, String>(MENU_USB_ENABLE, "Enabled"));
@@ -1285,6 +1294,9 @@ void AerGUI::printIcon(uint x, uint y, uint16_t menuIndex, bool selected)
     case MENU_MAIN_WIFI:
         tft->pushImage(x, y, 28, 28, image_data_wifi, 0xffff);
         break;
+    case MENU_WIFI_AUTH:
+        tft->pushImage(x, y, 28, 28, image_data_lock1, 0xffff);
+        break;
     case MENU_MAIN_BLE:
     case MENU_BLE_ENABLE:
         tft->pushImage(x, y, 28, 28, image_data_ble, 0xffff);
@@ -1339,6 +1351,7 @@ void AerGUI::printIcon(uint x, uint y, uint16_t menuIndex, bool selected)
         tft->pushImage(x, y, 28, 28, image_data_thermal_ssr, 0xffff);
         break;
     case MENU_SYSTEM_UPDATE_CHECK:
+    case MENU_SYSTEM_UPDATE_CHECK_PERFORM:
         tft->pushImage(x, y, 28, 28, image_data_update, 0xffff);
         break;
     case MENU_SYSTEM_DISPLAY_SETTINGS:
@@ -2043,10 +2056,13 @@ void AerGUI::printIcon(TFT_eSprite *spr, uint x, uint y, uint16_t menuIndex, boo
     case MENU_PID_P_SET:
     case MENU_PID_I_SET:
     case MENU_PID_D_SET:
-        if (selected) {
+        if (selected)
+        {
             spr->fillCircle(x + 14, y + 14, 7, TFT_RED);
             spr->fillCircle(x + 14, y + 14, 6, TFT_ORANGE);
-        } else {
+        }
+        else
+        {
             spr->fillCircle(x + 14, y + 14, 6, TFT_GOLD);
         }
         break;
@@ -2103,6 +2119,9 @@ void AerGUI::printIcon(TFT_eSprite *spr, uint x, uint y, uint16_t menuIndex, boo
     case MENU_MAIN_WIFI:
         spr->pushImage(x, y, 28, 28, image_data_wifi);
         break;
+    case MENU_WIFI_AUTH:
+        spr->pushImage(x, y, 28, 28, image_data_lock1);
+        break;
     case MENU_MAIN_BLE:
     case MENU_BLE_ENABLE:
         spr->pushImage(x, y, 28, 28, image_data_ble);
@@ -2157,6 +2176,7 @@ void AerGUI::printIcon(TFT_eSprite *spr, uint x, uint y, uint16_t menuIndex, boo
         spr->pushImage(x, y, 28, 28, image_data_thermal_ssr);
         break;
     case MENU_SYSTEM_UPDATE_CHECK:
+    case MENU_SYSTEM_UPDATE_CHECK_PERFORM:
         spr->pushImage(x, y, 28, 28, image_data_update);
         break;
     case MENU_SYSTEM_DISPLAY_SETTINGS:

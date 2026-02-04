@@ -41,6 +41,7 @@
 // #include "screen/i2c/oled.h"   // i2c Screen
 // #include "screen/i2c/display.h"
 
+#include "storage/versionStor.h"
 #include "storage/eepromStor.h"
 #include "storage/flash.h"
 #include "storage/auth.h"
@@ -55,6 +56,7 @@
 #include "storage/lights.h"
 #include "storage/networkStor.h"
 #include "storage/wifiStor.h"
+#include "storage/webAuthStor.h"
 #include "storage/uiSettingsStor.h"
 #include "storage/chartsStor.h"
 #if AERPID_COUNT == 2
@@ -114,7 +116,7 @@ void _initThreadStackSizes()
     taskStackSize[4] = 32 * 32 * 4;  // TFT_Demo
     taskStackSize[5] = 32 * 32 * 4;  // PID_Task
     taskStackSize[6] = 32 * 32 * 6;  // Serial_Task
-    taskStackSize[7] = 32 * 32 * 4;  // TFT_Task
+    taskStackSize[7] = 32 * 32 * 5;  // TFT_Task
     taskStackSize[8] = 32 * 32 * 2;  // LED_Task
     taskStackSize[9] = 32 * 32 * 1;  // perfmon_task
     taskStackSize[10] = 32 * 32 * 4; // webServer (wifi) Task

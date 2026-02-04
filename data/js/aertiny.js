@@ -47,10 +47,13 @@ const ParamAdv = {
   PARAM_ADV_PWM_RES: 2,
   PARAM_ADV_PID_BIAS: 3,
   PARAM_ADV_PID_TIME: 4,
-  PARAM_ADV_PID_RES: 5
+  PARAM_ADV_PID_RES: 5,
+  PARAM_ADV_PID_WINDUP: 6
 };
 
 const SerialCommand = {
+  AUTH: 0x07,
+  VALIDATE: 0x08,
   INIT: 0x20,
   INIT_ADV: 0x2a,
   INIT2: 0x22,
@@ -90,6 +93,13 @@ const Operation = {
   SET: 0x01
 };
 
+const Authentication = {
+  AUTH_NACK: 0x00,
+  AUTH_ACK: 0x01,
+  AUTH_CHECK: 0x02,
+  AUTH_SETUP: 0x03
+};
+
 const WiFi = {
   ENABLE: 0,
   JOIN: 1,
@@ -120,6 +130,10 @@ let state = {
   INITIALIZED: false,
   VERSION: '-',
   NET_VERSION: '-',
+  AUTH_TOKEN: '',
+  AUTH_KEY: '',
+  AUTH_STEP: 0,
+  AUTHENTICATED: false,
   HOSTNAME: '-',
   UPTIME: 0,
   UNIT: TemperatureUnit.CELSIUS,
@@ -144,30 +158,32 @@ let state = {
   },
   COIL1: {
     enabled: false,
-    P: 0.0,
-    I: 0.0,
-    D: 0.0,
+    kP: 0.0,
+    kI: 0.0,
+    kD: 0.0,
     adv: {
       pwm_factor: 0,
       pwm_freq: 0,
       pwm_res: 0,
       pid_bias: 0,
       pid_time: 0,
-      pid_res: 0
+      pid_res: 0,
+      pid_windup: 0
     }
   },
   COIL2: {
     enabled: false,
-    P: 0.0,
-    I: 0.0,
-    D: 0.0,
+    kP: 0.0,
+    kI: 0.0,
+    kD: 0.0,
     adv: {
       pwm_factor: 0,
       pwm_freq: 0,
       pwm_res: 0,
       pid_bias: 0,
       pid_time: 0,
-      pid_res: 0
+      pid_res: 0,
+      pid_windup: 0
     }
   },
   LED: {
@@ -430,9 +446,9 @@ const parseInitMessage = (data) => {
   const temp = getNumber(data.slice(577, 579));
   const setTemp = getNumber(data.slice(579, 581));
   const avgTemp = getNumber(data.slice(581, 583));
-  const P = bytesToDouble(Uint8Array.from(data.slice(583, 591)));
-  const I = bytesToDouble(Uint8Array.from(data.slice(591, 599)));
-  const D = bytesToDouble(Uint8Array.from(data.slice(599, 607)));
+  const kP = bytesToDouble(Uint8Array.from(data.slice(583, 591)));
+  const kI = bytesToDouble(Uint8Array.from(data.slice(591, 599)));
+  const kD = bytesToDouble(Uint8Array.from(data.slice(599, 607)));
   const unitType = data.slice(607, 608)[0];
   const booleanMap = [...Array(8)].map((_, i) => Boolean(data.slice(608, 609)[0] & (1 << (7 - i))));
   const [
@@ -475,9 +491,9 @@ const parseInitMessage = (data) => {
     temp,
     setTemp,
     avgTemp,
-    P,
-    I,
-    D,
+    kP,
+    kI,
+    kD,
     AUTO_OFF_ENABLED,
     COIL_ENABLED,
     BUMP_ENABLED,
@@ -497,7 +513,8 @@ const parseInitMessage2 = (data) => {
     const pidBias = bytesToDouble(Uint8Array.from(data.slice(i, (i += 8))));
     const pidTime = getNumber(data.slice(i, (i += 4)));
     const pidRes = getNumber(data.slice(i, (i += 4)));
-    return [{ pwmPower, pwmFreq, pwmRes, pidBias, pidTime, pidRes }];
+    const pidWindup = bytesToDouble(Uint8Array.from(data.slice(i, (i += 8))));
+    return [{ pwmPower, pwmFreq, pwmRes, pidBias, pidTime, pidRes, pidWindup }];
   } else if (state.MODEL == 2) {
     let i = 0;
     let e1, e2;
@@ -508,7 +525,8 @@ const parseInitMessage2 = (data) => {
       const pidBias = bytesToDouble(Uint8Array.from(data.slice(i, (i += 8))));
       const pidTime = getNumber(data.slice(i, (i += 4)));
       const pidRes = getNumber(data.slice(i, (i += 4)));
-      e1 = { pwmPower, pwmFreq, pwmRes, pidBias, pidTime, pidRes };
+      const pidWindup = bytesToDouble(Uint8Array.from(data.slice(i, (i += 8))));
+      e1 = { pwmPower, pwmFreq, pwmRes, pidBias, pidTime, pidRes, pidWindup };
     }
     {
       const pwmPower = bytesToDouble(Uint8Array.from(data.slice(i, (i += 8))));
@@ -517,7 +535,8 @@ const parseInitMessage2 = (data) => {
       const pidBias = bytesToDouble(Uint8Array.from(data.slice(i, (i += 8))));
       const pidTime = getNumber(data.slice(i, (i += 4)));
       const pidRes = getNumber(data.slice(i, (i += 4)));
-      e2 = { pwmPower, pwmFreq, pwmRes, pidBias, pidTime, pidRes };
+      const pidWindup = bytesToDouble(Uint8Array.from(data.slice(i, (i += 8))));
+      e2 = { pwmPower, pwmFreq, pwmRes, pidBias, pidTime, pidRes, pidWindup };
     }
     return [e1, e2];
   }
@@ -532,21 +551,36 @@ function initWebSocket() {
   if (connecting || connected) {
     return;
   }
+  if (state.AUTH_STEP < 1) {
+    socketWaitForAuth();
+    return;
+  }
   console.log('Attempting to open WebSocket connection...');
   connecting = true;
+  state.AUTH_STEP = 2;
+  state.AUTHENTICATED = false;
   document.getElementById('sockets-modal-connect-btn').disabled = true;
   document.getElementById('sockets-modal').style.display = 'block';
   document.getElementById('sockets-modal-mobile').style.display = 'block';
   document.getElementById('sockets-modal-text').innerHTML = '...Connecting...';
-  websocket = new WebSocket(gateway);
-  websocket.onopen = onOpen;
-  websocket.onclose = onClose;
-  websocket.onmessage = onMessage;
+  try {
+    websocket = new WebSocket(gateway, state.AUTH_KEY);
+    websocket.onopen = onOpen;
+    websocket.onclose = onClose;
+    websocket.onmessage = onMessage;
+    websocket.onerror = onError;
+  } catch (e) {
+    console.log(e);
+    onError(undefined);
+  }
 }
 function onOpen(event) {
   console.log('Connection to host opened!');
   connecting = false;
   connected = true;
+  state.AUTH_STEP = 3;
+  state.AUTHENTICATED = true;
+  document.getElementById('aer-auth-modal').style.display = 'none';
   document.getElementById('sockets-modal-text').innerHTML = 'Connected!';
   document.getElementById('sockets-modal').style.display = 'none';
   document.getElementById('sockets-modal-mobile').style.display = 'none';
@@ -555,11 +589,35 @@ function onClose(event) {
   console.log('Connection to host closed!');
   connecting = false;
   connected = false;
+  state.AUTH_STEP = 0;
+  state.AUTHENTICATED = false;
+  document.getElementById('apassword').disabled = false;
+  document.getElementById('aer-auth-modal').style.display = 'block';
+  document.getElementById('aer-auth-pending').style.display = 'none';
+  document.getElementById('aer-auth-validate').style.display = 'none';
+  document.getElementById('aer-auth-form').style.display = 'block';
   document.getElementById('sockets-modal-connect-btn').disabled = false;
   document.getElementById('sockets-modal-text').innerHTML = 'Connection Error!';
   document.getElementById('sockets-modal').style.display = 'block';
   document.getElementById('sockets-modal-mobile').style.display = 'block';
   //setTimeout(initWebSocket, 3000);
+}
+function onError(event) {
+  console.log('Connection to host faulted!');
+  connecting = false;
+  connected = false;
+  state.AUTH_STEP = 0;
+  state.AUTHENTICATED = false;
+  document.getElementById('apassword').disabled = false;
+  document.getElementById('aer-auth-modal').style.display = 'block';
+  document.getElementById('aer-auth-pending').style.display = 'none';
+  document.getElementById('aer-auth-validate').style.display = 'none';
+  document.getElementById('aer-auth-form').style.display = 'none';
+  document.getElementById('aer-auth-error').style.display = 'block';
+  document.getElementById('sockets-modal-connect-btn').disabled = false;
+  document.getElementById('sockets-modal-text').innerHTML = 'Connection Error!';
+  document.getElementById('sockets-modal').style.display = 'block';
+  document.getElementById('sockets-modal-mobile').style.display = 'block';
 }
 
 const initPageData = async (initData) => {
@@ -639,35 +697,35 @@ const initPageData = async (initData) => {
     document.getElementById('br_qset').value = `${state.LED.brightness}`;
   }
   state.COIL1.enabled = initData.COIL_ENABLED;
-  state.COIL1.P = initData.P;
+  state.COIL1.kP = initData.kP;
   if (document.getElementById('p_set')) {
-    document.getElementById('p_set').value = `${state.COIL1.P}`;
+    document.getElementById('p_set').value = `${state.COIL1.kP}`;
   }
   if (document.getElementById('p_qset')) {
-    document.getElementById('p_qset').value = `${state.COIL1.P}`;
+    document.getElementById('p_qset').value = `${state.COIL1.kP}`;
   }
   if (document.getElementById('p_qset2')) {
-    document.getElementById('p_qset2').value = `${state.COIL1.P}`;
+    document.getElementById('p_qset2').value = `${state.COIL1.kP}`;
   }
-  state.COIL1.I = initData.I;
+  state.COIL1.kI = initData.kI;
   if (document.getElementById('i_set')) {
-    document.getElementById('i_set').value = `${state.COIL1.I}`;
+    document.getElementById('i_set').value = `${state.COIL1.kI}`;
   }
   if (document.getElementById('i_qset')) {
-    document.getElementById('i_qset').value = `${state.COIL1.I}`;
+    document.getElementById('i_qset').value = `${state.COIL1.kI}`;
   }
   if (document.getElementById('i_qset2')) {
-    document.getElementById('i_qset2').value = `${state.COIL1.I}`;
+    document.getElementById('i_qset2').value = `${state.COIL1.kI}`;
   }
-  state.COIL1.D = initData.D;
+  state.COIL1.kD = initData.kD;
   if (document.getElementById('d_set')) {
-    document.getElementById('d_set').value = `${state.COIL1.D}`;
+    document.getElementById('d_set').value = `${state.COIL1.kD}`;
   }
   if (document.getElementById('d_qset')) {
-    document.getElementById('d_qset').value = `${state.COIL1.D}`;
+    document.getElementById('d_qset').value = `${state.COIL1.kD}`;
   }
   if (document.getElementById('d_qset2')) {
-    document.getElementById('d_qset2').value = `${state.COIL1.D}`;
+    document.getElementById('d_qset2').value = `${state.COIL1.kD}`;
   }
   if (document.getElementById('toggle_heat')) {
     const element = document.getElementById('toggle_heat');
@@ -686,16 +744,16 @@ const initPageData = async (initData) => {
       state.UNIT == TemperatureUnit.FAHRENHEIT
         ? cToF(state.FAV_1.temp)
         : state.UNIT == TemperatureUnit.KELVIN
-        ? cToK(state.FAV_1.temp)
-        : cToC(state.FAV_1.temp);
+          ? cToK(state.FAV_1.temp)
+          : cToC(state.FAV_1.temp);
   }
   if (document.getElementById('fav1q_n')) {
     document.getElementById('fav1q_n').innerHTML =
       state.UNIT == TemperatureUnit.FAHRENHEIT
         ? cToF(state.FAV_1.temp)
         : state.UNIT == TemperatureUnit.KELVIN
-        ? cToK(state.FAV_1.temp)
-        : cToC(state.FAV_1.temp) + '';
+          ? cToK(state.FAV_1.temp)
+          : cToC(state.FAV_1.temp) + '';
   }
   if (document.getElementById('fav1_t')) {
     document.getElementById('fav1_t').value = `${state.FAV_1.name}`;
@@ -711,16 +769,16 @@ const initPageData = async (initData) => {
       state.UNIT == TemperatureUnit.FAHRENHEIT
         ? cToF(state.FAV_2.temp)
         : state.UNIT == TemperatureUnit.KELVIN
-        ? cToK(state.FAV_2.temp)
-        : cToC(state.FAV_2.temp);
+          ? cToK(state.FAV_2.temp)
+          : cToC(state.FAV_2.temp);
   }
   if (document.getElementById('fav2q_n')) {
     document.getElementById('fav2q_n').innerHTML =
       state.UNIT == TemperatureUnit.FAHRENHEIT
         ? cToF(state.FAV_2.temp)
         : state.UNIT == TemperatureUnit.KELVIN
-        ? cToK(state.FAV_2.temp)
-        : cToC(state.FAV_2.temp) + '';
+          ? cToK(state.FAV_2.temp)
+          : cToC(state.FAV_2.temp) + '';
   }
   if (document.getElementById('fav2_t')) {
     document.getElementById('fav2_t').value = `${state.FAV_2.name}`;
@@ -736,16 +794,16 @@ const initPageData = async (initData) => {
       state.UNIT == TemperatureUnit.FAHRENHEIT
         ? cToF(state.FAV_3.temp)
         : state.UNIT == TemperatureUnit.KELVIN
-        ? cToK(state.FAV_3.temp)
-        : cToC(state.FAV_3.temp);
+          ? cToK(state.FAV_3.temp)
+          : cToC(state.FAV_3.temp);
   }
   if (document.getElementById('fav3q_n')) {
     document.getElementById('fav3q_n').innerHTML =
       state.UNIT == TemperatureUnit.FAHRENHEIT
         ? cToF(state.FAV_3.temp)
         : state.UNIT == TemperatureUnit.KELVIN
-        ? cToK(state.FAV_3.temp)
-        : cToC(state.FAV_3.temp) + '';
+          ? cToK(state.FAV_3.temp)
+          : cToC(state.FAV_3.temp) + '';
   }
   if (document.getElementById('fav3_t')) {
     document.getElementById('fav3_t').value = `${state.FAV_3.name}`;
@@ -761,16 +819,16 @@ const initPageData = async (initData) => {
       state.UNIT == TemperatureUnit.FAHRENHEIT
         ? cToF(state.FAV_4.temp)
         : state.UNIT == TemperatureUnit.KELVIN
-        ? cToK(state.FAV_4.temp)
-        : cToC(state.FAV_4.temp);
+          ? cToK(state.FAV_4.temp)
+          : cToC(state.FAV_4.temp);
   }
   if (document.getElementById('fav4q_n')) {
     document.getElementById('fav4q_n').innerHTML =
       state.UNIT == TemperatureUnit.FAHRENHEIT
         ? cToF(state.FAV_4.temp)
         : state.UNIT == TemperatureUnit.KELVIN
-        ? cToK(state.FAV_4.temp)
-        : cToC(state.FAV_4.temp) + '';
+          ? cToK(state.FAV_4.temp)
+          : cToC(state.FAV_4.temp) + '';
   }
   if (document.getElementById('fav4_t')) {
     document.getElementById('fav4_t').value = `${state.FAV_4.name}`;
@@ -795,16 +853,16 @@ const initPageData = async (initData) => {
       state.UNIT == TemperatureUnit.FAHRENHEIT
         ? cToF(state.TEMP).toFixed(1)
         : state.UNIT == TemperatureUnit.KELVIN
-        ? cToK(state.TEMP).toFixed(1)
-        : cToC(state.TEMP).toFixed(1);
+          ? cToK(state.TEMP).toFixed(1)
+          : cToC(state.TEMP).toFixed(1);
   state.SET_TEMP = initData.setTemp;
   if (document.getElementById('temp_setting'))
     document.getElementById('temp_setting').value =
       state.UNIT == TemperatureUnit.FAHRENHEIT
         ? cToF(state.SET_TEMP).toFixed(1)
         : state.UNIT == TemperatureUnit.KELVIN
-        ? cToK(state.SET_TEMP).toFixed(1)
-        : cToC(state.SET_TEMP).toFixed(1);
+          ? cToK(state.SET_TEMP).toFixed(1)
+          : cToC(state.SET_TEMP).toFixed(1);
 
   updateTempMeter();
   updateTempSlider();
@@ -859,6 +917,10 @@ const initPageData2 = async (initData) => {
   if (document.getElementById('pid1_set_reso')) {
     document.getElementById('pid1_set_reso').value = `${state.COIL1.adv.pid_res}`;
   }
+  state.COIL1.adv.pid_windup = initData[0].pidWindup;
+  if (document.getElementById('pid1_set_windup')) {
+    document.getElementById('pid1_set_windup').value = `${state.COIL1.adv.pid_windup}`;
+  }
   document.getElementById('pwm_adv1_msg').style.display = 'none';
   document.getElementById('pid_adv1_msg').style.display = 'none';
   if (state.MODEL == 2) {
@@ -885,6 +947,10 @@ const initPageData2 = async (initData) => {
     state.COIL2.adv.pid_res = initData[1].pidRes;
     if (document.getElementById('pid2_set_reso')) {
       document.getElementById('pid2_set_reso').value = `${state.COIL2.adv.pid_res}`;
+    }
+    state.COIL2.adv.pid_windup = initData[1].pidWindup;
+    if (document.getElementById('pid2_set_windup')) {
+      document.getElementById('pid2_set_windup').value = `${state.COIL2.adv.pid_windup}`;
     }
     document.getElementById('pwm_adv2_msg').style.display = 'none';
     document.getElementById('pid_adv2_msg').style.display = 'none';
@@ -914,14 +980,14 @@ const updateTempMeter = () => {
     state.UNIT == TemperatureUnit.FAHRENHEIT
       ? cToF(state.TEMP).toFixed(1)
       : state.UNIT == TemperatureUnit.KELVIN
-      ? cToK(state.TEMP).toFixed(1)
-      : cToC(state.TEMP).toFixed(1);
+        ? cToK(state.TEMP).toFixed(1)
+        : cToC(state.TEMP).toFixed(1);
   const temp_setting =
     state.UNIT == TemperatureUnit.FAHRENHEIT
       ? cToF(state.SET_TEMP).toFixed(1)
       : state.UNIT == TemperatureUnit.KELVIN
-      ? cToK(state.SET_TEMP).toFixed(1)
-      : cToC(state.SET_TEMP).toFixed(1);
+        ? cToK(state.SET_TEMP).toFixed(1)
+        : cToC(state.SET_TEMP).toFixed(1);
   bar.style.transform = 'rotate(' + (45 + temp * 0.15) + 'deg)';
   var color = 'black';
   if (temp >= temp_setting - 7 && temp <= temp_setting + 7) {
@@ -949,14 +1015,14 @@ const updateTempMeter_1 = () => {
     state.UNIT == TemperatureUnit.FAHRENHEIT
       ? cToF(state.TEMP).toFixed(1)
       : state.UNIT == TemperatureUnit.KELVIN
-      ? cToK(state.TEMP).toFixed(1)
-      : cToC(state.TEMP).toFixed(1);
+        ? cToK(state.TEMP).toFixed(1)
+        : cToC(state.TEMP).toFixed(1);
   const temp_setting =
     state.UNIT == TemperatureUnit.FAHRENHEIT
       ? cToF(state.SET_TEMP).toFixed(1)
       : state.UNIT == TemperatureUnit.KELVIN
-      ? cToK(state.SET_TEMP).toFixed(1)
-      : cToC(state.SET_TEMP).toFixed(1);
+        ? cToK(state.SET_TEMP).toFixed(1)
+        : cToC(state.SET_TEMP).toFixed(1);
   bar.style.transform = 'rotate(' + (45 + temp * 0.15) + 'deg)';
   var color = 'black';
   if (temp >= temp_setting - 7 && temp <= temp_setting + 7) {
@@ -984,14 +1050,14 @@ const updateTempMeter_2 = () => {
     state.UNIT == TemperatureUnit.FAHRENHEIT
       ? cToF(state.TEMP2).toFixed(1)
       : state.UNIT == TemperatureUnit.KELVIN
-      ? cToK(state.TEMP2).toFixed(1)
-      : cToC(state.TEMP2).toFixed(1);
+        ? cToK(state.TEMP2).toFixed(1)
+        : cToC(state.TEMP2).toFixed(1);
   const temp_setting =
     state.UNIT == TemperatureUnit.FAHRENHEIT
       ? cToF(state.SET_TEMP2).toFixed(1)
       : state.UNIT == TemperatureUnit.KELVIN
-      ? cToK(state.SET_TEMP2).toFixed(1)
-      : cToC(state.SET_TEMP2).toFixed(1);
+        ? cToK(state.SET_TEMP2).toFixed(1)
+        : cToC(state.SET_TEMP2).toFixed(1);
   bar.style.transform = 'rotate(' + (45 + temp * 0.15) + 'deg)';
   var color = 'black';
   if (temp >= temp_setting - 7 && temp <= temp_setting + 7) {
@@ -1023,8 +1089,8 @@ function updateTempSlider() {
     state.UNIT == TemperatureUnit.FAHRENHEIT
       ? cToF(state.SET_TEMP).toFixed(1)
       : state.UNIT == TemperatureUnit.KELVIN
-      ? cToK(state.SET_TEMP).toFixed(1)
-      : cToC(state.SET_TEMP).toFixed(1);
+        ? cToK(state.SET_TEMP).toFixed(1)
+        : cToC(state.SET_TEMP).toFixed(1);
 }
 
 function updateTempSlider_1() {
@@ -1037,8 +1103,8 @@ function updateTempSlider_1() {
     state.UNIT == TemperatureUnit.FAHRENHEIT
       ? cToF(state.SET_TEMP).toFixed(1)
       : state.UNIT == TemperatureUnit.KELVIN
-      ? cToK(state.SET_TEMP).toFixed(1)
-      : cToC(state.SET_TEMP).toFixed(1);
+        ? cToK(state.SET_TEMP).toFixed(1)
+        : cToC(state.SET_TEMP).toFixed(1);
 }
 
 function updateTempSlider_2() {
@@ -1051,8 +1117,8 @@ function updateTempSlider_2() {
     state.UNIT == TemperatureUnit.FAHRENHEIT
       ? cToF(state.SET_TEMP2).toFixed(1)
       : state.UNIT == TemperatureUnit.KELVIN
-      ? cToK(state.SET_TEMP2).toFixed(1)
-      : cToC(state.SET_TEMP2).toFixed(1);
+        ? cToK(state.SET_TEMP2).toFixed(1)
+        : cToC(state.SET_TEMP2).toFixed(1);
 }
 
 const initPageMessage = async (initData) => {
@@ -1075,6 +1141,17 @@ const handleMessage = (dat) => {
   let pid_enb;
   let param;
   switch (cmd) {
+    case SerialCommand.AUTH:
+      var op = dat.slice(1, 2);
+      if (op == Authentication.AUTH_SETUP) {
+        state.AUTH_TOKEN = dat.slice(2);
+      } else if (op == Authentication.AUTH_CHECK) {
+      } else if (op == Authentication.AUTH_ACK) {
+        state.AUTHENTICATED = true;
+      } else if (op == Authentication.AUTH_NACK) {
+        state.AUTHENTICATED = false;
+      }
+      break;
     case SerialCommand.INIT:
       const initMsg = parseInitMessage(dat.slice(1));
       //console.log(initMsg);
@@ -1098,18 +1175,18 @@ const handleMessage = (dat) => {
         state.UNIT == TemperatureUnit.FAHRENHEIT
           ? cToF(mes_temp).toFixed(1)
           : state.UNIT == TemperatureUnit.KELVIN
-          ? cToK(mes_temp).toFixed(1)
-          : cToC(mes_temp).toFixed(1),
+            ? cToK(mes_temp).toFixed(1)
+            : cToC(mes_temp).toFixed(1),
         state.UNIT == TemperatureUnit.FAHRENHEIT
           ? cToF(avg_temp).toFixed(1)
           : state.UNIT == TemperatureUnit.KELVIN
-          ? cToK(avg_temp).toFixed(1)
-          : cToC(avg_temp).toFixed(1),
+            ? cToK(avg_temp).toFixed(1)
+            : cToC(avg_temp).toFixed(1),
         state.UNIT == TemperatureUnit.FAHRENHEIT
           ? cToF(set_temp).toFixed(1)
           : state.UNIT == TemperatureUnit.KELVIN
-          ? cToK(set_temp).toFixed(1)
-          : cToC(set_temp).toFixed(1),
+            ? cToK(set_temp).toFixed(1)
+            : cToC(set_temp).toFixed(1),
         output / 10,
         sigma / 10
       );
@@ -1142,15 +1219,15 @@ const handleMessage = (dat) => {
           state.UNIT == TemperatureUnit.FAHRENHEIT
             ? cToF(state.TEMP).toFixed(1)
             : state.UNIT == TemperatureUnit.KELVIN
-            ? cToK(state.TEMP).toFixed(1)
-            : cToC(state.TEMP).toFixed(1);
+              ? cToK(state.TEMP).toFixed(1)
+              : cToC(state.TEMP).toFixed(1);
       if (document.getElementById('meas_temp_1'))
         document.getElementById('meas_temp_1').innerHTML =
           state.UNIT == TemperatureUnit.FAHRENHEIT
             ? cToF(state.TEMP).toFixed(1)
             : state.UNIT == TemperatureUnit.KELVIN
-            ? cToK(state.TEMP).toFixed(1)
-            : cToC(state.TEMP).toFixed(1);
+              ? cToK(state.TEMP).toFixed(1)
+              : cToC(state.TEMP).toFixed(1);
       var elm_ts = document.getElementById('temp_setting');
       var isFocused = document.activeElement === elm_ts;
       if (!isFocused && document.getElementById('temp_setting'))
@@ -1158,8 +1235,8 @@ const handleMessage = (dat) => {
           state.UNIT == TemperatureUnit.FAHRENHEIT
             ? cToF(state.SET_TEMP).toFixed(1)
             : state.UNIT == TemperatureUnit.KELVIN
-            ? cToK(state.SET_TEMP).toFixed(1)
-            : cToC(state.SET_TEMP).toFixed(1);
+              ? cToK(state.SET_TEMP).toFixed(1)
+              : cToC(state.SET_TEMP).toFixed(1);
       var elm_ts2 = document.getElementById('temp_setting_1');
       var isFocused2 = document.activeElement === elm_ts2;
       if (!isFocused2 && document.getElementById('temp_setting_1'))
@@ -1167,8 +1244,8 @@ const handleMessage = (dat) => {
           state.UNIT == TemperatureUnit.FAHRENHEIT
             ? cToF(state.SET_TEMP).toFixed(1)
             : state.UNIT == TemperatureUnit.KELVIN
-            ? cToK(state.SET_TEMP).toFixed(1)
-            : cToC(state.SET_TEMP).toFixed(1);
+              ? cToK(state.SET_TEMP).toFixed(1)
+              : cToC(state.SET_TEMP).toFixed(1);
       updateTempMeter();
       updateTempMeter_1();
       updateTempSlider();
@@ -1186,18 +1263,18 @@ const handleMessage = (dat) => {
         state.UNIT == TemperatureUnit.FAHRENHEIT
           ? cToF(mes_temp).toFixed(1)
           : state.UNIT == TemperatureUnit.KELVIN
-          ? cToK(mes_temp).toFixed(1)
-          : cToC(mes_temp).toFixed(1),
+            ? cToK(mes_temp).toFixed(1)
+            : cToC(mes_temp).toFixed(1),
         state.UNIT == TemperatureUnit.FAHRENHEIT
           ? cToF(avg_temp).toFixed(1)
           : state.UNIT == TemperatureUnit.KELVIN
-          ? cToK(avg_temp).toFixed(1)
-          : cToC(avg_temp).toFixed(1),
+            ? cToK(avg_temp).toFixed(1)
+            : cToC(avg_temp).toFixed(1),
         state.UNIT == TemperatureUnit.FAHRENHEIT
           ? cToF(set_temp).toFixed(1)
           : state.UNIT == TemperatureUnit.KELVIN
-          ? cToK(set_temp).toFixed(1)
-          : cToC(set_temp).toFixed(1),
+            ? cToK(set_temp).toFixed(1)
+            : cToC(set_temp).toFixed(1),
         output / 10,
         sigma / 10
       );
@@ -1220,8 +1297,8 @@ const handleMessage = (dat) => {
           state.UNIT == TemperatureUnit.FAHRENHEIT
             ? cToF(state.TEMP2).toFixed(1)
             : state.UNIT == TemperatureUnit.KELVIN
-            ? cToK(state.TEMP2).toFixed(1)
-            : cToC(state.TEMP2).toFixed(1);
+              ? cToK(state.TEMP2).toFixed(1)
+              : cToC(state.TEMP2).toFixed(1);
       var elm_ts = document.getElementById('temp_setting_2');
       var isFocused = document.activeElement === elm_ts;
       if (!isFocused && document.getElementById('temp_setting_2'))
@@ -1229,8 +1306,8 @@ const handleMessage = (dat) => {
           state.UNIT == TemperatureUnit.FAHRENHEIT
             ? cToF(state.SET_TEMP2).toFixed(1)
             : state.UNIT == TemperatureUnit.KELVIN
-            ? cToK(state.SET_TEMP2).toFixed(1)
-            : cToC(state.SET_TEMP2).toFixed(1);
+              ? cToK(state.SET_TEMP2).toFixed(1)
+              : cToC(state.SET_TEMP2).toFixed(1);
       updateTempMeter_2();
       updateTempSlider_2();
       break;
@@ -1245,8 +1322,8 @@ const handleMessage = (dat) => {
           state.UNIT == TemperatureUnit.FAHRENHEIT
             ? cToF(state.SET_TEMP).toFixed(1)
             : state.UNIT == TemperatureUnit.KELVIN
-            ? cToK(state.SET_TEMP).toFixed(1)
-            : cToC(state.SET_TEMP).toFixed(1);
+              ? cToK(state.SET_TEMP).toFixed(1)
+              : cToC(state.SET_TEMP).toFixed(1);
       var elm_ts2 = document.getElementById('temp_setting_1');
       var isFocused2 = document.activeElement === elm_ts2;
       if (!isFocused2 && document.getElementById('temp_setting_1'))
@@ -1254,8 +1331,8 @@ const handleMessage = (dat) => {
           state.UNIT == TemperatureUnit.FAHRENHEIT
             ? cToF(state.SET_TEMP).toFixed(1)
             : state.UNIT == TemperatureUnit.KELVIN
-            ? cToK(state.SET_TEMP).toFixed(1)
-            : cToC(state.SET_TEMP).toFixed(1);
+              ? cToK(state.SET_TEMP).toFixed(1)
+              : cToC(state.SET_TEMP).toFixed(1);
       updateTempMeter();
       updateTempMeter_1();
       updateTempSlider();
@@ -1272,8 +1349,8 @@ const handleMessage = (dat) => {
           state.UNIT == TemperatureUnit.FAHRENHEIT
             ? cToF(state.SET_TEMP).toFixed(1)
             : state.UNIT == TemperatureUnit.KELVIN
-            ? cToK(state.SET_TEMP).toFixed(1)
-            : cToC(state.SET_TEMP).toFixed(1);
+              ? cToK(state.SET_TEMP).toFixed(1)
+              : cToC(state.SET_TEMP).toFixed(1);
       updateTempMeter_2();
       updateTempSlider_2();
       break;
@@ -1328,35 +1405,35 @@ const handleMessage = (dat) => {
           const I = bytesToDouble(Uint8Array.from(dat.slice(10, 18)));
           const D = bytesToDouble(Uint8Array.from(dat.slice(18, 26)));
           //console.log(P, I, D);
-          state.COIL1.P = P;
+          state.COIL1.kP = P;
           if (document.getElementById('p_set')) {
-            document.getElementById('p_set').value = `${state.COIL1.P}`;
+            document.getElementById('p_set').value = `${state.COIL1.kP}`;
           }
           if (document.getElementById('p_qset')) {
-            document.getElementById('p_qset').value = `${state.COIL1.P}`;
+            document.getElementById('p_qset').value = `${state.COIL1.kP}`;
           }
           if (document.getElementById('p_qset2')) {
-            document.getElementById('p_qset2').value = `${state.COIL1.P}`;
+            document.getElementById('p_qset2').value = `${state.COIL1.kP}`;
           }
-          state.COIL1.I = I;
+          state.COIL1.kI = I;
           if (document.getElementById('i_set')) {
-            document.getElementById('i_set').value = `${state.COIL1.I}`;
+            document.getElementById('i_set').value = `${state.COIL1.kI}`;
           }
           if (document.getElementById('i_qset')) {
-            document.getElementById('i_qset').value = `${state.COIL1.I}`;
+            document.getElementById('i_qset').value = `${state.COIL1.kI}`;
           }
           if (document.getElementById('i_qset2')) {
-            document.getElementById('i_qset2').value = `${state.COIL1.I}`;
+            document.getElementById('i_qset2').value = `${state.COIL1.kI}`;
           }
-          state.COIL1.D = D;
+          state.COIL1.kD = D;
           if (document.getElementById('d_set')) {
-            document.getElementById('d_set').value = `${state.COIL1.D}`;
+            document.getElementById('d_set').value = `${state.COIL1.kD}`;
           }
           if (document.getElementById('d_qset')) {
-            document.getElementById('d_qset').value = `${state.COIL1.D}`;
+            document.getElementById('d_qset').value = `${state.COIL1.kD}`;
           }
           if (document.getElementById('d_qset2')) {
-            document.getElementById('d_qset2').value = `${state.COIL1.D}`;
+            document.getElementById('d_qset2').value = `${state.COIL1.kD}`;
           }
           break;
         default:
@@ -1367,21 +1444,21 @@ const handleMessage = (dat) => {
       param = dat[1];
       switch (param) {
         case ParamPid.PARAM_PID:
-          const P = bytesToDouble(Uint8Array.from(dat.slice(2, 10)));
-          const I = bytesToDouble(Uint8Array.from(dat.slice(10, 18)));
-          const D = bytesToDouble(Uint8Array.from(dat.slice(18, 26)));
+          const kP = bytesToDouble(Uint8Array.from(dat.slice(2, 10)));
+          const kI = bytesToDouble(Uint8Array.from(dat.slice(10, 18)));
+          const kD = bytesToDouble(Uint8Array.from(dat.slice(18, 26)));
           //console.log(P, I, D);
-          state.COIL2.P = P;
+          state.COIL2.kP = kP;
           if (document.getElementById('p_qset2b')) {
-            document.getElementById('p_qset2b').value = `${state.COIL2.P}`;
+            document.getElementById('p_qset2b').value = `${state.COIL2.kP}`;
           }
-          state.COIL2.I = I;
+          state.COIL2.kI = kI;
           if (document.getElementById('i_qset2b')) {
-            document.getElementById('i_qset2b').value = `${state.COIL2.I}`;
+            document.getElementById('i_qset2b').value = `${state.COIL2.kI}`;
           }
-          state.COIL2.D = D;
+          state.COIL2.kD = kD;
           if (document.getElementById('d_qset2b')) {
-            document.getElementById('d_qset2b').value = `${state.COIL2.D}`;
+            document.getElementById('d_qset2b').value = `${state.COIL2.kD}`;
           }
           break;
         default:
@@ -1397,6 +1474,7 @@ const handleMessage = (dat) => {
           if (document.getElementById('pwm1_set_fact')) {
             document.getElementById('pwm1_set_fact').value = `${val * 100}`;
           }
+          break;
         }
         case ParamAdv.PARAM_ADV_PWM_FREQ: {
           const val = bytesToDouble(Uint8Array.from(dat.slice(2, 10)));
@@ -1404,6 +1482,7 @@ const handleMessage = (dat) => {
           if (document.getElementById('pwm1_set_freq')) {
             document.getElementById('pwm1_set_freq').value = `${val}`;
           }
+          break;
         }
         case ParamAdv.PARAM_ADV_PWM_RES: {
           const val = bytesToDouble(Uint8Array.from(dat.slice(2, 10)));
@@ -1426,6 +1505,7 @@ const handleMessage = (dat) => {
           if (document.getElementById('pid1_set_bias')) {
             document.getElementById('pid1_set_bias').value = `${val}`;
           }
+          break;
         }
         case ParamAdv.PARAM_ADV_PID_TIME: {
           const val = bytesToDouble(Uint8Array.from(dat.slice(2, 10)));
@@ -1433,12 +1513,21 @@ const handleMessage = (dat) => {
           if (document.getElementById('pid1_set_time')) {
             document.getElementById('pid1_set_time').value = `${val}`;
           }
+          break;
         }
-        case ParamAdv.PARAM_ADV_PID_TIME: {
+        case ParamAdv.PARAM_ADV_PID_RES: {
           const val = bytesToDouble(Uint8Array.from(dat.slice(2, 10)));
           state.COIL1.adv.pid_res = val;
           if (document.getElementById('pid1_set_reso')) {
             document.getElementById('pid1_set_reso').value = `${val}`;
+          }
+          break;
+        }
+        case ParamAdv.PARAM_ADV_PID_WINDUP: {
+          const val = bytesToDouble(Uint8Array.from(dat.slice(2, 10)));
+          state.COIL1.adv.pid_windup = val;
+          if (document.getElementById('pid1_set_windup')) {
+            document.getElementById('pid1_set_windup').value = `${val}`;
           }
           break;
         }
@@ -1455,6 +1544,7 @@ const handleMessage = (dat) => {
           if (document.getElementById('pwm2_set_fact')) {
             document.getElementById('pwm2_set_fact').value = `${val * 100}`;
           }
+          break;
         }
         case ParamAdv.PARAM_ADV_PWM_FREQ: {
           const val = bytesToDouble(Uint8Array.from(dat.slice(2, 10)));
@@ -1462,6 +1552,7 @@ const handleMessage = (dat) => {
           if (document.getElementById('pwm2_set_freq')) {
             document.getElementById('pwm2_set_freq').value = `${val}`;
           }
+          break;
         }
         case ParamAdv.PARAM_ADV_PWM_RES: {
           const val = bytesToDouble(Uint8Array.from(dat.slice(2, 10)));
@@ -1484,6 +1575,7 @@ const handleMessage = (dat) => {
           if (document.getElementById('pid2_set_bias')) {
             document.getElementById('pid2_set_bias').value = `${val}`;
           }
+          break;
         }
         case ParamAdv.PARAM_ADV_PID_TIME: {
           const val = bytesToDouble(Uint8Array.from(dat.slice(2, 10)));
@@ -1491,12 +1583,21 @@ const handleMessage = (dat) => {
           if (document.getElementById('pid2_set_time')) {
             document.getElementById('pid2_set_time').value = `${val}`;
           }
+          break;
         }
-        case ParamAdv.PARAM_ADV_PID_TIME: {
+        case ParamAdv.PARAM_ADV_PID_RES: {
           const val = bytesToDouble(Uint8Array.from(dat.slice(2, 10)));
           state.COIL2.adv.pid_res = val;
           if (document.getElementById('pid2_set_reso')) {
             document.getElementById('pid2_set_reso').value = `${val}`;
+          }
+          break;
+        }
+        case ParamAdv.PARAM_ADV_PID_WINDUP: {
+          const val = bytesToDouble(Uint8Array.from(dat.slice(2, 10)));
+          state.COIL2.adv.pid_windup = val;
+          if (document.getElementById('pid2_set_windup')) {
+            document.getElementById('pid2_set_windup').value = `${val}`;
           }
           break;
         }
@@ -1513,9 +1614,8 @@ const handleMessage = (dat) => {
           console.log('Setup WiFi');
           if (document.getElementById('join_wifi')) {
             document.getElementById('join_wifi').classList.remove('w3-pale-green');
-            document.getElementById(
-              'join_wifi'
-            ).innerHTML = `<div><i class="fas fa-check"></i> Joining Network</div>`;
+            document.getElementById('join_wifi').innerHTML =
+              `<div><i class="fas fa-check"></i> Joining Network</div>`;
           }
           if (document.getElementById('save_wifi_alert')) {
             document.getElementById('save_wifi_alert').style.display = 'block';
@@ -1533,9 +1633,8 @@ const handleMessage = (dat) => {
             document.getElementById('save_wifi_alert').style.display = 'block';
           }
           if (document.getElementById('join_wifi')) {
-            document.getElementById(
-              'join_wifi'
-            ).innerHTML = `<div><i class="fas fa-link"></i> Join Network</div>`;
+            document.getElementById('join_wifi').innerHTML =
+              `<div><i class="fas fa-link"></i> Join Network</div>`;
             document.getElementById('join_wifi').classList.add('w3-pale-green');
           }
           break;
@@ -1707,16 +1806,16 @@ const handleMessage = (dat) => {
               state.UNIT == TemperatureUnit.FAHRENHEIT
                 ? cToF(state.FAV_1.temp)
                 : state.UNIT == TemperatureUnit.KELVIN
-                ? cToK(state.FAV_1.temp)
-                : cToC(state.FAV_1.temp);
+                  ? cToK(state.FAV_1.temp)
+                  : cToC(state.FAV_1.temp);
           }
           if (document.getElementById('fav1q_n')) {
             document.getElementById('fav1q_n').innerHTML =
               state.UNIT == TemperatureUnit.FAHRENHEIT
                 ? cToF(state.FAV_1.temp)
                 : state.UNIT == TemperatureUnit.KELVIN
-                ? cToK(state.FAV_1.temp)
-                : cToC(state.FAV_1.temp) + '&deg;';
+                  ? cToK(state.FAV_1.temp)
+                  : cToC(state.FAV_1.temp) + '&deg;';
           }
           break;
 
@@ -1752,16 +1851,16 @@ const handleMessage = (dat) => {
               state.UNIT == TemperatureUnit.FAHRENHEIT
                 ? cToF(state.FAV_2.temp)
                 : state.UNIT == TemperatureUnit.KELVIN
-                ? cToK(state.FAV_2.temp)
-                : cToC(state.FAV_2.temp);
+                  ? cToK(state.FAV_2.temp)
+                  : cToC(state.FAV_2.temp);
           }
           if (document.getElementById('fav2q_n')) {
             document.getElementById('fav2q_n').innerHTML =
               state.UNIT == TemperatureUnit.FAHRENHEIT
                 ? cToF(state.FAV_2.temp)
                 : state.UNIT == TemperatureUnit.KELVIN
-                ? cToK(state.FAV_2.temp)
-                : cToC(state.FAV_2.temp) + '&deg;';
+                  ? cToK(state.FAV_2.temp)
+                  : cToC(state.FAV_2.temp) + '&deg;';
           }
           break;
 
@@ -1797,16 +1896,16 @@ const handleMessage = (dat) => {
               state.UNIT == TemperatureUnit.FAHRENHEIT
                 ? cToF(state.FAV_3.temp)
                 : state.UNIT == TemperatureUnit.KELVIN
-                ? cToK(state.FAV_3.temp)
-                : cToC(state.FAV_3.temp);
+                  ? cToK(state.FAV_3.temp)
+                  : cToC(state.FAV_3.temp);
           }
           if (document.getElementById('fav3q_n')) {
             document.getElementById('fav3q_n').innerHTML =
               state.UNIT == TemperatureUnit.FAHRENHEIT
                 ? cToF(state.FAV_3.temp)
                 : state.UNIT == TemperatureUnit.KELVIN
-                ? cToK(state.FAV_3.temp)
-                : cToC(state.FAV_3.temp) + '&deg;';
+                  ? cToK(state.FAV_3.temp)
+                  : cToC(state.FAV_3.temp) + '&deg;';
           }
           break;
 
@@ -1842,16 +1941,16 @@ const handleMessage = (dat) => {
               state.UNIT == TemperatureUnit.FAHRENHEIT
                 ? cToF(state.FAV_4.temp)
                 : state.UNIT == TemperatureUnit.KELVIN
-                ? cToK(state.FAV_4.temp)
-                : cToC(state.FAV_4.temp);
+                  ? cToK(state.FAV_4.temp)
+                  : cToC(state.FAV_4.temp);
           }
           if (document.getElementById('fav4q_n')) {
             document.getElementById('fav4q_n').innerHTML =
               state.UNIT == TemperatureUnit.FAHRENHEIT
                 ? cToF(state.FAV_4.temp)
                 : state.UNIT == TemperatureUnit.KELVIN
-                ? cToK(state.FAV_4.temp)
-                : cToC(state.FAV_4.temp) + '&deg;';
+                  ? cToK(state.FAV_4.temp)
+                  : cToC(state.FAV_4.temp) + '&deg;';
           }
           break;
 
@@ -1982,6 +2081,73 @@ function pidButtonInit() {
   document.getElementById('d_qset2b').addEventListener('change', function () {
     qd2bChanged = true;
   });
+}
+
+function triggerAuthStep() {
+  const user = document.getElementById('ausername').value;
+  const pass = document.getElementById('apassword').value;
+  let hash = '';
+  const hpass = sha256(pass).toUpperCase();
+  for (let i = 0; i < 64; i += 2) {
+    const var1 = hpass[i];
+    const var2 = hpass[i + 1];
+    hash += `${var1}${var2}`;
+    if (i < 64 - 2) {
+      hash += '-';
+    }
+  }
+  state.AUTH_KEY = hash.trim();
+  state.AUTH_STEP = 1;
+
+  document.getElementById('ausername').value = '';
+  document.getElementById('apassword').value = '';
+  document.getElementById('apassword').disabled = true;
+
+  setTimeout(() => {
+    if (state.AUTHENTICATED) {
+      return;
+    }
+    console.log('Auth error timout failure!');
+    document.getElementById('aer-auth-form').style.display = 'none';
+    document.getElementById('aer-auth-pending').style.display = 'block';
+    document.getElementById('aer-auth-validate').style.display = 'none';
+    document.getElementById('aer-auth-error').style.display = 'block';
+    document.getElementById('aer-auth-alert').style.display = 'none';
+    setTimeout(() => {
+      console.log('Reloading page...');
+      document.getElementById('aer-auth-pending').style.display = 'none';
+      location.reload();
+    }, 3300);
+  }, 3000);
+}
+
+function sendAuthCmd() {
+  const user = document.getElementById('ausername').value;
+  const pass = document.getElementById('apassword').value;
+  //const huser = sha256(sha256(user) + sha256(state.AUTH_TOKEN));
+  //const hpass = sha256(sha256(pass) + sha256(state.AUTH_TOKEN));
+
+  let hash = '';
+  const hpass = sha256(pass).toUpperCase();
+  for (let i = 0; i < 64; i += 2) {
+    const var1 = hpass[i];
+    const var2 = hpass[i + 1];
+    hash += `${var1}${var2}`;
+    if (i < 64 - 2) {
+      hash += '-';
+    }
+  }
+
+  state.AUTH_KEY = hash.trim();
+  state.AUTH_STEP = 1;
+
+  /*emit_websocket([
+    SerialCommand.AUTH,
+    Operation.GET,
+    Authentication.AUTH_CHECK,
+    ...Array.from(huser),
+    ...Array.from(hpass)
+  ]);*/
 }
 
 function sendPidSettings() {
@@ -2336,6 +2502,35 @@ function sendPid1AdvSettings() {
       ...numberToBytes(Number(val))
     ]);
   }
+  if (true) {
+    let val = document.getElementById('pid1_set_windup').value;
+    if (val.includes('-')) {
+      document.getElementById('pid_adv1_txt').innerHTML =
+        'PID Windup Limit must be a non negative whole number!';
+      document.getElementById('pid_adv1_msg').style.display = 'block';
+      return;
+    } else if (val < 8) {
+      document.getElementById('pid_adv1_txt').innerHTML = 'PID Windup Limit must be 8 or greater!';
+      document.getElementById('pid_adv1_msg').style.display = 'block';
+      return;
+    } else if (val > 32768) {
+      document.getElementById('pid_adv1_txt').innerHTML = 'PID Windup Limit must be 32768 or less!';
+      document.getElementById('pid_adv1_msg').style.display = 'block';
+      return;
+    } else if (val.includes('.')) {
+      document.getElementById('pid_adv1_txt').innerHTML =
+        'PID Windup Limit must be a whole number!';
+      document.getElementById('pid_adv1_msg').style.display = 'block';
+      return;
+    }
+    state.COIL1.adv.pid_windup = Number(val);
+    emit_websocket([
+      SerialCommand.ADV1_PID,
+      Operation.SET,
+      ParamAdv.PARAM_ADV_PID_WINDUP,
+      ...numberToBytes(Number(val))
+    ]);
+  }
 }
 
 function sendPwm2AdvSettings() {
@@ -2503,6 +2698,35 @@ function sendPid2AdvSettings() {
       SerialCommand.ADV2_PID,
       Operation.SET,
       ParamAdv.PARAM_ADV_PID_RES,
+      ...numberToBytes(Number(val))
+    ]);
+  }
+  if (true) {
+    let val = document.getElementById('pid2_set_windup').value;
+    if (val.includes('-')) {
+      document.getElementById('pid_adv2_txt').innerHTML =
+        'PID Windup Limit must be a non negative whole number!';
+      document.getElementById('pid_adv2_msg').style.display = 'block';
+      return;
+    } else if (val < 8) {
+      document.getElementById('pid_adv2_txt').innerHTML = 'PID Windup Limit must be 8 or greater!';
+      document.getElementById('pid_adv2_msg').style.display = 'block';
+      return;
+    } else if (val > 32768) {
+      document.getElementById('pid_adv2_txt').innerHTML = 'PID Windup Limit must be 32768 or less!';
+      document.getElementById('pid_adv2_msg').style.display = 'block';
+      return;
+    } else if (val.includes('.')) {
+      document.getElementById('pid_adv2_txt').innerHTML =
+        'PID Windup Limit must be a whole number!';
+      document.getElementById('pid_adv2_msg').style.display = 'block';
+      return;
+    }
+    state.COIL2.adv.pid_windup = Number(val);
+    emit_websocket([
+      SerialCommand.ADV2_PID,
+      Operation.SET,
+      ParamAdv.PARAM_ADV_PID_WINDUP,
       ...numberToBytes(Number(val))
     ]);
   }
@@ -3004,6 +3228,18 @@ function openChartTab(evt, tabName) {
 // ==================================================
 // ==================================================
 
+const socketWaitForAuth = () => {
+  if (state.AUTH_STEP == 0) {
+    setTimeout(() => {
+      socketWaitForAuth();
+    }, 1000);
+    return;
+  }
+  document.getElementById('aer-auth-pending').style.display = 'none';
+  document.getElementById('aer-auth-validate').style.display = 'block';
+  initWebSocket();
+};
+
 // init load
 const init = () => {
   pidButtonInit();
@@ -3011,7 +3247,7 @@ const init = () => {
   advButtonInit();
   window.addEventListener('load', onLoad);
   function onLoad(event) {
-    initWebSocket();
+    socketWaitForAuth();
   }
   document.getElementById('element1').click();
 };

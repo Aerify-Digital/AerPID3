@@ -56,8 +56,7 @@ bool AerPID::init()
     // =======================
     // initialize 1wire bus
     oneWire = new OneWire(owPin);
-    // set sensor bit resolution
-    setSensorResolution(MEASURE_BIT_PRECISION);
+
     Serial.println(F(" ok!"));
 
     // =======================
@@ -72,7 +71,7 @@ bool AerPID::init()
     // Set initial PID tunings and limits
     aPID->setCoefficients(kP, kI, kD);
     aPID->setOutputLimits(0, _pidOutputLimit);
-    aPID->setWindUpLimits(-PID_WINDUP_LIMIT, PID_WINDUP_LIMIT);
+    aPID->setWindUpLimits(-windUpLimit, windUpLimit);
     aPID->setBias(_pidBias);
     aPID->reset();
 
@@ -172,11 +171,8 @@ void AerPID::tick()
         if (compute())
         {
             // reset pid tick
-            _tick = _pidTickMax;
-        }
-        else
-        {
-            _tick = 0;
+            //_tick = _pidTickMax;
+            _tick = _pidTickMax * (5 / 1000);
         }
     }
 
@@ -211,6 +207,12 @@ void AerPID::tick()
  */
 bool AerPID::compute()
 {
+    // sample time check
+    int sampleTime = (PID_SLEEP_TIME_MS * getPidTick()) - PID_TIME_OVERSHOOT;
+    if (millis() - timed_start < sampleTime)
+    {
+        return false;
+    }
     // check if PID functions are active...
     if (!pidEnabled) // output disabled
     {
@@ -230,17 +232,20 @@ bool AerPID::compute()
         ledcWrite(ssrChan, 0); // output pin off
         return false;
     }
-    // sample time check
-    int sampleTime = PID_TIME_OVERSHOOT + (PID_SLEEP_TIME_MS + 10) * getPidTick();
-    if (millis() - timed_start > sampleTime)
+
+    /*if (millis() - timed_start > sampleTime)
     {
         digitalWrite(PIN_LED_ACT, LOW);
         ledcWrite(ssrChan, 0); // output pin off
     }
     else if (millis() - timed_start < sampleTime)
     {
+        Serial.print("PID not ready! ");
+        Serial.print(millis() - timed_start);
+        Serial.print(" < ");
+        Serial.println(sampleTime);
         return false;
-    }
+    }*/
     if (true)
     {
         // perform PID calculation
@@ -260,8 +265,8 @@ bool AerPID::compute()
         double delta = (SET_TEMP - MES_TEMP);
 
         // scale output using temperature delta for better stability at set point
-        double _output = deltaScaleOutput(delta, output);
-        _output = max(0.0, _output);
+        // double _output = deltaScaleOutput(delta, output);
+        double _output = max(0.0, output);
 
         // convert output double to uint32 for ledcWrite
         xOutput = static_cast<uint32_t>(_output);
@@ -607,7 +612,7 @@ void AerPID::setPidTime(int time)
         return;
     }
     _pidCycleTime = time;
-    _pidTickMax = static_cast<int>(((double)time / PID_SLEEP_TIME_MS) * 0.67);
+    _pidTickMax = static_cast<int>(((double)time / PID_SLEEP_TIME_MS) * 1);
     this->updateSampleTime(_pidTickMax);
 }
 
@@ -691,7 +696,7 @@ void AerPID::updatePWM(uint8_t pin, uint8_t channel, uint32_t freq, uint8_t reso
 
 void AerPID::updateSampleTime(int pidTickMax)
 {
-    int sampleTime = PID_TIME_OVERSHOOT + (10 + PID_SLEEP_TIME_MS) * pidTickMax;
+    int sampleTime = PID_TIME_OVERSHOOT + ((0 + PID_SLEEP_TIME_MS) * pidTickMax);
     aPID->setSampleTime(sampleTime);
     aPID->reset();
     aPID->start();
@@ -729,12 +734,15 @@ void AerPID::updateSampleTime(int pidTickMax)
  */
 AerPID::MeasureResult AerPID::measureElementTemperature()
 {
+    // async & sync modes
     if (_measMode > 0)
     {
+        // async
         if (_measMode == 1)
         {
             return measureElementTemperatureAsync();
         }
+        // sync
         if (_measMode == 2)
         {
             if (pidEnabled)
@@ -755,6 +763,9 @@ AerPID::MeasureResult AerPID::measureElementTemperature()
         }
         return MeasureResult::NACK;
     }
+
+    // auto mode
+    // defaults to async, swaps to sync if too many fault.
 
     bool useAsync = !_faultError;
     bool measSuccess = false;
@@ -779,7 +790,7 @@ AerPID::MeasureResult AerPID::measureElementTemperature()
         _faultsTotal--;
     }
 
-    if (_faultsTotal >= 20)
+    if (_faultsTotal >= 50)
     {
         useAsync = false;
         if (!_faultError)
@@ -813,7 +824,7 @@ AerPID::MeasureResult AerPID::measureElementTemperature()
 
     if (_faultError && recentFault && _faultsRecent > 5)
     {
-        delay(500);
+        delay(250);
     }
 
     // Firstly, disable the power to the element if in safe mode.
@@ -853,7 +864,7 @@ AerPID::MeasureResult AerPID::measureElementTemperatureAsync()
     float celsius;
 
     bool isMeasureReset = _measureTimeMs == 0;
-    bool doMeasure = millis() - _measureTimeMs >= MEASURE_TIME_COST + 20;
+    bool doMeasure = millis() - _measureTimeMs >= MEASURE_TIME_COST + 2;
 
     if (isMeasureReset || doMeasure)
     {
@@ -882,18 +893,6 @@ AerPID::MeasureResult AerPID::measureElementTemperatureAsync()
         // the first ROM byte indicates which chip
         switch (addr[0])
         {
-        case 0x10:
-            // Serial.println("  Chip = DS18S20"); // or old DS1820
-            temptype = TYPE_DS18S20;
-            break;
-        case 0x28:
-            // Serial.println("  Chip = DS18B20");
-            temptype = TYPE_DS18B20;
-            break;
-        case 0x22:
-            // Serial.println("  Chip = DS1822");
-            temptype = TYPE_DS18S22;
-            break;
         case 0x3B:
             // Serial.println("  Chip = MAX31850");
             temptype = TYPE_MAX31850;
@@ -908,8 +907,8 @@ AerPID::MeasureResult AerPID::measureElementTemperatureAsync()
     {
         oneWire->reset();
         oneWire->select(addr);
-        oneWire->write(0x44); // start conversion, use ds.write(0x44,1) with parasite power on at the end
-        //Serial.println("(async) Start conversion...");
+        oneWire->write(STARTCONVO); // start conversion, use ds.write(0x44,1) with parasite power on at the end
+        // Serial.println("(async) Start conversion...");
         _measureTimeMs = millis();
         return MeasureResult::PENDING;
     }
@@ -919,7 +918,7 @@ AerPID::MeasureResult AerPID::measureElementTemperatureAsync()
         return MeasureResult::PENDING;
     }
 
-    //Serial.println("(async) Measure Perform!!!");
+    // Serial.println("(async) Measure Perform!!!");
     _measureTimeMs = 0;
 
     present = oneWire->reset();
@@ -929,7 +928,7 @@ AerPID::MeasureResult AerPID::measureElementTemperatureAsync()
         return MeasureResult::NACK;
     }
     oneWire->select(addr);
-    oneWire->write(0xBE); // Read Scratchpad
+    oneWire->write(READSCRATCH); // Read Scratchpad
 
     // Serial.print("  Data = ");
     // Serial.print(present, HEX);
@@ -947,58 +946,18 @@ AerPID::MeasureResult AerPID::measureElementTemperatureAsync()
     // Serial.print("  Address = 0x");
     // Serial.println(data[4] & 0xF, HEX);
 
-    // Convert the data to actual temperature
-    // because the result is a 16 bit signed integer, it should
-    // be stored to an "int16_t" type, which is always 16 bits
-    // even when compiled on a 32 bit processor.
     int16_t raw = (data[1] << 8) | data[0];
-    if (temptype == TYPE_DS18S20)
+    // Serial.println(raw, HEX);
+    if (raw & 0x01)
     {
-        raw = raw << 3; // 9 bit resolution default
-        if (data[7] == 0x10)
+        if (pidEnabled)
         {
-            // "count remain" gives full 12 bit resolution
-            raw = (raw & 0xFFF0) + 12 - data[6];
+            _faultCodeLast = getMax31855ErrorCode(raw);
+            Serial.print(F("ERROR: "));
+            Serial.print(_faultCodeLast, HEX);
+            Serial.println(F(" **FAULT!**"));
         }
-    }
-    else if (temptype == TYPE_MAX31850)
-    {
-        // Serial.println(raw, HEX);
-        if (raw & 0x01)
-        {
-            if (pidEnabled)
-            {
-                _faultCodeLast = getMax31855ErrorCode(raw);
-                Serial.print(F("(async) ERROR: "));
-                Serial.print(_faultCodeLast, HEX);
-                Serial.println(F(" **MEASURE FAULT!**"));
-                if (_faultsTotal < 0xFFFFFFFF)
-                {
-                    _faultsTotal++;
-                    _faultsRecent++;
-                    _faultLastTime = millis();
-                }
-            }
-            return MeasureResult::FAULT;
-        }
-    }
-    else
-    {
-        byte cfg = (data[4] & 0x60);
-        // at lower res, the low bits are undefined, so let's zero them
-        if (cfg == 0x00)
-        {
-            raw = raw & ~7; // 9 bit resolution, 93.75 ms
-        }
-        else if (cfg == 0x20)
-        {
-            raw = raw & ~3; // 10 bit res, 187.5 ms
-        }
-        else if (cfg == 0x40)
-        {
-            raw = raw & ~1; // 11 bit res, 375 ms
-                            //// default is 12 bit resolution, 750 ms conversion time
-        }
+        return MeasureResult::FAULT;
     }
 
     celsius = ((float)raw / 16.0) + OFFSET_TEMP;
@@ -1032,7 +991,9 @@ AerPID::MeasureResult AerPID::measureElementTemperatureAsync()
             _measLastTime = millis();
             Serial.println(F("(async) Measure Fault Recovery! Forcing measure..."));
             return MeasureResult::ACK;
-        } else {
+        }
+        else
+        {
             Serial.println(F(" "));
         }
 
@@ -1085,10 +1046,10 @@ AerPID::MeasureResult AerPID::measureElementTemperatureBlocking()
         return MeasureResult::NACK;
     }
 
-    oneWire->reset();         // reset the bus
-    oneWire->select(addr);    // select the chip
-    oneWire->write(0x44);     // start conversion
-    delay(MEASURE_TIME_COST); // delay for conversion to complete
+    oneWire->reset();           // reset the bus
+    oneWire->select(addr);      // select the chip
+    oneWire->write(STARTCONVO); // start conversion
+    delay(MEASURE_TIME_COST);   // delay for conversion to complete
 
     present = oneWire->reset(); // presense check
     if (!present)
@@ -1096,8 +1057,8 @@ AerPID::MeasureResult AerPID::measureElementTemperatureBlocking()
         Serial.println(F("Measure Abort!!"));
         return MeasureResult::NACK;
     }
-    oneWire->select(addr); // select the chip
-    oneWire->write(0xBE);  // Read Scratchpad
+    oneWire->select(addr);       // select the chip
+    oneWire->write(READSCRATCH); // Read Scratchpad
 
     for (uint8_t i = 0; i < 9; i++)
     { // we need 9 bytes
@@ -1122,76 +1083,6 @@ AerPID::MeasureResult AerPID::measureElementTemperatureBlocking()
     addToMES_TEMP(celsius);
     _measLastTime = millis();
     return MeasureResult::ACK;
-}
-
-// set resolution of a device to 9, 10, 11, or 12 bits
-// if new resolution is out of range, 9 bits is used.
-bool AerPID::setSensorResolution(uint8_t newResolution)
-{
-    byte addr[8];
-    uint8_t temptype;
-
-    oneWire->reset_search();
-    if (!oneWire->search(addr))
-    {
-        oneWire->reset_search();
-        return false;
-    }
-
-    if (OneWire::crc8(addr, 7) != addr[7])
-    {
-        Serial.println(F("CRC is not valid!"));
-        return false;
-    }
-
-    // the first ROM byte indicates which chip
-    switch (addr[0])
-    {
-    case 0x3B:
-        Serial.print(F(" Chip = MAX31850 ..."));
-        temptype = TYPE_MAX31850;
-        break;
-    default:
-        Serial.println(F("Device is not a DS18x20 family device."));
-        return false;
-    }
-
-    if (temptype == TYPE_MAX31850)
-    {
-        uint8_t scratchPad[9];
-        readScratchPad(addr, scratchPad);
-        Serial.print(F(" Set Resolution: "));
-        switch (newResolution)
-        {
-        case 12:
-            scratchPad[SENSOR_CONFIGURATION_LOCATION] = TEMP_12_BIT;
-            Serial.print(12);
-            break;
-        case 11:
-            scratchPad[SENSOR_CONFIGURATION_LOCATION] = TEMP_11_BIT;
-            Serial.print(11);
-            break;
-        case 10:
-            scratchPad[SENSOR_CONFIGURATION_LOCATION] = TEMP_10_BIT;
-            Serial.print(10);
-            break;
-        case 9:
-        default:
-            scratchPad[SENSOR_CONFIGURATION_LOCATION] = TEMP_9_BIT;
-            Serial.print(9);
-            break;
-        }
-        Serial.println(F(" bits"));
-
-        oneWire->reset();
-        oneWire->select(addr);
-        oneWire->write_bytes(scratchPad, 9);
-        Serial.print(F("Wrote Scratchpad to Sensor..."));
-
-        oneWire->reset();
-    }
-
-    return false;
 }
 
 void AerPID::readScratchPad(uint8_t *deviceAddress, uint8_t *scratchPad)
