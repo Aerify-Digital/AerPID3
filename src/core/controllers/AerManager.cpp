@@ -67,10 +67,31 @@ bool AerManager::doUpdateCheck(bool resetCheck)
     {
         xVersion lVer = version->getVer();
         xVersion rVer = versionRemote->getVer();
-        if (lVer.major >= rVer.major && lVer.minor >= rVer.minor && lVer.build >= rVer.build)
+
+        bool hasUpate = false;
+        if (rVer.major > lVer.major)
         {
-            _appUpdateState = UpdateState::UPDATE_CHECK_NONE;
-            Serial.println("[AppUpdate] No Updates Found.");
+            hasUpate = true;
+        }
+        else if (rVer.minor > lVer.minor)
+        {
+            if (rVer.major >= lVer.major)
+            {
+                hasUpate = true;
+            }
+        }
+        else if (rVer.build > lVer.build)
+        {
+            if (rVer.minor >= lVer.minor)
+            {
+                hasUpate = true;
+            }
+        }
+
+        if (hasUpate)
+        {
+            _appUpdateState = UpdateState::UPDATE_CHECK_FOUND;
+            Serial.println("[AppUpdate] New Version Found!");
             Serial.print("[AppUpdate] Local Version: ");
             Serial.print(version->get());
             Serial.print("  Remote Version: ");
@@ -79,8 +100,8 @@ bool AerManager::doUpdateCheck(bool resetCheck)
         }
         else
         {
-            _appUpdateState = UpdateState::UPDATE_CHECK_FOUND;
-            Serial.println("[AppUpdate] New Version Found!");
+            _appUpdateState = UpdateState::UPDATE_CHECK_NONE;
+            Serial.println("[AppUpdate] No Updates Found.");
             Serial.print("[AppUpdate] Local Version: ");
             Serial.print(version->get());
             Serial.print("  Remote Version: ");
