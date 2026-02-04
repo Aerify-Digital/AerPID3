@@ -399,6 +399,16 @@ void onEb1Clicked(EncoderButton &eb)
             }
         }
 #endif
+        else if (enc_aerGUI->getMenuProps()->menuIndex == MENU_SYSTEM_UPDATE_CHECK)
+        {
+            if (enc_aerGUI->getMenuProps()->menuLevelVal == MENU_SYSTEM_UPDATE_CHECK_PERFORM)
+            {
+                enc_am->doUpdateCheck(true);
+                enc_aerGUI->updateMenu();
+                delay(100);
+                return;
+            }
+        }
         else if (enc_aerGUI->getMenuProps()->menuIndex == MENU_SYSTEM_FACTORY_RESET)
         {
             if (enc_aerGUI->getMenuProps()->menuLevelVal == MENU_SYSTEM_FACTORY_RESET_CONFIRM)

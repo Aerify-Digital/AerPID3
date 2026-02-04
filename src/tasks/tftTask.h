@@ -656,6 +656,13 @@ void tft_task(void *pvParameters)
                     _menu->menuChange = false;
                     break;
                 }
+                case MENU_SYSTEM_UPDATE_CHECK:
+                {
+                    AerTftUI::showUpdateCheck(_am, _menu->menuUpdate, _menu->menuChange);
+                    _menu->menuUpdate = false;
+                    _menu->menuChange = false;
+                    break;
+                }
                 case MENU_SYSTEM_TOGGLE_IDLE:
                 {
                     AerTftUI::showIdleToggle(_am, _menu->menuUpdate, _menu->menuChange);

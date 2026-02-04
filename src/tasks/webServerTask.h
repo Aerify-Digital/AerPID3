@@ -6,8 +6,18 @@
 
 #include "tasks/webFetchTask.h"
 
+// Check if wifi is ready and connected
+bool isWifiConnected()
+{
+    if (WiFi.getMode() == WIFI_MODE_STA && WiFi.status() == WL_CONNECTED)
+    {
+        return true;
+    }
+    return false;
+}
+
 // Task 1 Worker
-void taskWebWorker(void *parameter)
+void taskWebWorker(void *pvParameters)
 {
     while (millis() < 9000)
     {
@@ -35,7 +45,10 @@ void taskWebWorker(void *parameter)
         return;
     }
 
-    // xTaskCreate(webFetch_task, "Web_Fetch", 8192, (void *)&aerManager, 10, &webFetchTask);
+    if (isWifiConnected())
+    {
+        aerManager.doUpdateCheck();
+    }
 
     vTaskDelay(500 / portTICK_PERIOD_MS);
     Serial.print(F("Starting Task Web Worker on core "));
@@ -44,6 +57,10 @@ void taskWebWorker(void *parameter)
     { // infinite loop
         if (xSemaphoreTake(sys1_mutex, 100) == pdTRUE)
         {
+            if (isWifiConnected() && aerManager.getUpdateState() == UpdateState::UPDATE_CHECK && aerManager.doUpdateCheck())
+            {
+                xTaskCreate(webFetch_task, "Web_Fetch", 5120, (void *)&aerManager, 10, &webFetchTask);
+            }
             webServer.tick();
             xSemaphoreGive(sys1_mutex);
         }

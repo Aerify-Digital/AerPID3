@@ -131,6 +131,7 @@ namespace AerTftUI
     void showBleMenu(AerManager *am, bool update, bool change);
     void showKeyboardMenu(AerManager *am, AerGUI *gui, bool indexupdate, bool change);
     void showPowerMenu(AerGUI *gui, bool indexupdate, bool change);
+    void showUpdateCheck(AerManager *am, bool update, bool change);
     void showFactoryReset(AerManager *am, bool update, bool change);
     void showDisplayMenu(AerManager *am, AerGUI *gui, bool indexupdate, bool change);
     void showNearbyNetworks(AerGUI *gui, bool indexupdate, String json);

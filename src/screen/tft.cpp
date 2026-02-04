@@ -466,6 +466,12 @@ namespace AerTftUI
             spr1->createSprite(272, 14);
             spr1->drawRect(0, 0, 272, 3, TFT_BLACK);
             spr1->pushImage(0, 3, 272, 11, image_data_bg02_mid);
+            if (am->hasAppUpdate()) {
+                spr1->setCursor(4, 5);
+                spr1->setTextSize(1);
+                spr1->setTextColor(TFT_GREENYELLOW);
+                spr1->print("Firmware Update Available!");
+            }
             /*if (am->getAerPID(0)->isPidOn())
             {
                 drawBarColorScroll(spr1, 1, 1); // green
@@ -5058,6 +5064,63 @@ namespace AerTftUI
         lastindex = mindex;
     }
 
+    void showUpdateCheck(AerManager *am, bool update, bool change)
+    {
+        AerGUI *gui = am->getGUI();
+        PropsMenu *props = gui->getMenuProps();
+        uint16_t mindex = props->menuLevelVal;
+        if (lastindex == mindex && !update)
+        {
+            // Indexes match and update is false; return
+            return;
+        }
+        uint16_t mlvl = props->menuIndex;
+        AerMenu menu = gui->getSelectedMenu(mlvl);
+        TFT_eSPI *lcd = gui->getTFT();
+        if (update && change)
+        {
+            lcd->fillScreen(0x0841);
+            drawRoundRectWithBorder2px(lcd, 20, 20, 280, 200, 7, TFT_DARKGREY, TFT_GREENYELLOW);
+            lcd->setTextWrap(false);
+            lcd->setTextColor(TFT_WHITE, TFT_DARKGREY);
+            lcd->setTextSize(4);
+            lcd->setCursor(32, 24);
+            lcd->print("UpdateCheck");
+            lcd->setTextSize(3);
+        }
+
+        drawSelections(gui, menu, mindex, TFT_DARKGREY);
+
+        TFT_eSprite *spr = gui->getSpriteBuffer(0);
+        spr->createSprite(250, 80);
+        spr->setTextWrap(true);
+        spr->fillRect(0, 0, 250, 80, TFT_DARKGREY);
+        spr->setTextSize(2);
+        spr->setCursor(30, 2);
+        if (am->hasAppUpdate()) {
+            spr->setTextColor(TFT_YELLOW, TFT_DARKGREY);
+        } else {
+            spr->setTextColor(TFT_GREEN, TFT_DARKGREY);
+        }
+        spr->print("Local:   v");
+        spr->print(aerManager.getVersion()->get());
+        spr->setCursor(30, 22);
+        spr->setTextColor(TFT_GOLD, TFT_DARKGREY);
+        spr->print("Remote:  v");
+        spr->print(aerManager.getVersionRemote()->get());
+        spr->setTextColor(0xfb28, TFT_DARKGREY);
+        spr->setCursor(3, 48);
+        spr->setTextSize(2);
+        if (am->getUpdateState() == UpdateState::UPDATE_CHECK || am->getUpdateState() == UpdateState::UPDATE_CHECKED) {
+            spr->print("Checking for firmware updates...");
+        } else {
+            spr->print("This will check for firmware updates.");
+        }
+        spr->pushSprite(35, 130);
+        spr->deleteSprite();
+
+        lastindex = mindex;
+    }
     void showFactoryReset(AerManager *am, bool update, bool change)
     {
         AerGUI *gui = am->getGUI();

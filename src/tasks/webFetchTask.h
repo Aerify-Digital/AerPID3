@@ -7,24 +7,28 @@
 #include "SPI.h"
 
 #include "common/datatypes/mutex.h"
+#include "common/datatypes/Version.h"
 
 #include <HTTPClient.h>
+
+#include <fstream>
+#include <nlohmann/json.hpp>
+using json = nlohmann::json;
 
 void webFetch_task(void *pvParameters);
 
 // Web Client Worker
 void webFetch_task(void *pvParameters)
 {
-    vTaskDelay(100);
+    AerManager *_am = (AerManager *)pvParameters; // task parameters
 
-    Serial.print("Web Fetch Worker starting on core ");
+    Serial.print("[HTTP] Web Fetch Worker starting on core ");
     Serial.println(xPortGetCoreID());
 
     HTTPClient http;
 
     http.begin("https://raw.githubusercontent.com/Aerify-Digital/AerPID3/master/version.json");
 
-    Serial.print("[HTTP] GET...\n");
     // start connection and send HTTP header
     int httpCode = http.GET();
 
@@ -37,7 +41,22 @@ void webFetch_task(void *pvParameters)
         if (httpCode == HTTP_CODE_OK)
         {
             String payload = http.getString();
-            Serial.println(payload);
+            json j = json::parse(payload);
+            unsigned long ul_value1 = std::stoul(j["version"]["VER_MAJOR"].get<std::string>()); 
+            unsigned long ul_value2 = std::stoul(j["version"]["VER_MINOR"].get<std::string>()); 
+            unsigned long ul_value3 = std::stoul(j["version"]["VER_BUILD"].get<std::string>()); 
+            uint vMajor = static_cast<unsigned int>(ul_value1);
+            uint vMinor = static_cast<unsigned int>(ul_value2);
+            uint vBuild = static_cast<unsigned int>(ul_value3);
+            j.clear();
+
+            AppVersion *version = new AppVersion(vMajor, vMinor, vBuild);
+            _am->setVersionRemote(version);
+            _am->doUpdateCheck();
+
+            /*Serial.print("> Remote App Version: ");
+            Serial.print(version->get());
+            Serial.println("");*/
         }
     }
     else
@@ -46,6 +65,7 @@ void webFetch_task(void *pvParameters)
     }
 
     http.end();
+    http.~HTTPClient();
 
     vTaskDelete(NULL);
 }

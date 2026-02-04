@@ -12,6 +12,12 @@ void AerManager::setVersionWeb(AppVersion *v)
     AerManager::versionWeb = v;
 }
 
+// Sets the remote app version - from github
+void AerManager::setVersionRemote(AppVersion *version)
+{
+    AerManager::versionRemote = version;
+}
+
 // Sets the app version
 void AerManager::setVersion(uint major, uint minor, uint build)
 {
@@ -28,6 +34,72 @@ AppVersion *AerManager::getVersionWeb()
     return versionWeb;
 }
 
+AppVersion *AerManager::getVersionRemote()
+{
+    return versionRemote;
+}
+
+UpdateState AerManager::getUpdateState()
+{
+    return _appUpdateState;
+}
+
+bool AerManager::doUpdateCheck(bool resetCheck)
+{
+    if (resetCheck)
+    {
+        _appUpdateState = UpdateState::UPDATE_NONE;
+    }
+
+    switch (_appUpdateState)
+    {
+    case UpdateState::UPDATE_NONE:
+    {
+        _appUpdateState = UpdateState::UPDATE_CHECK;
+        break;
+    }
+    case UpdateState::UPDATE_CHECK:
+    {
+        _appUpdateState = UpdateState::UPDATE_CHECKED;
+        return true;
+    }
+    case UpdateState::UPDATE_CHECKED:
+    {
+        xVersion lVer = version->getVer();
+        xVersion rVer = versionRemote->getVer();
+        if (lVer.major >= rVer.major && lVer.minor >= rVer.minor && lVer.build >= rVer.build)
+        {
+            _appUpdateState = UpdateState::UPDATE_CHECK_NONE;
+            Serial.println("[AppUpdate] No Updates Found.");
+            Serial.print("[AppUpdate] Local Version: ");
+            Serial.print(version->get());
+            Serial.print("  Remote Version: ");
+            Serial.print(versionRemote->get());
+            Serial.println(" !");
+        }
+        else
+        {
+            _appUpdateState = UpdateState::UPDATE_CHECK_FOUND;
+            Serial.println("[AppUpdate] New Version Found!");
+            Serial.print("[AppUpdate] Local Version: ");
+            Serial.print(version->get());
+            Serial.print("  Remote Version: ");
+            Serial.print(versionRemote->get());
+            Serial.println(" !");
+        }
+        break;
+    }
+    default:
+        break;
+    }
+    return false;
+}
+
+bool AerManager::hasAppUpdate()
+{
+    return _appUpdateState == UpdateState::UPDATE_CHECK_FOUND;
+}
+
 // Gets the AerPID storage Object
 AerPID *AerManager::getAerPID(uint8_t ei) // getAerStorage()
 {
@@ -41,8 +113,9 @@ void AerManager::setMeasureMode(uint8_t mode, bool save)
     {
         AerManager::aerPID[i]->setMeasMode(mode);
     }
-    if (save) {
-    measModeStorage.setMode(mode);
+    if (save)
+    {
+        measModeStorage.setMode(mode);
     }
 }
 
@@ -396,6 +469,7 @@ _elm_prot_op_code_t AerManager::getOpEP()
 void AerManager::init()
 {
     this->intialized = true;
+    this->_appUpdateState = UpdateState::UPDATE_NONE;
 
     for (int i = 0; i < cpu_usages_size; i++)
     {

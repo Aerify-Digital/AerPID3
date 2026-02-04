@@ -32,6 +32,15 @@ class FancyLED;
 
 class SettingsStorage;
 
+// Firmware update state enum
+enum UpdateState {
+    UPDATE_NONE,
+    UPDATE_CHECK,
+    UPDATE_CHECKED,
+    UPDATE_CHECK_NONE,
+    UPDATE_CHECK_FOUND,
+};
+
 /// @brief Storage accesor class for cross thread data sharing and handling
 class AerManager
 {
@@ -53,24 +62,37 @@ public:
     }
 #endif
 
+    void setVersion(uint major, uint minor, uint build);
+    void setVersionApp(AppVersion *version);
+    void setVersionWeb(AppVersion *version);
+    void setVersionRemote(AppVersion *version);
+
+    AppVersion *getVersion(); // firmware version on device
+    AppVersion *getVersionWeb(); // web app version
+    AppVersion *getVersionRemote(); // firmware version from github
+
+    // firmware update state get
+    UpdateState getUpdateState();
+    // perform update check state changes
+    bool doUpdateCheck(bool resetCheck = false);
+    // true if firmware update found
+    bool hasAppUpdate();
+
+    // Setup storage objects...
+    void setupStorageObjects(FavsStor *f, CommStor *c, LightsStor *l, BumpStor *b, TempStor *s, SettingsStorage *ss, NetworkingStorage *n);
+
+    // Set gui object
     void setGUI(AerGUI *gui);
     AerGUI *getGUI();
 
+    // Set fancy LED object
     void setFancyLED(FancyLED *xled);
     FancyLED *getFancyLED();
-
-    void setVersionApp(AppVersion *version);
-    void setVersion(uint major, uint minor, uint build);
-    void setVersionWeb(AppVersion *version);
-
-    void setupStorageObjects(FavsStor *f, CommStor *c, LightsStor *l, BumpStor *b, TempStor *s, SettingsStorage *ss, NetworkingStorage *n);
-
-    AppVersion *getVersion();
-    AppVersion *getVersionWeb();
 
     /// @brief Gets the AerPID class Object
     /// @return AerPID
     AerPID *getAerPID(uint8_t elementIndex);
+
     void setMeasureMode(uint8_t mode, bool save);
     uint8_t getMeasureMode();
 
@@ -279,6 +301,8 @@ private:
 
     AppVersion *version;
     AppVersion *versionWeb;
+    AppVersion *versionRemote;
+    UpdateState _appUpdateState;
 
     AerPID *aerPID[AERPID_COUNT];
     uint8_t measMode;
