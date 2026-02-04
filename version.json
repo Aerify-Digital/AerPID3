@@ -1,11 +1,11 @@
 {
   "version": {
     "VER_MAJOR": "3",
-    "VER_MINOR": "3",
-    "VER_BUILD": "21",
+    "VER_MINOR": "4",
+    "VER_BUILD": "0",
     "VER_WEB_MAJOR": "0",
-    "VER_WEB_MINOR": "3",
-    "VER_WEB_BUILD": "87",
+    "VER_WEB_MINOR": "4",
+    "VER_WEB_BUILD": "0",
     "VER_BUILD_YEAR": "2026"
   }
 }
