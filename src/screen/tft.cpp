@@ -17,6 +17,13 @@ namespace AerTftUI
 
     int bar_index[2] = {0, 0};
 
+    // charting vars
+    double l_yhi = 0;
+    double l_ylo = 0;
+
+    bool display1 = true;
+    bool update1 = true;
+
     // charting object for graphs
     AerChart *graph;
 
@@ -439,27 +446,17 @@ namespace AerTftUI
             }
         }
 
-        if (update)
+        if (settings->getDispTypeOptions() == 0)
         {
-            if (settings->getDispTypeOptions() == 0)
-            {
-                showSysInfoSection(am, true);
-            }
-            else if (settings->getDispTypeOptions() == 1)
-            {
-                showSysIconsSection(am, true);
-            }
+            showSysInfoSection(am, update);
         }
-        else
+        else if (settings->getDispTypeOptions() == 1)
         {
-            if (settings->getDispTypeOptions() == 0)
-            {
-                showSysInfoSection(am, false);
-            }
-            if (settings->getDispTypeOptions() == 1)
-            {
-                showSysIconsSection(am, false);
-            }
+            showSysIconsSection(am, update);
+        }
+        else if (settings->getDispTypeOptions() == 2)
+        {
+            showSysMeasureSection(am, update);
         }
 
         if (!modalOpen)
@@ -469,6 +466,12 @@ namespace AerTftUI
             spr1->createSprite(272, 14);
             spr1->drawRect(0, 0, 272, 3, TFT_BLACK);
             spr1->pushImage(0, 3, 272, 11, image_data_bg02_mid);
+            if (am->hasAppUpdate()) {
+                spr1->setCursor(4, 5);
+                spr1->setTextSize(1);
+                spr1->setTextColor(TFT_GREENYELLOW);
+                spr1->print("Firmware Update Available!");
+            }
             /*if (am->getAerPID(0)->isPidOn())
             {
                 drawBarColorScroll(spr1, 1, 1); // green
@@ -722,6 +725,190 @@ namespace AerTftUI
         lcd->print("CPU0");
         lcd->setCursor(37, 170);
         lcd->print("CPU1");
+    }
+
+    int xLastPos = 0;
+    double yLastMeasure = 0;
+
+    void showSysMeasureSection(AerManager *am, bool update)
+    {
+        const uint16_t bgColor = color565(2, 3, 4);
+        const uint16_t brdColor = color565(15, 202, 213);
+
+        AerGUI *gui = am->getGUI();
+        PropsMenu *props = gui->getMenuProps();
+        uint16_t mindex = props->menuLevelVal;
+        if (lastindex == mindex && !update)
+        {
+            // Indexes match and update is false; return
+            // return;
+        }
+        uint16_t mlvl = props->menuIndex;
+        AerMenu menu = gui->getSelectedMenu(mlvl);
+        TFT_eSPI *lcd = gui->getTFT();
+        if (update)
+        {
+            lcd->fillRect(0, 134, 71, 105, TFT_BLACK);
+            lcd->fillRoundRect(2, 138, 64, 98, 3, bgColor);
+            // lcd->drawRoundRect(0, 140, 66, 100, 3, brdColor);
+            graph = new AerChart();
+        }
+        /*lcd->setTextWrap(false);
+        lcd->setTextColor(TFT_WHITE, bgColor);
+        lcd->setTextSize(2);
+        lcd->setCursor(64, 20);
+        lcd->print("Temperature Graph");
+        lcd->setTextSize(1);*/
+
+        // size of datapoints array...
+        uint data_size = 64;
+
+        /* datapoint variables x,y */
+        double x, y1, y2 = 0;
+
+        uint8_t dp = 1;   // datapoint flag
+        double gx = 2;    // x graph location (lower left)
+        double gy = 238;  // y graph location (lower left)
+        double w = 64;    // width of graph
+        double h = 98;    // height of graph
+        double xlo = 0;   // lower bound of x axis
+        double xhi = 64;  // upper bound of x asis
+        double xinc = 16; // division of x axis (distance not count)
+        double ylo = 0;   // lower bound of y axis
+        double yhi = 500; // upper bound of y asis
+        double yinc = 50; // division of y axis (distance not count)
+
+        // labels are not used!
+        const char *title = "T(x)";   // title of graph
+        const char *xlabel = "x";     // x asis label
+        const char *ylabel = "fn(x)"; // y asis label
+
+        uint16_t seriesColor = color565(8, 255, 32);
+
+        uint8_t elementIndex = gui->getElementIndex();
+
+        // get the measured data to display
+        double *mes = am->getAerPID(elementIndex)->getMeasures();
+        double sett = am->getAerPID(elementIndex)->SET_TEMP;
+
+        // rescale the y axis based on the measured
+        yhi = am->getAerPID(elementIndex)->maxMeasures() + 25;
+        ylo = am->getAerPID(elementIndex)->minMeasuresLong() - 20;
+
+        if (ylo < 10)
+        {
+            ylo = 0;
+        }
+
+        // rescale increment for y axis
+        yinc = getGraphScaleAxisY(ylo, yhi);
+
+        // changed flag for redrawing axises
+        bool chngd = l_yhi != yhi;
+        l_yhi = yhi;
+
+        // adjust based on reading type
+        if (am->getReadingType() == ThermalUnitsType::FAHRENHEIT)
+        {
+            ylo = toFahrenheit(ylo);
+            yhi = toFahrenheit(yhi);
+        }
+        else if (am->getReadingType() == ThermalUnitsType::KELVIN)
+        {
+            ylo = toKelvin(ylo);
+            yhi = toKelvin(yhi);
+        }
+
+        double mY = y1;
+        if (am->getReadingType() == ThermalUnitsType::FAHRENHEIT)
+        {
+            mY = toFahrenheit(mes[0]);
+        }
+        else if (am->getReadingType() == ThermalUnitsType::CELSIUS)
+        {
+            mY = mes[0];
+        }
+        else if (am->getReadingType() == ThermalUnitsType::KELVIN)
+        {
+            mY = toKelvin(mes[0]);
+        }
+
+        // draw the basic graph canvas
+        display1 = update || chngd;
+        graph->Graph(gui, x, mY, 0, dp, gx - 1, gy, w + 5, h, xlo, xhi, xinc, ylo, yhi, yinc, "", "", "", display1, seriesColor, seriesColor, bgColor);
+
+        // sprite buffer
+        TFT_eSprite *spr = gui->getSpriteBuffer(0);
+
+        // chunked sprite count
+        const uint chnk = 8;
+
+        uint t_x;              // index pointer for x datapoint
+        double t_xlo = 0;      // lower bound of x axis
+        double t_xhi = 8;      // upper bound of x axis
+        double t_xinc = 4;     // division of x axis
+        double t_w = w / chnk; // graph chunk width
+        double t_gx = 0;       // x graph location (lower left)
+        double t_gy = h;       // y graph location (lower left)
+
+        // iterate over sprite data, build chart series
+        for (int z = 0; z < 8; z++)
+        {
+            spr->createSprite(8, h);
+            spr->fillRect(0, 0, 8, h, bgColor);
+            update1 = true;
+
+            for (x = 0; x <= chnk; x++)
+            {
+                t_x = x + chnk * z;
+                if (t_x >= data_size)
+                {
+                    break;
+                }
+                if (am->getReadingType() == ThermalUnitsType::FAHRENHEIT)
+                {
+                    y1 = toFahrenheit(mes[t_x]);
+                    y2 = toFahrenheit(sett);
+                }
+                else if (am->getReadingType() == ThermalUnitsType::CELSIUS)
+                {
+                    y1 = mes[t_x];
+                    y2 = sett;
+                }
+                else if (am->getReadingType() == ThermalUnitsType::KELVIN)
+                {
+                    y1 = toKelvin(mes[t_x]);
+                    y2 = toKelvin(sett);
+                }
+                graph->Trace(spr,
+                             x /* datapoint x */,
+                             y1 /* datapoint y1 */,
+                             y2 /* datapoint y2 */,
+                             dp,
+                             t_gx /* location x */,
+                             t_gy /* location y */,
+                             t_w /* graph width */,
+                             h /* graph height */,
+                             t_xlo,
+                             t_xhi,
+                             t_xinc,
+                             ylo,
+                             yhi,
+                             yinc,
+                             title,
+                             xlabel,
+                             ylabel,
+                             update1,
+                             seriesColor,
+                             bgColor);
+            }
+
+            spr->pushSprite(gx + (8 * z), gy - h);
+            spr->deleteSprite();
+        }
+
+        update1 = false;
+        lastindex = mindex;
     }
 
     void showMemorySection(AerManager *am)
@@ -3983,9 +4170,84 @@ namespace AerTftUI
             lcd->setTextColor(TFT_WHITE, TFT_DARKGREY);
             break;
         }
+        case MENU_WIFI_AUTH: /* basic auth password */
+        {
+            TFT_eSprite *spr = gui->getSpriteBuffer(0);
+
+            if (update && change)
+            {
+                lcd->fillScreen(0x0841);
+                lcd->fillRoundRect(20, 20, 280, 200, 7, TFT_DARKGREY);
+                lcd->drawRoundRect(18, 18, 284, 204, 7, TFT_BLACK);
+            }
+
+            spr->createSprite(250, 30);
+            spr->fillRect(0, 0, 250, 30, TFT_DARKGREY);
+            spr->setTextWrap(false);
+            spr->setTextColor(TFT_WHITE, TFT_DARKGREY);
+            spr->setTextSize(4);
+            spr->setCursor(5, 0);
+            spr->print("PASSPHRASE");
+            spr->pushSprite(40, 24);
+            spr->deleteSprite();
+
+            if (update && change)
+            {
+                spr->createSprite(250, 76);
+                spr->fillRect(0, 0, 250, 76, TFT_BLACK);
+                spr->fillRect(2, 2, 246, 70, 0x5aeb);
+                spr->pushSprite(35, 64);
+                spr->deleteSprite();
+            }
+
+            spr->createSprite(236, 60);
+            spr->fillRect(0, 0, 236, 60, 0x5aeb);
+            spr->setTextSize(3);
+            spr->setTextColor(0xC69D);
+            spr->setTextWrap(true);
+            if (update && change)
+            {
+                gui->getMenuProps()->menuItemSelStr = std::string(webAuthStorage.getPass());
+            }
+            spr->print(gui->getMenuProps()->menuItemSelStr.c_str());
+            spr->pushSprite(45, 74);
+            spr->deleteSprite();
+
+            spr->createSprite(250, 46);
+            spr->setTextWrap(false);
+            spr->fillRect(0, 0, 250, 46, TFT_BLACK);
+            spr->fillRect(2, 2, 246, 42, 0x5aeb);
+            printSelectedChar(gui, spr, 1);
+            spr->pushSprite(35, 140);
+            spr->deleteSprite();
+
+            spr->createSprite(250, 20);
+            spr->fillRect(0, 0, 250, 20, TFT_DARKGREY);
+            spr->setTextSize(2);
+            spr->setCursor(0, 0);
+            bool mod = gui->isCursorModify();
+            spr->setTextColor(mod ? TFT_LIGHTGREY : (mindex == MENU_MAIN_WIFI ? TFT_CYAN : TFT_WHITE));
+            spr->print("Back");
+            spr->setCursor(70, 0);
+            spr->setTextColor(mindex == MENU_WIFI_AUTH_EDIT ? mod ? TFT_RED : TFT_CYAN : TFT_WHITE);
+            spr->print("Edit");
+            spr->setCursor(180, 0);
+            spr->setTextColor(mod ? TFT_LIGHTGREY : (mindex == MENU_WIFI_AUTH_SAVE ? TFT_RED : TFT_WHITE));
+            spr->print("Save");
+            spr->pushSprite(40, 197);
+            spr->deleteSprite();
+            break;
+        }
         case MENU_WIFI_PASSWORD: /* code */
         {
             TFT_eSprite *spr = gui->getSpriteBuffer(0);
+
+            if (update && change)
+            {
+                lcd->fillScreen(0x0841);
+                lcd->fillRoundRect(20, 20, 280, 200, 7, TFT_DARKGREY);
+                lcd->drawRoundRect(18, 18, 284, 204, 7, TFT_BLACK);
+            }
 
             spr->createSprite(250, 30);
             spr->fillRect(0, 0, 250, 30, TFT_DARKGREY);
@@ -3994,12 +4256,11 @@ namespace AerTftUI
             spr->setTextSize(4);
             spr->setCursor(15, 0);
             spr->print("PASSWORD");
-            spr->pushSprite(45, 24);
+            spr->pushSprite(40, 24);
             spr->deleteSprite();
 
             if (update && change)
             {
-                lcd->fillScreen(0x0841);
                 spr->createSprite(250, 76);
                 spr->fillRect(0, 0, 250, 76, TFT_BLACK);
                 spr->fillRect(2, 2, 246, 70, 0x5aeb);
@@ -4803,6 +5064,63 @@ namespace AerTftUI
         lastindex = mindex;
     }
 
+    void showUpdateCheck(AerManager *am, bool update, bool change)
+    {
+        AerGUI *gui = am->getGUI();
+        PropsMenu *props = gui->getMenuProps();
+        uint16_t mindex = props->menuLevelVal;
+        if (lastindex == mindex && !update)
+        {
+            // Indexes match and update is false; return
+            return;
+        }
+        uint16_t mlvl = props->menuIndex;
+        AerMenu menu = gui->getSelectedMenu(mlvl);
+        TFT_eSPI *lcd = gui->getTFT();
+        if (update && change)
+        {
+            lcd->fillScreen(0x0841);
+            drawRoundRectWithBorder2px(lcd, 20, 20, 280, 200, 7, TFT_DARKGREY, TFT_GREENYELLOW);
+            lcd->setTextWrap(false);
+            lcd->setTextColor(TFT_WHITE, TFT_DARKGREY);
+            lcd->setTextSize(4);
+            lcd->setCursor(32, 24);
+            lcd->print("UpdateCheck");
+            lcd->setTextSize(3);
+        }
+
+        drawSelections(gui, menu, mindex, TFT_DARKGREY);
+
+        TFT_eSprite *spr = gui->getSpriteBuffer(0);
+        spr->createSprite(250, 80);
+        spr->setTextWrap(true);
+        spr->fillRect(0, 0, 250, 80, TFT_DARKGREY);
+        spr->setTextSize(2);
+        spr->setCursor(30, 2);
+        if (am->hasAppUpdate()) {
+            spr->setTextColor(TFT_YELLOW, TFT_DARKGREY);
+        } else {
+            spr->setTextColor(TFT_GREEN, TFT_DARKGREY);
+        }
+        spr->print("Local:   v");
+        spr->print(aerManager.getVersion()->get());
+        spr->setCursor(30, 22);
+        spr->setTextColor(TFT_GOLD, TFT_DARKGREY);
+        spr->print("Remote:  v");
+        spr->print(aerManager.getVersionRemote()->get());
+        spr->setTextColor(0xfb28, TFT_DARKGREY);
+        spr->setCursor(3, 48);
+        spr->setTextSize(2);
+        if (am->getUpdateState() == UpdateState::UPDATE_CHECK || am->getUpdateState() == UpdateState::UPDATE_CHECKED) {
+            spr->print("Checking for firmware updates...");
+        } else {
+            spr->print("This will check for firmware updates.");
+        }
+        spr->pushSprite(35, 130);
+        spr->deleteSprite();
+
+        lastindex = mindex;
+    }
     void showFactoryReset(AerManager *am, bool update, bool change)
     {
         AerGUI *gui = am->getGUI();
@@ -4980,6 +5298,11 @@ namespace AerTftUI
                 {
                     spr->setTextColor(TFT_GREEN, TFT_DARKGREY);
                     spr->print("INF");
+                }
+                else if (am->getSettings()->getDispTypeOptions() == 2)
+                {
+                    spr->setTextColor(TFT_GREEN, TFT_DARKGREY);
+                    spr->print("TMP");
                 }
                 spr->pushSprite(xt, yt + (offset * i));
                 spr->deleteSprite();
@@ -7072,13 +7395,6 @@ namespace AerTftUI
         }
         return 50;
     }
-
-    // charting vars
-    double l_yhi = 0;
-    double l_ylo = 0;
-
-    bool display1 = true;
-    bool update1 = true;
 
     void showGraphTemperature(AerManager *am, bool update, bool change, uint8_t elementIndex)
     {

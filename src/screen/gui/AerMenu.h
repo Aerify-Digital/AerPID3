@@ -28,7 +28,6 @@
 #include <iostream>
 #include <map>
 #include <vector>
-#include <Arduino.h>
 
 class AerMenu
 {

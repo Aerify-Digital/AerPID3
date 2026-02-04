@@ -58,10 +58,10 @@ uint32_t uptimeTick = 0;
 
 // *******************************************************************************************
 // *******************************************************************************************
-AppVersion app_version = AppVersion(VER_MAJOR, VER_MINOR, VER_BUILD);
-AppVersion web_version = AppVersion(VER_WEB_MAJOR, VER_WEB_MINOR, VER_WEB_BUILD);
-String version = app_version.get();
-String webui_version = web_version.get();
+AppVersion appVersion = AppVersion(VER_MAJOR, VER_MINOR, VER_BUILD);
+AppVersion webVersion = AppVersion(VER_WEB_MAJOR, VER_WEB_MINOR, VER_WEB_BUILD);
+String version = appVersion.get();
+String webuiVersion = webVersion.get();
 
 // ===========================================================================================
 // ===========================================================================================
@@ -89,12 +89,14 @@ void setup()
   Serial.println(F(" "));
   Serial.println(F("System Starting ..."));
   Serial.print(F(">> Version "));
-  Serial.println(app_version.get());
+  Serial.println(appVersion.get());
   // printFreeMem();
 
   // ----------------------------
   // Begin i2c Master
   Wire.begin();
+  Wire.setClock(400000);
+  Wire.setTimeOut(50);
   delay(50);
 
   if (AerSetup::verbose_d)
@@ -185,11 +187,11 @@ void setup()
   aerManager.setGUI(&aerGUI);
 
   // setup version
-  aerManager.setVersionApp(&app_version);
-  aerManager.setVersionWeb(&web_version);
+  aerManager.setVersionApp(&appVersion);
+  aerManager.setVersionWeb(&webVersion);
   // setup screen and show app version
   aerGUI.getST7789()->setupISP();
-  aerGUI.getST7789()->showVersion(app_version.get());
+  aerGUI.getST7789()->showVersion(appVersion.get());
   delay(300);
 
   // printFreeMem();
@@ -233,6 +235,8 @@ void setup()
   char buf[16];
   version.toCharArray(buf, 16);
   config.setup(buf);
+  Serial.println(F("[BOOT] Initializing Version Storage (version)"));
+  versionStorage.init(&flash, appVersion);
   Serial.println(F("[BOOT] Initializing Crypto Storage (crypto)"));
   // auth.init(&flash);
   crypto.init(&flash);
@@ -258,6 +262,8 @@ void setup()
   networkingStorage.init(&flash);
   Serial.println(F("[BOOT] Initializing WiFi Storage (wifiStorage)"));
   wifiStorage.init(&flash);
+  Serial.println(F("[BOOT] Initializing Web Auth Storage (webAuthStorage)"));
+  webAuthStorage.init(&flash);
   Serial.println(F("[BOOT] Initializing Charting Storage (chartingStorage)"));
   chartingStorage.init(&flash);
 #if AERPID_COUNT == 2

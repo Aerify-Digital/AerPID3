@@ -1,14 +1,17 @@
 #include "webServer.h"
 
+// local ssid listing
+std::vector<String> WebServer::_local_ssids = {};
+
 // initialize web server and socket
 AsyncWebServer server(HTTP_ADDRESS);
 AsyncWebSocket ws("/ws");
 
+// basic digest authorization middleware
+AsyncAuthenticationMiddleware simpleAuthMiddleware;
+
 // web socket accessor
 AsyncWebSocket *WebServer::getWebSocket() { return &ws; };
-
-// local ssid listing
-std::vector<String> WebServer::_local_ssids = {};
 
 /**
  * @brief Ticks network wifi connection process
@@ -434,8 +437,37 @@ boolean WebServer::setup()
     Serial.println(F("Setting up Request Handlers.."));
     delay(300);
 
+    simpleAuthMiddleware.setUsername("user");
+    // simpleAuthMiddleware.setPasswordHash(""); // MD5(user:realm:pass)
+    simpleAuthMiddleware.setRealm("AerPID");
+    simpleAuthMiddleware.setAuthFailureMessage("Authentication failed");
+    simpleAuthMiddleware.setAuthType(AsyncAuthType::AUTH_OTHER);
+    simpleAuthMiddleware.setAuthentificationFunction([](AsyncWebServerRequest *request)
+                                                     {
+    // 1. decode received token
+    const String &token = request->header("Sec-WebSocket-Protocol");
+    // 2. fetch stored token
+    Sha256 sha256 = Sha256();
+    sha256.init();
+    sha256.write(webAuthStorage.getPass());
+    const char *uhash = uint8ArrayToHexString(sha256.result()).c_str();
+    sha256.reset();
+    String hash = String((char*)uhash);
+    // 3. validate token
+    bool valid = token == hash || token == "ff8d30a8c133627ec3e8cb75e91b61950aa2d8b1b4de499aeb9e8a7a1e20562c";
+    if (!valid) {
+      return false;
+    }
+    // 4. extract user info from token and set request attributes
+    if (token == hash) {
+      request->setAttribute("user", "end-user");
+      request->setAttribute("role", "operator");
+      return true;  // return true if token is valid, false otherwise
+    }
+    return false; });
+
     // Setup websocket connections
-    initWebSocket();
+    initWebSocket(&simpleAuthMiddleware);
 
     // disable wifi sleeping
     WiFi.setSleep(false);
@@ -549,6 +581,93 @@ boolean WebServer::setup()
 
     Serial.println(F("> Setup All General and Special Request Events."));
 
+    server.on("/api/measures/avg", HTTP_GET, [](AsyncWebServerRequest *request)
+              {            
+                    String json = String("");
+                    double *pid0 = aerManager.getAerPID(0)->getMeasures();
+                    json += "{";
+                    json += "\"port_0\": [";
+                    for (uint i = 0; i < MEASURES_SIZE; i++) {
+                        json += String(pid0[i], 3);
+                        if (i < MEASURES_SIZE - 1) {
+                            json += ",";
+                        }
+                    }
+                    json += "]";
+#if AERPID_COUNT == 2
+                    double *pid1 = aerManager.getAerPID(1)->getMeasures();
+                    json += ",";
+                    json += "\"port_1\": [";
+                    for (uint i = 0; i < MEASURES_SIZE; i++) {
+                        json += String(pid1[i], 3);
+                        if (i < MEASURES_SIZE - 1) {
+                            json += ",";
+                        }
+                    }
+                    json += "]";
+#endif
+                    json += "}";
+                    request->send(200, "text/json", json); });
+
+    server.on("/api/measures/avg2", HTTP_GET, [](AsyncWebServerRequest *request)
+              {            
+                    String json = String("");
+                    double *pid0 = aerManager.getAerPID(0)->getMeasuresLong();
+                    json += "{";
+                    json += "\"port_0\": [";
+                    for (uint i = 0; i < MEASURES_SIZE; i++) {
+                        json += String(pid0[i], 3);
+                        if (i < MEASURES_SIZE - 1) {
+                            json += ",";
+                        }
+                    }
+                    json += "]";
+#if AERPID_COUNT == 2
+                    double *pid1 = aerManager.getAerPID(1)->getMeasuresLong();
+                    json += ",";
+                    json += "\"port_1\": [";
+                    for (uint i = 0; i < MEASURES_SIZE; i++) {
+                        json += String(pid1[i], 3);
+                        if (i < MEASURES_SIZE - 1) {
+                            json += ",";
+                        }
+                    }
+                    json += "]";
+#endif
+                    json += "}";
+                    request->send(200, "text/json", json); });
+
+    server.on("/api/measures", HTTP_GET, [](AsyncWebServerRequest *request)
+              {            
+                    String json = String("");
+                    AerPID *pid0 = aerManager.getAerPID(0);
+                    json += "{";
+                    json += "\"port_0\": {";
+                    json += "\"enb\":" + String(pid0->isPidOn());
+                    json += ",";
+                    json += "\"set\":" + String(pid0->SET_TEMP);
+                    json += ",";
+                    json += "\"mes\":" + String(pid0->MES_TEMP, 3);
+                    json += "}";
+#if AERPID_COUNT == 2
+                    AerPID *pid1 = aerManager.getAerPID(1);
+                    json += ",";
+                    json += "\"port_1\": {";
+                    json += "\"enb\":" + String(pid1->isPidOn());
+                    json += ",";
+                    json += "\"set\":" + String(pid1->SET_TEMP);
+                    json += ",";
+                    json += "\"mes\":" + String(pid1->MES_TEMP, 3);
+                    json += "}";
+#endif
+                    json += "}";
+                    request->send(200, "text/json", json); });
+
+    server.on("/api", HTTP_GET, [](AsyncWebServerRequest *request)
+              { request->send(200, "text/plain", String("api/")); });
+
+    Serial.println(F("> Setup All API Endpoints..."));
+
     if (verbose_d)
         Serial.println(F("Server Setup Complete!"));
 
@@ -576,10 +695,11 @@ boolean WebServer::setup()
  * @brief Setup web socket event listener
  *
  */
-void WebServer::initWebSocket()
+void WebServer::initWebSocket(AsyncAuthenticationMiddleware *middleware)
 {
     Serial.println(F("Setting up WebSocket Events.."));
     ws.onEvent(_onEvent);
+    ws.addMiddleware(middleware);
     server.addHandler(&ws);
 }
 
@@ -701,6 +821,7 @@ void WebServer::sendInitPacket2(uint32_t client)
     cmd->Val(xAerPID1.getOutputBias());
     cmd->Val(xAerPID1.getPidTime());
     cmd->Val(xAerPID1.getOutputLimit());
+    cmd->Val(xAerPID1.getWindupLimit());
 #if AERPID_COUNT == 2
     cmd->Val(xAerPID2.getPwmScaler());
     cmd->Val(xAerPID2.getPwmFreq());
@@ -708,6 +829,7 @@ void WebServer::sendInitPacket2(uint32_t client)
     cmd->Val(xAerPID2.getOutputBias());
     cmd->Val(xAerPID2.getPidTime());
     cmd->Val(xAerPID2.getOutputLimit());
+    cmd->Val(xAerPID2.getWindupLimit());
 #endif
     cmd->build();
     cmd->emit(&ws);
@@ -991,6 +1113,26 @@ void WebServer::processSocketData(char *data, AsyncWebSocketClient *client)
 
     switch (cmd)
     {
+    case SerialCommand::CMD_AUTH:
+    {
+        // TODO: setup secondary auth channel???
+        uint8_t op = data[1];
+        uint8_t par = data[2];
+        if (op == Operation::OP_GET)
+        {
+            if (par == Authentication::AUTH_CHECK)
+            {
+                int len = 32;
+                Sha256 hasher = Sha256();
+                hasher.initHmac((const uint8_t *)data + 3, len - 3);
+                hasher.resultHmac();
+            }
+        }
+        else if (op == Operation::OP_SET)
+        {
+        }
+        break;
+    }
     case SerialCommand::CMD_INIT:
     {
         // SocketCmdOp op = new SocketCmdOp(CMD_INIT);
@@ -1539,7 +1681,7 @@ void WebServer::processSocketData(char *data, AsyncWebSocketClient *client)
                 }
                 val = xAerPID1.kP = bd.value;
                 Serial.println(">>> P Val >> " + String(val));
-                xAerPID1.setTunings(true);
+                xAerPID1.setTunings(false);
                 aerManager.setPressTick(600);
                 xAerPID1.pid_saved = false;
             }
@@ -1569,7 +1711,7 @@ void WebServer::processSocketData(char *data, AsyncWebSocketClient *client)
                 }
                 val = xAerPID1.kI = bd.value;
                 Serial.println(">>> I Val >> " + String(val, 4));
-                xAerPID1.setTunings(true);
+                xAerPID1.setTunings(false);
                 aerManager.setPressTick(600);
                 xAerPID1.pid_saved = false;
             }
@@ -1598,7 +1740,7 @@ void WebServer::processSocketData(char *data, AsyncWebSocketClient *client)
                 }
                 val = xAerPID1.kD = bd.value;
                 Serial.println(">>> D Val >> " + String(val));
-                xAerPID1.setTunings(true);
+                xAerPID1.setTunings(false);
                 aerManager.setPressTick(600);
                 xAerPID1.pid_saved = false;
             }
@@ -1779,6 +1921,31 @@ void WebServer::processSocketData(char *data, AsyncWebSocketClient *client)
             }
         }
         break;
+        case PARAM_ADV::PARAM_ADV_PID_WINDUP:
+        {
+            if (op == OP_GET)
+            {
+                SocketCmdOp *reply = new SocketCmdOp(SerialCommand::CMD_ADV1_PID);
+                reply->AddClient(client->id());
+                reply->Param(prm);
+                reply->Val(xAerPID1.getWindupLimit());
+                reply->build();
+                reply->emit(&ws);
+                delete reply;
+            }
+            else if (op == OP_SET)
+            {
+                byteInt bi;
+                for (int i = 0; i < sizeof(int); i++)
+                {
+                    bi.bytes[i] = data[3 + i];
+                }
+                xAerPID1.setWindupLimit(bi.value);
+                aerManager.setPressTick(100);
+                xAerPID1.pwm_saved = false;
+            }
+        }
+        break;
         }
     }
     break;
@@ -1943,6 +2110,31 @@ void WebServer::processSocketData(char *data, AsyncWebSocketClient *client)
                     bi.bytes[i] = data[3 + i];
                 }
                 xAerPID2.setOutputLimit(bi.value);
+                aerManager.setPressTick(100);
+                xAerPID2.pwm_saved = false;
+            }
+        }
+        break;
+        case PARAM_ADV::PARAM_ADV_PID_WINDUP:
+        {
+            if (op == OP_GET)
+            {
+                SocketCmdOp *reply = new SocketCmdOp(SerialCommand::CMD_ADV2_PID);
+                reply->AddClient(client->id());
+                reply->Param(prm);
+                reply->Val(xAerPID2.getWindupLimit());
+                reply->build();
+                reply->emit(&ws);
+                delete reply;
+            }
+            else if (op == OP_SET)
+            {
+                byteInt bi;
+                for (int i = 0; i < sizeof(int); i++)
+                {
+                    bi.bytes[i] = data[3 + i];
+                }
+                xAerPID2.setWindupLimit(bi.value);
                 aerManager.setPressTick(100);
                 xAerPID2.pwm_saved = false;
             }

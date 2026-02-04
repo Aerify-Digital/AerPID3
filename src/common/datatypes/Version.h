@@ -40,6 +40,15 @@ public:
         return v;
     }
 
+    uint *getVerArr()
+    {
+        uint *ver = new uint[3];
+        ver[0] = this->major;
+        ver[1] = this->minor;
+        ver[2] = this->build;
+        return ver;
+    }
+
 protected:
     char vDot = '.';
 
