@@ -1436,7 +1436,7 @@ void onEb1Clicked(EncoderButton &eb)
             else if (enc_aerGUI->getMenuProps()->menuLevelVal == MENU_WIFI_HOSTNAME_SAVE)
             {
                 // save and update hostname
-                commstor.setPSK(enc_aerGUI->getMenuProps()->menuItemSelStr.c_str());
+                enc_am->getNet()->setHostname(enc_aerGUI->getMenuProps()->menuItemSelStr.c_str());
                 enc_am->webUpdateWIFI(true);
                 enc_am->setPressTick(100);
                 enc_aerGUI->gotoMenu(MENU_MAIN_WIFI);
