@@ -4,3 +4,6 @@
 [submodule "app/electron"]
 	path = app/electron
 	url = https://github.com/Aerify-Digital/aerpid_suite.git
+[submodule "libs/TinyMPC"]
+	path = libs/TinyMPC
+	url = https://github.com/TinyMPC/TinyMPC.git
