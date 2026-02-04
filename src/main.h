@@ -116,7 +116,7 @@ void _initThreadStackSizes()
     taskStackSize[4] = 32 * 32 * 4;  // TFT_Demo
     taskStackSize[5] = 32 * 32 * 4;  // PID_Task
     taskStackSize[6] = 32 * 32 * 6;  // Serial_Task
-    taskStackSize[7] = 32 * 32 * 4;  // TFT_Task
+    taskStackSize[7] = 32 * 32 * 5;  // TFT_Task
     taskStackSize[8] = 32 * 32 * 2;  // LED_Task
     taskStackSize[9] = 32 * 32 * 1;  // perfmon_task
     taskStackSize[10] = 32 * 32 * 4; // webServer (wifi) Task
