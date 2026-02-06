@@ -5116,16 +5116,17 @@ namespace AerTftUI
         spr->setTextSize(2);
         if (am->getUpdateState() == UpdateState::UPDATE_CHECK || am->getUpdateState() == UpdateState::UPDATE_CHECKED)
         {
-            spr->print("Checking for firmware updates...");
+            spr->setTextColor(TFT_YELLOW, TFT_DARKGREY);
+            spr->print("Checking for firmware update...");
         }
         else if (am->hasAppUpdate())
         {
-            spr->setTextColor(TFT_MAROON, TFT_DARKGREY);
+            spr->setTextColor(TFT_RED, TFT_DARKGREY);
             spr->print("New firmware version available!");
         }
         else
         {
-            spr->setTextColor(TFT_DARKGREEN, TFT_DARKGREY);
+            spr->setTextColor(TFT_GREENYELLOW, TFT_DARKGREY);
             spr->print("No firmware updates available.");
         }
         spr->pushSprite(35, 130);
