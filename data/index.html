@@ -156,16 +156,13 @@
       openAuthModal()
      }, 300)
     }
-    /*setTimeout(() => {
-     errorLoadingModal()
-    }, 12000)*/
    }
    const login = (e) => {
     e.preventDefault()
     document.getElementById('aer-auth-pending').style.display = 'block'
     document.getElementById('aer-auth-form').style.display = 'none'
     console.log('logging in...')
-    triggerAuthStep();
+    triggerAuthStep()
    }
    setupAuthPage()
   </script>
@@ -176,20 +173,20 @@
       <i class="fa-solid fa-lock w3-text-white w3-xxlarge"></i>
       <div>Device Authentication</div>
       <div id="aer-auth-pending" style="display: none">
-       <div style="min-width: 256px; padding: 10px; ">Please Wait...</div>
+       <div style="min-width: 256px; padding: 10px">Please Wait...</div>
       </div>
       <div id="aer-auth-validate" style="display: none">
-       <div style="min-width: 256px; padding: 10px; ">Validating...</div>
+       <div style="min-width: 256px; padding: 10px">Validating...</div>
       </div>
       <div id="aer-auth-error" style="display: none">
-       <div style="min-width: 256px; padding: 10px; ">Authentication Failed!</div>
+       <div style="min-width: 256px; padding: 10px">Authentication Failed!</div>
       </div>
       <div id="aer-auth-form" style="display: block">
        <div>Enter your access password to connect.</div>
        <div class="w3-text-white" style="padding: 20px; width: min-content; margin: 0 auto">
         <form>
          <table>
-          <tr style="display: none;">
+          <tr style="display: none">
            <td>
             <label for="username">Username:</label>
            </td>
@@ -210,7 +207,12 @@
         </form>
        </div>
       </div>
-      <div id="aer-auth-alert" style="font-size: 10px; min-width: 256px;"><div style="color: orangered;">WARNING!</div>This connection does not use encryption. Data transmitted may be viewable by other devices on the network.<br/>Never expose this device directly to the Internet!</div>
+      <div id="aer-auth-alert" style="font-size: 10px; min-width: 256px">
+       <div style="color: orangered">WARNING!</div>
+       This connection does not use encryption. Data transmitted may be viewable by other devices on the network.
+       <br />
+       Never expose this device directly to the Internet!
+      </div>
      </div>
     </div>
    </div>

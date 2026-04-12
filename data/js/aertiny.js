@@ -551,8 +551,10 @@ function initWebSocket() {
   if (connecting || connected) {
     return;
   }
-  if (state.AUTH_STEP < 1) {
-    socketWaitForAuth();
+  if (state.AUTH_STEP < 1 && !state.AUTHENTICATED) {
+    setTimeout(() => {
+      socketWaitForAuth();
+    }, 500);
     return;
   }
   console.log('Attempting to open WebSocket connection...');
@@ -580,6 +582,7 @@ function onOpen(event) {
   connected = true;
   state.AUTH_STEP = 3;
   state.AUTHENTICATED = true;
+  document.getElementById('apassword').disabled = false;
   document.getElementById('aer-auth-modal').style.display = 'none';
   document.getElementById('sockets-modal-text').innerHTML = 'Connected!';
   document.getElementById('sockets-modal').style.display = 'none';
@@ -589,13 +592,15 @@ function onClose(event) {
   console.log('Connection to host closed!');
   connecting = false;
   connected = false;
-  state.AUTH_STEP = 0;
+  //state.AUTH_STEP = 0;
   state.AUTHENTICATED = false;
-  document.getElementById('apassword').disabled = false;
-  document.getElementById('aer-auth-modal').style.display = 'block';
-  document.getElementById('aer-auth-pending').style.display = 'none';
-  document.getElementById('aer-auth-validate').style.display = 'none';
-  document.getElementById('aer-auth-form').style.display = 'block';
+  //document.getElementById('apassword').disabled = false;
+  if (state.AUTH_STEP < 3) {
+    document.getElementById('aer-auth-modal').style.display = 'block';
+    document.getElementById('aer-auth-pending').style.display = 'none';
+    document.getElementById('aer-auth-validate').style.display = 'none';
+    document.getElementById('aer-auth-form').style.display = 'block';
+  }
   document.getElementById('sockets-modal-connect-btn').disabled = false;
   document.getElementById('sockets-modal-text').innerHTML = 'Connection Error!';
   document.getElementById('sockets-modal').style.display = 'block';
@@ -606,9 +611,9 @@ function onError(event) {
   console.log('Connection to host faulted!');
   connecting = false;
   connected = false;
-  state.AUTH_STEP = 0;
+  //state.AUTH_STEP = 0;
   state.AUTHENTICATED = false;
-  document.getElementById('apassword').disabled = false;
+  //document.getElementById('apassword').disabled = false;
   document.getElementById('aer-auth-modal').style.display = 'block';
   document.getElementById('aer-auth-pending').style.display = 'none';
   document.getElementById('aer-auth-validate').style.display = 'none';
@@ -2084,24 +2089,31 @@ function pidButtonInit() {
 }
 
 function triggerAuthStep() {
-  const user = document.getElementById('ausername').value;
-  const pass = document.getElementById('apassword').value;
-  let hash = '';
-  const hpass = sha256(pass).toUpperCase();
-  for (let i = 0; i < 64; i += 2) {
-    const var1 = hpass[i];
-    const var2 = hpass[i + 1];
-    hash += `${var1}${var2}`;
-    if (i < 64 - 2) {
-      hash += '-';
+  if (!state.AUTHENTICATED && state.AUTH_STEP < 3) {
+    const user = document.getElementById('ausername').value;
+    const pass = document.getElementById('apassword').value;
+    let hash = '';
+    const hpass = sha256(pass).toUpperCase();
+    for (let i = 0; i < 64; i += 2) {
+      const var1 = hpass[i];
+      const var2 = hpass[i + 1];
+      hash += `${var1}${var2}`;
+      if (i < 64 - 2) {
+        hash += '-';
+      }
     }
+    state.AUTH_KEY = hash.trim();
+    state.AUTH_STEP = 1;
   }
-  state.AUTH_KEY = hash.trim();
-  state.AUTH_STEP = 1;
 
   document.getElementById('ausername').value = '';
   document.getElementById('apassword').value = '';
   document.getElementById('apassword').disabled = true;
+
+  if (state.AUTH_STEP > 1) {
+    socketWaitForAuth();
+    return;
+  }
 
   setTimeout(() => {
     if (state.AUTHENTICATED) {
@@ -3229,6 +3241,7 @@ function openChartTab(evt, tabName) {
 // ==================================================
 
 const socketWaitForAuth = () => {
+  console.log(`socketWaitForAuth() step: ${state.AUTH_STEP}`);
   if (state.AUTH_STEP == 0) {
     setTimeout(() => {
       socketWaitForAuth();
@@ -3245,10 +3258,10 @@ const init = () => {
   pidButtonInit();
   favListenersInit();
   advButtonInit();
-  window.addEventListener('load', onLoad);
   function onLoad(event) {
     socketWaitForAuth();
   }
+  window.addEventListener('load', onLoad);
   document.getElementById('element1').click();
 };
 
