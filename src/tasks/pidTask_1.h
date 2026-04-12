@@ -17,7 +17,7 @@ void pid_task_1(void *pvParameters)
     {
         vTaskDelay(100 / portTICK_PERIOD_MS);
     }
-        vTaskDelay(250 / portTICK_PERIOD_MS);
+    vTaskDelay(250 / portTICK_PERIOD_MS);
 
     Serial.print(F("AerPID Worker 1 starting on core "));
     Serial.println(xPortGetCoreID());

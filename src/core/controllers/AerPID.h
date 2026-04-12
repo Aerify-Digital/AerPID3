@@ -91,16 +91,16 @@
 // *************************************
 
 // Measure sample array sizes
-#define MEASURES_SIZE 128
+#define MEASURES_SIZE 300
 // Measure rolling average size -- must be smaller than MEASURES_SIZE
-#define MEASURES_AVG_TOTAL 58
+#define MEASURES_AVG_TOTAL 60
 // Rolling average measure max size
 #define MEAS_TICK_MAX_C ((1000 / PID_SLEEP_TIME_MS) * 1)
  
 // Time it takes to perform a measurement in milliseconds
 #define MEASURE_TIME_COST 100
 // Array average size for recent measurements
-#define MES_TEMP_SIZE 16
+#define MES_TEMP_SIZE 17
 
 // *************************************
 // *************************************
@@ -192,6 +192,8 @@ public:
     // AerPID Initialization
     bool init();
 
+    bool isLoaded() { return _loaded; }
+
     // *************************
     // Temperature variables  (in celsius)
     double MES_TEMP = 0.0;          // Measured temperature
@@ -235,6 +237,7 @@ public:
     // *************************
     // Do work tick
     void tick();
+    void tick_measure();
 
     // Measurements array
     double *getMeasures();
@@ -289,6 +292,7 @@ public:
     bool hasFaultError();
     bool hasFaultErrorAlerted();
     void setFaultErrorAlert(bool alerted);
+    bool autotune(double &kp, double &ki, double &kd);
 
 private:
     // verbose debug output

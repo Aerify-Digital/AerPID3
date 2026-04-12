@@ -139,31 +139,34 @@ void AerPID::handleFeatureSetTick()
 // Main tick
 void AerPID::tick()
 {
-    // tick measure counter
-    if (millis() - _measLastTime > _measLastTimeMax || _measLastTime == 0)
+    // Autotune handling
+    if (isAutoTuneActive())
     {
-        // Second, Perform element measurements...
-        MeasureResult res = measureElementTemperature();
-        if (res == MeasureResult::ACK)
+        // setup and run autotune function
+        double kp, ki, kd;
+        // auto should run every tick when enabled.
+        // auto tune will adjust the PID values to reduce the error of the pid compute.
+        if (autotune(kp, ki, kd))
         {
-            MES_TEMP = avgMES_TEMP();
-            addToMeasuresB(MES_TEMP);
-            AVG_TEMP = avgMeasures();
+            // save new PID values if autotune success
+            kP = kp;
+            kI = ki;
+            kD = kd;
+            Serial.println("AutoTune Complete!");
+            Serial.print("New kP: ");
+            Serial.print(kP);
+            Serial.print("  ");
+            Serial.print("New kI: ");
+            Serial.print(kI);
+            Serial.print("  ");
+            Serial.print("New kD: ");
+            Serial.print(kD);
+            Serial.println(" ");
+            setAutoTuneActive(false);
         }
-        else if (res == MeasureResult::PENDING)
-        {
-            _measLastTime = millis() - MEASURE_TIME_COST * 0.6;
-        }
-        else if (res == MeasureResult::FAULT)
-        {
-            //_measLastTime = millis() - MEASURE_TIME_COST;
-        }
+        // always run normal PID processing for this tick
     }
-    if (millis() - _measLastTimeLong >= 3000)
-    {
-        addToMeasuresC(MES_TEMP);
-        _measLastTimeLong = millis();
-    }
+
     // tick pid compute
     if (_tick-- <= 0)
     {
@@ -191,6 +194,35 @@ void AerPID::tick()
     handleFeatureSetTick();
 
     vTaskDelay(PID_SLEEP_TIME_MS / portTICK_PERIOD_MS);
+}
+
+void AerPID::tick_measure()
+{
+    // tick measure counter
+    if (millis() - _measLastTime > _measLastTimeMax || _measLastTime == 0)
+    {
+        // Second, Perform element measurements...
+        MeasureResult res = measureElementTemperature();
+        if (res == MeasureResult::ACK)
+        {
+            MES_TEMP = avgMES_TEMP();
+            addToMeasuresB(MES_TEMP);
+            AVG_TEMP = avgMeasures();
+        }
+        else if (res == MeasureResult::PENDING)
+        {
+            _measLastTime = millis() - MEASURE_TIME_COST * 0.6;
+        }
+        else if (res == MeasureResult::FAULT)
+        {
+            //_measLastTime = millis() - MEASURE_TIME_COST;
+        }
+    }
+    if (millis() - _measLastTimeLong >= 3000)
+    {
+        addToMeasuresC(MES_TEMP);
+        _measLastTimeLong = millis();
+    }
 }
 
 // --------------------------------------
@@ -1211,4 +1243,10 @@ bool AerPID::hasFaultErrorAlerted()
 void AerPID::setFaultErrorAlert(bool alerted)
 {
     this->_faultErrorAlerted = alerted;
+}
+
+bool AerPID::autotune(double &kp, double &ki, double &kd)
+{
+    
+    return false;
 }

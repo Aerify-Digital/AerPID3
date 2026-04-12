@@ -331,10 +331,12 @@ void startAllWorkerThreads()
   // PID task (first port)
   // xTaskCreatePinnedToCore(pid_task_1, "PID_Task_1", taskStackSize[5], NULL, 3, &pidTask1, 1);
   xTaskCreate(pid_task_1, "PID_Task_1", taskStackSize[5], NULL, 1, &pidTask1);
+  xTaskCreate(measure_task_1, "Measure_Task_1", taskStackSize[13], NULL, 1, &mesTask1);
 #if AERPID_COUNT == 2
   // PID task (second port - if available)
   // xTaskCreatePinnedToCore(pid_task_2, "PID_Task_2", taskStackSize[5], NULL, 3, &pidTask2, 1);
   xTaskCreate(pid_task_2, "PID_Task_2", taskStackSize[5], NULL, 1, &pidTask2);
+  xTaskCreate(measure_task_2, "Measure_Task_2", taskStackSize[13], NULL, 1, &mesTask2);
 #endif
 
   // xTaskCreatePinnedToCore(element_task, "Element_Task", taskStackSize[12], (void *)&aerManager, 8, &elementTask, 1);

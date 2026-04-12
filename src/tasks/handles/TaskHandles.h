@@ -15,6 +15,8 @@ TaskHandle_t wrkTask;
 TaskHandle_t pidTask;
 TaskHandle_t pidTask1;
 TaskHandle_t pidTask2;
+TaskHandle_t mesTask1;
+TaskHandle_t mesTask2;
 TaskHandle_t serialTask;
 TaskHandle_t encTask;
 TaskHandle_t demoTask = NULL;

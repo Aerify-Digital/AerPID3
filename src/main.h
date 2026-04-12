@@ -72,8 +72,10 @@
 #include "tasks/monitor/perfmon.h"
 #include "tasks/workerTask.h"
 #include "tasks/pidTask_1.h"
+#include "tasks/pMeasTask_1.h"
 #if AERPID_COUNT == 2
 #include "tasks/pidTask_2.h"
+#include "tasks/pMeasTask_2.h"
 #endif
 #include "tasks/elementTask.h"
 #include "tasks/serialTask.h"
@@ -98,7 +100,7 @@ AerPID xAerPID2 = AerPID(PIN_ONE_WIRE_B, PIN_SSR_EN_B, PIN_SSR_CHAN_2, 1);
 // Thread memory stack allocations
 
 // Max task count
-static const uint taskCount = 13; // count of tasks
+static const uint taskCount = 14; // count of tasks
 
 // Task stack sizes.  Controls how much heap is allocated per thread.
 // careful changing these sizes...
@@ -114,7 +116,7 @@ void _initThreadStackSizes()
     taskStackSize[2] = 32 * 32 * 2;  // Worker Task - RTC_Task & Local_Temp_Task
     taskStackSize[3] = 32 * 32 * 2;  // Link Task for element
     taskStackSize[4] = 32 * 32 * 4;  // TFT_Demo
-    taskStackSize[5] = 32 * 32 * 4;  // PID_Task
+    taskStackSize[5] = 32 * 32 * 3;  // PID_Task
     taskStackSize[6] = 32 * 32 * 6;  // Serial_Task
     taskStackSize[7] = 32 * 32 * 5;  // TFT_Task
     taskStackSize[8] = 32 * 32 * 2;  // LED_Task
@@ -122,6 +124,7 @@ void _initThreadStackSizes()
     taskStackSize[10] = 32 * 32 * 4; // webServer (wifi) Task
     taskStackSize[11] = 32 * 32 * 3; // Storage Variable Saving Task
     taskStackSize[12] = 32 * 32 * 2; // Element Feature Task (bump)
+    taskStackSize[13] = 32 * 32 * 3;  // Measure_Task
 }
 
 // ===============================================================
