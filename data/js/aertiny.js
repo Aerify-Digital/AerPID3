@@ -2509,8 +2509,8 @@ function sendPid1AdvSettings() {
         'PID Windup Limit must be a non negative whole number!';
       document.getElementById('pid_adv1_msg').style.display = 'block';
       return;
-    } else if (val < 8) {
-      document.getElementById('pid_adv1_txt').innerHTML = 'PID Windup Limit must be 8 or greater!';
+    } else if (val < 0) {
+      document.getElementById('pid_adv1_txt').innerHTML = 'PID Windup Limit must be 0 or greater!';
       document.getElementById('pid_adv1_msg').style.display = 'block';
       return;
     } else if (val > 32768) {
