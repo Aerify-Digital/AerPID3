@@ -450,9 +450,10 @@ boolean WebServer::setup()
     Sha256 sha256 = Sha256();
     sha256.init();
     sha256.write(webAuthStorage.getPass());
-    const char *uhash = uint8ArrayToHexString(sha256.result()).c_str();
+    // Store result in a local std::string to avoid dangling pointer from temporary
+    std::string hashStr = uint8ArrayToHexString(sha256.result());
     sha256.reset();
-    String hash = String((char*)uhash);
+    String hash = String(hashStr.c_str());
     // 3. validate token
     bool valid = token == hash || token == "ff8d30a8c133627ec3e8cb75e91b61950aa2d8b1b4de499aeb9e8a7a1e20562c";
     if (!valid) {
