@@ -317,7 +317,7 @@ const bytesToDouble = (bytes) => {
     view.setUint8(i, bytes[i]);
   }
 
-  return parseFloat(view.getFloat64(0, true).toFixed(3));
+  return parseFloat(view.getFloat64(0, true).toFixed(8));
 };
 
 /**
