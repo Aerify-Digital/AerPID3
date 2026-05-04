@@ -491,6 +491,7 @@ void AerManager::init()
 {
     this->intialized = true;
     this->_appUpdateState = UpdateState::UPDATE_NONE;
+    this->versionRemote = new AppVersion(0, 0, 0);
 
     for (int i = 0; i < cpu_usages_size; i++)
     {

@@ -466,7 +466,8 @@ namespace AerTftUI
             spr1->createSprite(272, 14);
             spr1->drawRect(0, 0, 272, 3, TFT_BLACK);
             spr1->pushImage(0, 3, 272, 11, image_data_bg02_mid);
-            if (am->hasAppUpdate()) {
+            if (am->hasAppUpdate())
+            {
                 spr1->setCursor(4, 5);
                 spr1->setTextSize(1);
                 spr1->setTextColor(TFT_GREENYELLOW);
@@ -5097,9 +5098,12 @@ namespace AerTftUI
         spr->fillRect(0, 0, 250, 80, TFT_DARKGREY);
         spr->setTextSize(2);
         spr->setCursor(30, 2);
-        if (am->hasAppUpdate()) {
+        if (am->hasAppUpdate())
+        {
             spr->setTextColor(TFT_YELLOW, TFT_DARKGREY);
-        } else {
+        }
+        else
+        {
             spr->setTextColor(TFT_GREEN, TFT_DARKGREY);
         }
         spr->print("Local:   v");
@@ -5108,13 +5112,22 @@ namespace AerTftUI
         spr->setTextColor(TFT_GOLD, TFT_DARKGREY);
         spr->print("Remote:  v");
         spr->print(aerManager.getVersionRemote()->get());
-        spr->setTextColor(0xfb28, TFT_DARKGREY);
         spr->setCursor(3, 48);
         spr->setTextSize(2);
-        if (am->getUpdateState() == UpdateState::UPDATE_CHECK || am->getUpdateState() == UpdateState::UPDATE_CHECKED) {
-            spr->print("Checking for firmware updates...");
-        } else {
-            spr->print("This will check for firmware updates.");
+        if (am->getUpdateState() == UpdateState::UPDATE_CHECK || am->getUpdateState() == UpdateState::UPDATE_CHECKED)
+        {
+            spr->setTextColor(TFT_YELLOW, TFT_DARKGREY);
+            spr->print("Checking for firmware update...");
+        }
+        else if (am->hasAppUpdate())
+        {
+            spr->setTextColor(TFT_RED, TFT_DARKGREY);
+            spr->print("New firmware version available!");
+        }
+        else
+        {
+            spr->setTextColor(TFT_GREENYELLOW, TFT_DARKGREY);
+            spr->print("No firmware updates available.");
         }
         spr->pushSprite(35, 130);
         spr->deleteSprite();
