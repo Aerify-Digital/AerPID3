@@ -279,6 +279,7 @@ bool AerPID::compute()
         // scale output using temperature delta for better stability at set point
         // double _output = deltaScaleOutput(delta, output);
         double _output = max(0.0, output);
+        if (isnan(_output)) _output = 0.0; // AER-19 hardening: never cast/act on a NaN output (xOutput cast would be UB; force safe-off, not dead-code happenstance)
 
         // convert output double to uint32 for ledcWrite
         xOutput = static_cast<uint32_t>(_output);
