@@ -55,14 +55,10 @@ void save_task(void *pvParameters)
         {
             am->getAerPID(0)->kP = 2.0;
         }
-        /*if (am->getAerPID(0)->kI <= 0.0001)
+        if (isnan(am->getAerPID(0)->kI) || am->getAerPID(0)->kI <= 0.0001 || am->getAerPID(0)->kI >= 5.0001)
         {
             am->getAerPID(0)->kI = 0.025;
         }
-        else if (am->getAerPID(0)->kI >= 5.0001)
-        {
-            am->getAerPID(0)->kI = 0.025;
-        }*/
         if (am->getAerPID(0)->kD < 0)
         {
             am->getAerPID(0)->kD = 7.0;
@@ -81,10 +77,10 @@ void save_task(void *pvParameters)
         {
             am->getAerPID(1)->kP = 2.0;
         }
-        /*if (am->getAerPID(1)->kI <= 0.0001)
+        if (isnan(am->getAerPID(1)->kI) || am->getAerPID(1)->kI <= 0.0001 || am->getAerPID(1)->kI >= 5.0001)
         {
             am->getAerPID(1)->kI = 0.025;
-        }*/
+        }
         if (am->getAerPID(1)->kD < 0)
         {
             am->getAerPID(1)->kD = 7.0;

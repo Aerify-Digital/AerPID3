@@ -170,9 +170,10 @@ void AerPID::tick()
         //  Process PID computation
         if (compute())
         {
-            // reset pid tick
-            //_tick = _pidTickMax;
-            _tick = _pidTickMax * (5 / 1000);
+            // reset pid tick. cadence is owned by the elapsed-time gate in compute()
+            // (sampleTime via getPidTick()); this just keeps the _tick-- guard satisfied.
+            // (was `_pidTickMax * (5 / 1000)` = integer 0 — a no-op; made explicit.)
+            _tick = 0;
         }
     }
 
@@ -986,7 +987,10 @@ AerPID::MeasureResult AerPID::measureElementTemperatureAsync()
 
         if (millis() - _measLastTime > FAULT_TIMEOUT || _faultsRecent >= 3)
         {
-            _faultsRecent--;
+            if (_faultsRecent > 0)
+            {
+                _faultsRecent--; // guard: _faultsRecent is unsigned; timeout branch can reach here at 0
+            }
             addToMES_TEMP(celsius);
             _measLastTime = millis();
             Serial.println(F("(async) Measure Fault Recovery! Forcing measure..."));
