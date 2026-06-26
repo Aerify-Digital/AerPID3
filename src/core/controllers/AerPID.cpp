@@ -175,6 +175,17 @@ void AerPID::tick()
             // (was `_pidTickMax * (5 / 1000)` = integer 0 — a no-op; made explicit.)
             _tick = 0;
         }
+        // Floor the counter so it can never march into int16 underflow. When compute()
+        // returns false (PID disabled, over-temp latch, or sample-time not yet elapsed)
+        // the original code left _tick decrementing unbounded: after ~6 min it reached
+        // INT16_MIN and wrapped to +32767, making `_tick-- <= 0` false and freezing
+        // compute() for ~6 min. Cadence is owned by compute()'s own sampleTime gate, so
+        // re-flooring to 0 is behavior-preserving (compute() is still evaluated every
+        // tick while _tick <= 0).
+        if (_tick < 0)
+        {
+            _tick = 0;
+        }
     }
 
     // timer trigger var
