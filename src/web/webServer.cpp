@@ -1680,11 +1680,18 @@ void WebServer::processSocketData(char *data, AsyncWebSocketClient *client)
                 {
                     bd.bytes[i] = data[3 + i];
                 }
-                val = xAerPID1.kP = bd.value;
+                if (isnan(bd.value) || bd.value < 0) // AER-19: reject NaN/negative gain from raw network bytes
+                {
+                    val = xAerPID1.kP; // keep current; no write, no flash-dirty
+                }
+                else
+                {
+                    val = xAerPID1.kP = bd.value;
+                    xAerPID1.setTunings(false);
+                    aerManager.setPressTick(600);
+                    xAerPID1.pid_saved = false;
+                }
                 Serial.println(">>> P Val >> " + String(val));
-                xAerPID1.setTunings(false);
-                aerManager.setPressTick(600);
-                xAerPID1.pid_saved = false;
             }
 
             SocketCmdOp *reply = new SocketCmdOp(SerialCommand::CMD_PID);
@@ -1710,11 +1717,18 @@ void WebServer::processSocketData(char *data, AsyncWebSocketClient *client)
                 {
                     bd.bytes[i] = data[3 + i];
                 }
-                val = xAerPID1.kI = bd.value;
+                if (isnan(bd.value) || bd.value < 0) // AER-19: reject NaN/negative gain from raw network bytes
+                {
+                    val = xAerPID1.kI; // keep current; no write, no flash-dirty
+                }
+                else
+                {
+                    val = xAerPID1.kI = bd.value;
+                    xAerPID1.setTunings(false);
+                    aerManager.setPressTick(600);
+                    xAerPID1.pid_saved = false;
+                }
                 Serial.println(">>> I Val >> " + String(val, 4));
-                xAerPID1.setTunings(false);
-                aerManager.setPressTick(600);
-                xAerPID1.pid_saved = false;
             }
             SocketCmdOp *reply = new SocketCmdOp(SerialCommand::CMD_PID);
             reply->AddClient(client->id());
@@ -1739,11 +1753,18 @@ void WebServer::processSocketData(char *data, AsyncWebSocketClient *client)
                 {
                     bd.bytes[i] = data[3 + i];
                 }
-                val = xAerPID1.kD = bd.value;
+                if (isnan(bd.value) || bd.value < 0) // AER-19: reject NaN/negative gain from raw network bytes
+                {
+                    val = xAerPID1.kD; // keep current; no write, no flash-dirty
+                }
+                else
+                {
+                    val = xAerPID1.kD = bd.value;
+                    xAerPID1.setTunings(false);
+                    aerManager.setPressTick(600);
+                    xAerPID1.pid_saved = false;
+                }
                 Serial.println(">>> D Val >> " + String(val));
-                xAerPID1.setTunings(false);
-                aerManager.setPressTick(600);
-                xAerPID1.pid_saved = false;
             }
             SocketCmdOp *reply = new SocketCmdOp(SerialCommand::CMD_PID);
             reply->AddClient(client->id());
@@ -2179,11 +2200,18 @@ void WebServer::processSocketData(char *data, AsyncWebSocketClient *client)
                 {
                     bd.bytes[i] = data[3 + i];
                 }
-                val = xAerPID2.kP = bd.value;
+                if (isnan(bd.value) || bd.value < 0) // AER-19: reject NaN/negative gain from raw network bytes
+                {
+                    val = xAerPID2.kP; // keep current; no write, no flash-dirty
+                }
+                else
+                {
+                    val = xAerPID2.kP = bd.value;
+                    xAerPID2.setTunings(true);
+                    aerManager.setPressTick(600);
+                    xAerPID2.pid_saved = false;
+                }
                 Serial.println(">>> P Val >> " + String(val));
-                xAerPID2.setTunings(true);
-                aerManager.setPressTick(600);
-                xAerPID2.pid_saved = false;
             }
 
             SocketCmdOp *reply = new SocketCmdOp(SerialCommand::CMD_PID2);
@@ -2209,11 +2237,18 @@ void WebServer::processSocketData(char *data, AsyncWebSocketClient *client)
                 {
                     bd.bytes[i] = data[3 + i];
                 }
-                val = xAerPID2.kI = bd.value;
+                if (isnan(bd.value) || bd.value < 0) // AER-19: reject NaN/negative gain from raw network bytes
+                {
+                    val = xAerPID2.kI; // keep current; no write, no flash-dirty
+                }
+                else
+                {
+                    val = xAerPID2.kI = bd.value;
+                    xAerPID2.setTunings(true);
+                    aerManager.setPressTick(600);
+                    xAerPID2.pid_saved = false;
+                }
                 Serial.println(">>> I Val >> " + String(val, 4));
-                xAerPID2.setTunings(true);
-                aerManager.setPressTick(600);
-                xAerPID2.pid_saved = false;
             }
             SocketCmdOp *reply = new SocketCmdOp(SerialCommand::CMD_PID2);
             reply->AddClient(client->id());
@@ -2238,11 +2273,18 @@ void WebServer::processSocketData(char *data, AsyncWebSocketClient *client)
                 {
                     bd.bytes[i] = data[3 + i];
                 }
-                val = xAerPID2.kD = bd.value;
+                if (isnan(bd.value) || bd.value < 0) // AER-19: reject NaN/negative gain from raw network bytes
+                {
+                    val = xAerPID2.kD; // keep current; no write, no flash-dirty
+                }
+                else
+                {
+                    val = xAerPID2.kD = bd.value;
+                    xAerPID2.setTunings(true);
+                    aerManager.setPressTick(600);
+                    xAerPID2.pid_saved = false;
+                }
                 Serial.println(">>> D Val >> " + String(val));
-                xAerPID2.setTunings(true);
-                aerManager.setPressTick(600);
-                xAerPID2.pid_saved = false;
             }
             SocketCmdOp *reply = new SocketCmdOp(SerialCommand::CMD_PID2);
             reply->AddClient(client->id());
@@ -2283,9 +2325,12 @@ void WebServer::processSocketData(char *data, AsyncWebSocketClient *client)
                 val = bd.value;
             }
             Serial.printf(">> Set Temp(c): %f \n", val);
-            xAerPID1.SET_TEMP = val;
-            aerManager.updateTempStor(0, true);
-            aerManager.setPressTick(250);
+            if (!isnan(val) && val >= 0 && val <= xAerPID1.SET_TEMP_MAX) // AER-19: reject NaN/out-of-range network target; keeps thermal-cutoff floor
+            {
+                xAerPID1.SET_TEMP = val;
+                aerManager.updateTempStor(0, true);
+                aerManager.setPressTick(250);
+            }
         }
         else
         {
@@ -2328,9 +2373,12 @@ void WebServer::processSocketData(char *data, AsyncWebSocketClient *client)
                 val = bd.value;
             }
             Serial.printf(">> Set Temp(c): %f \n", val);
-            xAerPID2.SET_TEMP = val;
-            aerManager.updateTempStor(1, true);
-            aerManager.setPressTick(250);
+            if (!isnan(val) && val >= 0 && val <= xAerPID2.SET_TEMP_MAX) // AER-19: reject NaN/out-of-range network target; keeps thermal-cutoff floor
+            {
+                xAerPID2.SET_TEMP = val;
+                aerManager.updateTempStor(1, true);
+                aerManager.setPressTick(250);
+            }
         }
         else
         {
