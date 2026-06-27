@@ -103,7 +103,7 @@ void TempStor::save1()
     }
     else if (i < 16)
     {
-      data[i] = mt.array[i + 8];
+      data[i] = mt.array[i - 8];
     }
   }
 
@@ -132,7 +132,7 @@ void TempStor::save2()
     }
     else if (i < 16)
     {
-      data[i] = mt.array[i + 8];
+      data[i] = mt.array[i - 8];
     }
   }
 

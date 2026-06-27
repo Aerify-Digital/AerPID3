@@ -170,9 +170,21 @@ void AerPID::tick()
         //  Process PID computation
         if (compute())
         {
-            // reset pid tick
-            //_tick = _pidTickMax;
-            _tick = _pidTickMax * (5 / 1000);
+            // reset pid tick. cadence is owned by the elapsed-time gate in compute()
+            // (sampleTime via getPidTick()); this just keeps the _tick-- guard satisfied.
+            // (was `_pidTickMax * (5 / 1000)` = integer 0 — a no-op; made explicit.)
+            _tick = 0;
+        }
+        // Floor the counter so it can never march into int16 underflow. When compute()
+        // returns false (PID disabled, over-temp latch, or sample-time not yet elapsed)
+        // the original code left _tick decrementing unbounded: after ~6 min it reached
+        // INT16_MIN and wrapped to +32767, making `_tick-- <= 0` false and freezing
+        // compute() for ~6 min. Cadence is owned by compute()'s own sampleTime gate, so
+        // re-flooring to 0 is behavior-preserving (compute() is still evaluated every
+        // tick while _tick <= 0).
+        if (_tick < 0)
+        {
+            _tick = 0;
         }
     }
 
@@ -267,6 +279,7 @@ bool AerPID::compute()
         // scale output using temperature delta for better stability at set point
         // double _output = deltaScaleOutput(delta, output);
         double _output = max(0.0, output);
+        if (isnan(_output)) _output = 0.0; // AER-19 hardening: never cast/act on a NaN output (xOutput cast would be UB; force safe-off, not dead-code happenstance)
 
         // convert output double to uint32 for ledcWrite
         xOutput = static_cast<uint32_t>(_output);
@@ -986,7 +999,10 @@ AerPID::MeasureResult AerPID::measureElementTemperatureAsync()
 
         if (millis() - _measLastTime > FAULT_TIMEOUT || _faultsRecent >= 3)
         {
-            _faultsRecent--;
+            if (_faultsRecent > 0)
+            {
+                _faultsRecent--; // guard: _faultsRecent is unsigned; timeout branch can reach here at 0
+            }
             addToMES_TEMP(celsius);
             _measLastTime = millis();
             Serial.println(F("(async) Measure Fault Recovery! Forcing measure..."));

@@ -2626,6 +2626,10 @@ void onEb1Encoder(EncoderButton &eb)
         {
             enc_am->getAerPID(elementIndex)->kP += 0.1 * dir;
         }
+        if (enc_am->getAerPID(elementIndex)->kP < 0)
+        {
+            enc_am->getAerPID(elementIndex)->kP = 0;
+        }
         enc_aerGUI->updateMenu();
         enc_am->setPressTick(300);
         enc_am->getAerPID(elementIndex)->pid_saved = false;
@@ -2642,6 +2646,10 @@ void onEb1Encoder(EncoderButton &eb)
         {
             enc_am->getAerPID(elementIndex)->kI += 0.001 * dir;
         }
+        if (enc_am->getAerPID(elementIndex)->kI < 0)
+        {
+            enc_am->getAerPID(elementIndex)->kI = 0;
+        }
         enc_aerGUI->updateMenu();
         enc_am->setPressTick(300);
         enc_am->getAerPID(elementIndex)->pid_saved = false;
@@ -2657,6 +2665,10 @@ void onEb1Encoder(EncoderButton &eb)
         else if (eb.increment() < 0)
         {
             enc_am->getAerPID(elementIndex)->kD += 0.5 * dir;
+        }
+        if (enc_am->getAerPID(elementIndex)->kD < 0)
+        {
+            enc_am->getAerPID(elementIndex)->kD = 0;
         }
         enc_aerGUI->updateMenu();
         enc_am->setPressTick(300);
@@ -2689,6 +2701,14 @@ void onEb1Encoder(EncoderButton &eb)
             {
                 enc_am->getAerPID(elementIndex)->SET_TEMP += amt * dir;
             }
+        }
+        if (enc_am->getAerPID(elementIndex)->SET_TEMP < 0)
+        {
+            enc_am->getAerPID(elementIndex)->SET_TEMP = 0;
+        }
+        if (enc_am->getAerPID(elementIndex)->SET_TEMP > enc_am->getAerPID(elementIndex)->SET_TEMP_MAX)
+        {
+            enc_am->getAerPID(elementIndex)->SET_TEMP = enc_am->getAerPID(elementIndex)->SET_TEMP_MAX;
         }
         enc_am->setPressTick(400);
         enc_am->updateTempStor(elementIndex, true);

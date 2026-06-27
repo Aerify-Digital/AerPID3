@@ -58,6 +58,7 @@ void PidStor::load_pid(double &kP, double &kI, double &kD)
     const char *filename = "pid.dat";
     int leng = 30;
     char storageData[leng];
+    memset(storageData, 0, leng); // deterministic 0.0 decode if file missing/short (guards then apply defaults)
 
     flash->openFile(filename, storageData, leng);
 
@@ -145,6 +146,7 @@ void PidStor::load_pid_2(double &kP, double &kI, double &kD)
     const char *filename = "pid2.dat";
     int leng = 30;
     char storageData[leng];
+    memset(storageData, 0, leng); // deterministic 0.0 decode if file missing/short (guards then apply defaults)
 
     flash->openFile(filename, storageData, leng);
 
